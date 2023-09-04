@@ -1,6 +1,6 @@
-pub use self::error::{Error, Result};
+use crate::model::ModelController;
 
-use std::fmt::format;
+pub use self::error::{Error, Result};
 use std::net::SocketAddr;
 
 use axum::extract::{Path, Query};
@@ -21,10 +21,12 @@ mod model;
 mod web;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
+    let mc = ModelController::new().await?;
     let routes_all = Router::new()
         .merge(routes_hello())
         .merge(web::routes_login::routes())
+        .nest("/api", web::routes_tickets::routes(mc.clone()))
         .layer(middleware::map_response(main_response_mapper))
         .layer(CookieManagerLayer::new())
         .fallback_service(routes_static());
@@ -35,6 +37,8 @@ async fn main() {
         .serve(routes_all.into_make_service())
         .await
         .unwrap();
+
+    Ok(())
 }
 
 async fn main_response_mapper(res: Response) -> Response {
