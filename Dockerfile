@@ -16,7 +16,7 @@ RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 ENV SQLX_OFFLINE true
 # Build our project
-RUN cargo build --release --bin zero2prod
+RUN cargo build --release --bin axum-demo
 
 FROM debian:stable-slim AS runtime
 #FROM alpine:3.17.1 AS runtime
@@ -31,7 +31,7 @@ RUN apt-get update -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app/target/release/zero2prod zero2prod
-COPY configuration configuration
+COPY --from=builder /app/target/release/axum-demo axum-demo
+COPY .cargo/config.toml .cargo/config.toml
 #ENV APP_ENVIRONMENT production
 ENTRYPOINT ["./axum-demo"]
