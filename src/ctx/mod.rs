@@ -10,13 +10,13 @@ pub struct Ctx {
 // Constructor.
 impl Ctx {
     pub fn root_ctx() -> Self {
-		Ctx { user_id: 0 }
-	}
-    
+        Ctx { user_id: 0 }
+    }
+
     pub fn new(user_id: u64) -> Result<Self> {
         if user_id == 0 {
             Err(Error::CtxCannotNewRootCtx)
-        } else{
+        } else {
             Ok(Self { user_id })
         }
     }

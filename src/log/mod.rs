@@ -5,8 +5,8 @@ use axum::http::{Method, Uri};
 use serde::Serialize;
 use serde_json::{json, Value};
 use serde_with::skip_serializing_none;
-use tracing::debug;
 use std::time::{SystemTime, UNIX_EPOCH};
+use tracing::debug;
 use uuid::Uuid;
 use web::Error;
 
@@ -23,10 +23,10 @@ pub async fn log_request(
         .unwrap()
         .as_millis();
 
-        let error_type = web_error.map(|se| se.as_ref().to_string());
-        let error_data = serde_json::to_value(web_error)
-            .ok()
-            .and_then(|mut v| v.get_mut("data").map(|v| v.take()));
+    let error_type = web_error.map(|se| se.as_ref().to_string());
+    let error_data = serde_json::to_value(web_error)
+        .ok()
+        .and_then(|mut v| v.get_mut("data").map(|v| v.take()));
 
     // Create the RequestLogLine
     let log_line = RequestLogLine {

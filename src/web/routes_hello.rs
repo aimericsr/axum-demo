@@ -1,4 +1,9 @@
-use axum::{Router, extract::{Query, Path}, response::{IntoResponse, Html}, routing::get};
+use axum::{
+    extract::{Path, Query},
+    response::{Html, IntoResponse},
+    routing::get,
+    Router,
+};
 use serde::Deserialize;
 use tracing::debug;
 

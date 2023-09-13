@@ -1,11 +1,11 @@
-// Modules 
+// Modules
 
+mod config;
 mod ctx;
 mod error;
 mod log;
 mod model;
 mod web;
-mod config;
 
 // Re-export
 pub use self::error::{Error, Result};
@@ -14,23 +14,21 @@ pub use config::Config;
 //  Import
 use crate::model::ModelManager;
 use crate::web::mw_res_map::mw_res_map;
-use std::net::SocketAddr;
 use axum::middleware;
 use axum::Router;
+use std::net::SocketAddr;
 use tower_cookies::CookieManagerLayer;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
-use web::routes_static::serve_dir as routes_static ;
 use web::routes_hello::routes as routes_hello;
 use web::routes_login::routes as routes_login;
-
-
+use web::routes_static::serve_dir as routes_static;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt()
-		.with_env_filter(EnvFilter::from_default_env())
-		.init();
+        .with_env_filter(EnvFilter::from_default_env())
+        .init();
 
     let mc = ModelManager::new().await?;
 
@@ -54,4 +52,3 @@ async fn main() -> Result<()> {
         .unwrap();
     Ok(())
 }
-

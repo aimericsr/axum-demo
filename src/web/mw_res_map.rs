@@ -2,25 +2,20 @@ use crate::ctx::Ctx;
 use crate::log::log_request;
 use crate::web;
 use axum::http::{Method, Uri};
-use axum::response::{Response, IntoResponse};
+use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde_json::json;
 use tracing::debug;
 use uuid::Uuid;
 use web::Error;
 
-pub async fn mw_res_map(
-    ctx: Option<Ctx>,
-    uri: Uri,
-    req_method: Method,
-    res: Response,
-) -> Response {
+pub async fn mw_res_map(ctx: Option<Ctx>, uri: Uri, req_method: Method, res: Response) -> Response {
     debug!("{:<12} - main_response_mapper", "RES_MAPPER");
     let uuid = Uuid::new_v4();
 
     // -- Get the eventual response error.
     let web_error = res.extensions().get::<Error>();
-	let client_status_error = web_error.map(|se| se.client_status_and_error());
+    let client_status_error = web_error.map(|se| se.client_status_and_error());
 
     // -- If client error, build the new reponse.
     let error_response = client_status_error
@@ -47,4 +42,3 @@ pub async fn mw_res_map(
     debug!("\n");
     error_response.unwrap_or(res)
 }
-
