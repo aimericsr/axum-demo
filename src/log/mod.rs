@@ -1,19 +1,20 @@
 use crate::ctx::Ctx;
-use crate::error::ClientError;
-use crate::{Error, Result};
+use crate::web::{self, ClientError};
+use crate::Result;
 use axum::http::{Method, Uri};
 use serde::Serialize;
 use serde_json::{json, Value};
 use serde_with::skip_serializing_none;
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
+use web::Error;
 
 pub async fn log_request(
     uuid: Uuid,
     req_method: Method,
     uri: Uri,
     ctx: Option<Ctx>,
-    service_error: Option<&Error>,
+    web_error: Option<&Error>,
     client_error: Option<ClientError>,
 ) -> Result<()> {
     let timestamp = SystemTime::now()
@@ -21,10 +22,10 @@ pub async fn log_request(
         .unwrap()
         .as_millis();
 
-    let error_type = service_error.map(|se| se.as_ref().to_string());
-    let error_data = serde_json::to_value(service_error)
-        .ok()
-        .and_then(|mut v| v.get_mut("data").map(|v| v.take()));
+        let error_type = web_error.map(|se| se.as_ref().to_string());
+        let error_data = serde_json::to_value(web_error)
+            .ok()
+            .and_then(|mut v| v.get_mut("data").map(|v| v.take()));
 
     // Create the RequestLogLine
     let log_line = RequestLogLine {
