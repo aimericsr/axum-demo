@@ -3,6 +3,7 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use strum_macros::Display;
+use tracing::{debug};
 
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -16,7 +17,7 @@ pub enum Error {
 
 impl IntoResponse for Error {
 	fn into_response(self) -> Response {
-		println!("->> {:<12} - model::Error {self:?}", "INTO_RES");
+		debug!("{:<12} - model::Error {self:?}", "INTO_RES");
 
 		// Create a placeholder Axum reponse.
 		let mut response = StatusCode::INTERNAL_SERVER_ERROR.into_response();

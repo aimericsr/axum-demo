@@ -1,5 +1,6 @@
 use axum::{Router, extract::{Query, Path}, response::{IntoResponse, Html}, routing::get};
 use serde::Deserialize;
+use tracing::debug;
 
 pub fn routes() -> Router {
     Router::new()
@@ -18,7 +19,7 @@ async fn handler_hello(Query(params): Query<HelloParams>) -> impl IntoResponse {
 }
 
 async fn handler_hello2(Path(name): Path<String>) -> impl IntoResponse {
-    println!("->> {:<12} - handler_hello2 - {name:?}", "HANDLER");
+    debug!("{:<12} - handler_hello2 - {name:?}", "HANDLER");
 
     Html(format!("Hello2 <strong>{name}</strong>"))
 }

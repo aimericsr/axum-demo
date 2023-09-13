@@ -21,7 +21,7 @@ ALTER DATABASE postgres SET log_statement = 'all';
 
 ```sh
 # Terminal 1 - To run the server.
-cargo watch -q -c -w src/ -x "run"
+cargo watch -q -c -w src/ -w .cargo/ -x "run"
 
 # Terminal 2 - To run the quick_dev.
 cargo watch -q -c -w examples/ -x "run --example quick_dev"
@@ -52,4 +52,19 @@ cargo run --example quick_dev
 cargo test -- --nocapture
 
 cargo watch -q -c -x test model::task::tests::test_create -- --nocapture
+```
+
+## Manage Rust Versions
+
+```sh
+rustup help toolchain
+
+rustup install nightly
+
+rustup default nightly-aarch64-apple-darwin
+
+rustup update
+
+rustc --version
+
 ```
