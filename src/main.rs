@@ -1,5 +1,6 @@
 // Modules
 mod config;
+mod crypt;
 mod ctx;
 mod error;
 mod log;
@@ -34,15 +35,15 @@ async fn main() -> Result<()> {
     // -- FOR DEV ONLY
     _dev_utils::init_dev().await;
 
-    let mc = ModelManager::new().await?;
+    let mm = ModelManager::new().await?;
 
     let routes_all = Router::new()
         .merge(routes_hello())
-        .merge(routes_login())
+        .merge(routes_login(mm.clone()))
         .layer(middleware::map_response(mw_res_map))
         // above CookieManagerLayer because we need it
         .layer(middleware::from_fn_with_state(
-            mc.clone(),
+            mm.clone(),
             web::mw_auth::mw_ctx_resolve,
         ))
         .layer(CookieManagerLayer::new())
