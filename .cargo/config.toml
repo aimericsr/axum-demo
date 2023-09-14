@@ -9,7 +9,7 @@ linker = "x86_64-linux-gnu-gcc"
 [env]
 
 # Scope down tracing, to filter out external lib tracing.
-RUST_LOG="axum_demo=debug"
+RUST_LOG="info,axum_demo=debug,tower_http=trace"
 
 # -- Service Environment Variables
 # IMPORTANT: 
@@ -21,4 +21,4 @@ RUST_LOG="axum_demo=debug"
 
 # This will be relative to Cargo.toml
 # In deployed images, probably use absolute path.
-SERVICE_WEB_FOLDER="statics/"
+SERVICE_WEB_FOLDER="static/"
