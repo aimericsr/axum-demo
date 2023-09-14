@@ -1,11 +1,12 @@
 // Modules
-
 mod config;
 mod ctx;
 mod error;
 mod log;
 mod model;
 mod web;
+
+pub mod _dev_utils;
 
 // Re-export
 pub use self::error::{Error, Result};
@@ -29,6 +30,9 @@ async fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env())
         .init();
+
+    // -- FOR DEV ONLY
+    _dev_utils::init_dev().await;
 
     let mc = ModelManager::new().await?;
 

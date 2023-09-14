@@ -19,6 +19,7 @@ strum_macros = "0.24"
 uuid ={ version = "1", features = ["v4", "fast-rng"]}
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+sqlx = { version = "0.6", features = [ "runtime-tokio-rustls", "postgres", "uuid", "time" ] }
 
 [dev-dependencies]
 anyhow = "1"
