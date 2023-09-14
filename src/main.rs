@@ -10,7 +10,7 @@ pub mod _dev_utils;
 
 // Re-export
 pub use self::error::{Error, Result};
-pub use config::Config;
+pub use config::config;
 
 //  Import
 use crate::model::ModelManager;

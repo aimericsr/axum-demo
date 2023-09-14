@@ -5,17 +5,25 @@
 [target.x86_64-unknown-linux-musl]
 linker = "x86_64-linux-gnu-gcc"
 
-# Set ENV_VAR_NAME=value for any process run by Cargo
+# Environments variables set for all `cargo ...` commands.
 [env]
 
 # Scope down tracing, to filter out external lib tracing.
 RUST_LOG="error,axum_demo=debug,tower_http=trace"
+
 
 # -- Service Environment Variables
 # IMPORTANT: 
 #   For cargo commands only.
 #   For deployed env, should be managed by container 
 #   (e.g., Kubernetes).
+
+## -- Secrets
+# Keys and passwords below are for localhost dev ONLY.
+# e.g., "welcome" type of passwords.
+# i.e., Encryption not needed.
+
+SERVICE_DB_URL="postgres://app_user:dev_only_pwd@localhost/app_db"
 
 ## -- ConfigMap
 
