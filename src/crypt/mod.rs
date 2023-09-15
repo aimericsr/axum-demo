@@ -1,13 +1,13 @@
 // region:    --- Modules
-
 mod error;
+
 pub mod pwd;
 pub mod token;
+
 pub use self::error::{Error, Result};
 
 use hmac::{Hmac, Mac};
 use sha2::Sha512;
-
 // endregion: --- Modules
 
 pub struct EncryptContent {

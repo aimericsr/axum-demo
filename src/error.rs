@@ -4,9 +4,10 @@ pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Debug)]
 pub enum Error {
-    // -- Env
+    // -- Config
     ConfigMissingEnv(&'static str),
     ConfigWrongFormat(&'static str),
+
     // -- Modules
     Model(model::Error),
 }

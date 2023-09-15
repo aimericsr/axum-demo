@@ -1,9 +1,7 @@
-// Public
 pub mod task;
 pub mod user;
 pub use self::error::{Error, Result};
 
-// Private
 mod base;
 mod error;
 mod store;
@@ -18,7 +16,7 @@ pub struct ModelManager {
 impl ModelManager {
     pub async fn new() -> Result<Self> {
         let db = new_db_pool().await?;
-        Ok(ModelManager { db: db })
+        Ok(ModelManager { db })
     }
 
     /// Returns the sqlx db pool reference.

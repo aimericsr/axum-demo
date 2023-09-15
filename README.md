@@ -68,3 +68,8 @@ rustup update
 rustc --version
 
 ```
+
+## Project Conventions
+
+function test name : test_[function_name]_[ok/err]_[case_tested]
+

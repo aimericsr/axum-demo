@@ -1,24 +1,33 @@
 use crate::{crypt, model::store};
 use serde::Serialize;
 use serde_with::{serde_as, DisplayFromStr};
-use strum_macros::Display;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-// implmente trait Serialize for sqlx::Error
-#[serde_as]
-#[derive(Debug, Display, Serialize)]
+#[serde_as] // implmente trait Serialize for sqlx::Error
+#[derive(Debug, Serialize)]
 pub enum Error {
     EntityNotFound { entity: &'static str, id: i64 },
 
     // -- Modules
     Store(store::Error),
     Crypt(crypt::Error),
+
     // - Externals
     Sqlx(#[serde_as(as = "DisplayFromStr")] sqlx::Error),
 }
 
-// enable ? for this line :  let db = new_db_pool().await?;
+// region:    --- Error Boilerplate
+impl core::fmt::Display for Error {
+    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
+        write!(fmt, "{self:?}")
+    }
+}
+
+impl std::error::Error for Error {}
+// endregion: --- Error Boilerplate
+
+// region:    --- Froms
 impl From<store::Error> for Error {
     fn from(val: store::Error) -> Self {
         Self::Store(val)
@@ -36,5 +45,4 @@ impl From<sqlx::Error> for Error {
         Self::Sqlx(val)
     }
 }
-
-impl std::error::Error for Error {}
+// endregion: --- Froms

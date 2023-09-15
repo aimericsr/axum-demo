@@ -2,7 +2,7 @@ use crate::crypt::{pwd, EncryptContent};
 use crate::ctx::Ctx;
 use crate::model::base::{self, DbBmc};
 use crate::model::ModelManager;
-use crate::model::{Error, Result};
+use crate::model::Result;
 use serde::{Deserialize, Serialize};
 use sqlb::{Fields, HasFields};
 use sqlx::postgres::PgRow;

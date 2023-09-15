@@ -1,4 +1,4 @@
-// Modules
+// region:    --- Modules
 mod config;
 mod crypt;
 mod ctx;
@@ -9,14 +9,9 @@ mod utils;
 mod web;
 
 pub mod _dev_utils;
-
-// Re-export
 pub use self::error::{Error, Result};
-use axum::response::Html;
-use axum::routing::get;
 pub use config::config;
 
-//  Import
 use crate::model::ModelManager;
 use crate::web::mw_auth::mw_ctx_require;
 use crate::web::mw_res_map::mw_res_map;
@@ -30,6 +25,7 @@ use tracing_subscriber::EnvFilter;
 use web::routes_hello::routes as routes_hello;
 use web::routes_login::routes as routes_login;
 use web::routes_static::serve_dir as routes_static;
+// endregion: --- Modules
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -46,6 +42,7 @@ async fn main() -> Result<()> {
 
     let routes_all = Router::new()
         .merge(routes_login(mm.clone()))
+        .merge(routes_hello())
         .nest("/api", routes_rpc)
         .layer(middleware::map_response(mw_res_map))
         // above CookieManagerLayer because we need it

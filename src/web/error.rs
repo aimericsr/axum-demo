@@ -2,12 +2,11 @@ use crate::{crypt, model, web};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
-use strum_macros::Display;
 use tracing::debug;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug, Display, Serialize, strum_macros::AsRefStr)]
+#[derive(Debug, Serialize, strum_macros::AsRefStr)]
 #[serde(tag = "type", content = "data")]
 pub enum Error {
     // -- RPC
@@ -31,6 +30,16 @@ pub enum Error {
     SerdeJson(String),
 }
 
+// region:    --- Error Boilerplate
+impl core::fmt::Display for Error {
+    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
+        write!(fmt, "{self:?}")
+    }
+}
+
+impl std::error::Error for Error {}
+// endregion: --- Error Boilerplate
+
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
         debug!("{:<12} - model::Error {self:?}", "INTO_RES");
@@ -45,8 +54,7 @@ impl IntoResponse for Error {
     }
 }
 
-impl std::error::Error for Error {}
-
+// region:    --- Froms
 impl From<model::Error> for Error {
     fn from(val: model::Error) -> Self {
         Self::Model(val)
@@ -64,6 +72,7 @@ impl From<serde_json::Error> for Error {
         Self::SerdeJson(val.to_string())
     }
 }
+// endregion: --- Froms
 
 /// From the root error to the http status code and ClientError
 impl Error {

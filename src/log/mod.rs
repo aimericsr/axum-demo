@@ -65,10 +65,11 @@ struct RequestLogLine {
     // -- User and context attributes.
     user_id: Option<i64>,
 
-    // -- http request attributes.
+    // -- Http request attributes.
     req_path: String,
     req_method: String,
 
+    // -- Rpc request attributes.
     rpc_id: Option<String>,
     rpc_method: Option<String>,
 
