@@ -27,6 +27,7 @@ serial_test = "2"
  hmac = "0.12"
  sha2 = "0.10"
  base64-url = "2"
+ time = "0.3"
 
 [dev-dependencies]
 anyhow = "1"

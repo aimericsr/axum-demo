@@ -1,4 +1,4 @@
-use crate::{model, web};
+use crate::{crypt, model, web};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
@@ -10,6 +10,11 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[derive(Debug, Display, Serialize, strum_macros::AsRefStr)]
 #[serde(tag = "type", content = "data")]
 pub enum Error {
+    // -- RPC
+    RpcMethodUnknown(String),
+    RpcMissingParams { rpc_method: String },
+    RpcFailJsonParams { rpc_method: String },
+
     // -- Login
     LoginFailUsernameNotFound,
     LoginFailUserHasNoPwd { user_id: i64 },
@@ -20,6 +25,10 @@ pub enum Error {
 
     // -- Modules
     Model(model::Error),
+    Crypt(crypt::Error),
+
+    // -- External Modules
+    SerdeJson(String),
 }
 
 impl IntoResponse for Error {
@@ -44,6 +53,18 @@ impl From<model::Error> for Error {
     }
 }
 
+impl From<crypt::Error> for Error {
+    fn from(val: crypt::Error) -> Self {
+        Self::Crypt(val)
+    }
+}
+
+impl From<serde_json::Error> for Error {
+    fn from(val: serde_json::Error) -> Self {
+        Self::SerdeJson(val.to_string())
+    }
+}
+
 /// From the root error to the http status code and ClientError
 impl Error {
     pub fn client_status_and_error(&self) -> (StatusCode, ClientError) {
@@ -59,6 +80,12 @@ impl Error {
             // -- Auth
             CtxExt(_) => (StatusCode::FORBIDDEN, ClientError::NO_AUTH),
 
+            // -- Model
+            Model(model::Error::EntityNotFound { entity, id }) => (
+                StatusCode::BAD_REQUEST,
+                ClientError::ENTITY_NOT_FOUND { entity, id: *id },
+            ),
+
             // -- Fallback.
             _ => (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -68,10 +95,12 @@ impl Error {
     }
 }
 
-#[derive(Debug, strum_macros::AsRefStr)]
+#[derive(Debug, Serialize, strum_macros::AsRefStr)]
+#[serde(tag = "message", content = "detail")]
 #[allow(non_camel_case_types)]
 pub enum ClientError {
     LOGIN_FAIL,
     NO_AUTH,
+    ENTITY_NOT_FOUND { entity: &'static str, id: i64 },
     SERVICE_ERROR,
 }

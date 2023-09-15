@@ -5,17 +5,22 @@ mod ctx;
 mod error;
 mod log;
 mod model;
+mod utils;
 mod web;
 
 pub mod _dev_utils;
 
 // Re-export
 pub use self::error::{Error, Result};
+use axum::response::Html;
+use axum::routing::get;
 pub use config::config;
 
 //  Import
 use crate::model::ModelManager;
+use crate::web::mw_auth::mw_ctx_require;
 use crate::web::mw_res_map::mw_res_map;
+use crate::web::rpc;
 use axum::middleware;
 use axum::Router;
 use std::net::SocketAddr;
@@ -37,9 +42,11 @@ async fn main() -> Result<()> {
 
     let mm = ModelManager::new().await?;
 
+    let routes_rpc = rpc::routes(mm.clone()).route_layer(middleware::from_fn(mw_ctx_require));
+
     let routes_all = Router::new()
-        .merge(routes_hello())
         .merge(routes_login(mm.clone()))
+        .nest("/api", routes_rpc)
         .layer(middleware::map_response(mw_res_map))
         // above CookieManagerLayer because we need it
         .layer(middleware::from_fn_with_state(
