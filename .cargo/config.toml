@@ -35,3 +35,4 @@ SERVICE_TOKEN_DURATION_SEC="1800" # 30 minutes
 # This will be relative to Cargo.toml
 # In deployed images, probably use absolute path.
 SERVICE_WEB_FOLDER="static/"
+JAEGER_ENABLED="true"

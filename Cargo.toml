@@ -17,17 +17,27 @@ lazy-regex = "2"
 async-trait = "0.1"
 strum_macros = "0.24"
 uuid ={ version = "1", features = ["v4", "fast-rng"]}
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+# -- Db
 sqlx = { version = "0.6", features = [ "runtime-tokio-rustls", "postgres", "uuid", "time" ] }
 sqlb = "0.3"
-serial_test = "2"
 # -- Crypt & Encoding
- rand = "0.8"
- hmac = "0.12"
- sha2 = "0.10"
- base64-url = "2"
- time = "0.3"
+rand = "0.8"
+hmac = "0.12"
+sha2 = "0.10"
+base64-url = "2"
+time = "0.3"
+# -- Observability
+metrics = "0.21.1"
+metrics-exporter-prometheus = "0.12.1"
+sysinfo = "0.27.1"
+opentelemetry = {version = "0.20.0", features = ["rt-tokio"]}
+opentelemetry-jaeger = {version = "0.19.0", features = ["rt-tokio"]}
+tracing = "0.1"
+tracing-opentelemetry = "0.21.0"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "std"] }
+axum-tracing-opentelemetry = "0.13.1"
+# -- Test
+serial_test = "2"
 
 [dev-dependencies]
 anyhow = "1"
