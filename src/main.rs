@@ -11,7 +11,10 @@ mod web;
 
 pub mod _dev_utils;
 pub use self::error::{Error, Result};
+use ::log::error;
 pub use config::config;
+use tracing_subscriber::fmt::format;
+use tracing_subscriber::Layer;
 
 use crate::model::ModelManager;
 use crate::observability::tracing::create_tracer_from_env;
@@ -25,12 +28,14 @@ use axum_tracing_opentelemetry::opentelemetry_tracing_layer;
 use serde_json::json;
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
-use tracing_subscriber::Registry;
+use tracing_subscriber::{fmt, Registry};
 
 use crate::web::rest::routes_prometheus::routes as routes_prometheus;
 use crate::web::rpc;
 use axum::middleware;
 use axum::Router;
+use std::fmt::Debug;
+use std::fs::File;
 use std::net::SocketAddr;
 use tower_cookies::CookieManagerLayer;
 use tracing::info;
@@ -60,10 +65,22 @@ async fn main() -> Result<()> {
     //     .with_env_filter(EnvFilter::from_default_env())
     //     .init();
 
-    let registry = Registry::default().with(tracing_subscriber::fmt::layer().pretty());
+    let file = File::create("test.txt").expect("Not file found");
+
+    let fmt_layer = fmt::layer().with_target(false);
+
+    let env_filter = tracing::Level::INFO.as_str();
+    let env_filter =
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(env_filter));
+
+    let registry = Registry::default()
+        .with(fmt_layer)
+        .with(env_filter)
+        .with(tracing_subscriber::fmt::layer().pretty());
 
     match create_tracer_from_env() {
         Some(tracer) => registry
+            // Add Layer to format and send trace to OpenTelemetry
             .with(tracing_opentelemetry::layer().with_tracer(tracer))
             .try_init()
             .expect("Failed to register tracer with registry and jaeger"),
@@ -95,6 +112,7 @@ async fn main() -> Result<()> {
             web::mw_auth::mw_ctx_resolve,
         ))
         .layer(CookieManagerLayer::new())
+        // include trace context as header into the response
         .layer(OtelInResponseLayer::default())
         //start OpenTelemetry trace on incoming request
         .layer(OtelAxumLayer::default())
@@ -102,6 +120,8 @@ async fn main() -> Result<()> {
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     info!("LISTENING on {addr}\n");
+
+    error!("LOG");
     axum::Server::bind(&addr)
         .serve(routes_all.into_make_service())
         .await

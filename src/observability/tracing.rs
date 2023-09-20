@@ -4,21 +4,13 @@ use opentelemetry::{
 };
 use std::env;
 use std::fmt::Display;
-use tracing::error;
+
+// -- TODO: See if we can use the classic OpenTelemetry exporter insted of the Jaeger one
+
 struct JaegerConfig {
     jaeger_agent_host: String,
     jaeger_agent_port: String,
     jaeger_tracing_service_name: String,
-}
-
-// impl Value for JaegerConfig {
-//     fn record(&self, key: &tracing::field::Field, visitor: &mut dyn tracing::field::Visit) {}
-// }
-
-impl Display for JaegerConfig {
-    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
-        write!(fmt, "{self}")
-    }
 }
 
 pub fn create_tracer_from_env() -> Option<Tracer> {
@@ -38,6 +30,7 @@ pub fn create_tracer_from_env() -> Option<Tracer> {
 fn init_tracer(config: JaegerConfig) -> Tracer {
     global::set_text_map_propagator(TraceContextPropagator::new());
     opentelemetry_jaeger::new_agent_pipeline()
+        // where to send the traces
         .with_endpoint(format!(
             "{}:{}",
             config.jaeger_agent_host, config.jaeger_agent_port
@@ -45,18 +38,16 @@ fn init_tracer(config: JaegerConfig) -> Tracer {
         .with_auto_split_batch(true)
         .with_service_name(config.jaeger_tracing_service_name)
         .with_trace_config(trace::config().with_sampler(Sampler::AlwaysOn))
+        // batch exporter instead of exporting each span synchronously on drop
         .install_batch(Tokio)
         .expect("pipeline install error")
 }
 
 fn get_jaeger_config_from_env() -> JaegerConfig {
-    let ja: JaegerConfig = JaegerConfig {
+    JaegerConfig {
         jaeger_agent_host: env::var("JAEGER_AGENT_HOST").unwrap_or_else(|_| "localhost".into()),
         jaeger_agent_port: env::var("JAEGER_AGENT_PORT").unwrap_or_else(|_| "6831".into()),
         jaeger_tracing_service_name: env::var("TRACING_SERVICE_NAME")
             .unwrap_or_else(|_| "axum-graphql".into()),
-    };
-
-    error!("{}", ja);
-    ja
+    }
 }

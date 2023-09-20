@@ -32,15 +32,20 @@ utoipa-swagger-ui = { version= "3.1.5", features = ["axum"] }
 utoipa-redoc = { version= "0.1.0", features = ["axum"] }
 utoipa-rapidoc = { version= "0.1.0", features = ["axum"] }
 # -- Observability
+# Excrat information from request
+axum-tracing-opentelemetry = "0.13.1"
+# -- Prometheus
 metrics = "0.21.1"
 metrics-exporter-prometheus = "0.12.1"
 sysinfo = "0.27.1"
+# -- OpenTelemetry
 opentelemetry = {version = "0.20.0", features = ["rt-tokio"]}
 opentelemetry-jaeger = {version = "0.19.0", features = ["rt-tokio"]}
-tracing = "0.1"
+# -- Tracing
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3.17", features = ["std", "env-filter", "json", "fmt", "tracing-log"] }
 tracing-opentelemetry = "0.21.0"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "std"] }
-axum-tracing-opentelemetry = "0.13.1"
+
 # -- Test
 serial_test = "2"
 
