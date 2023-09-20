@@ -3,6 +3,7 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use tracing::debug;
+use utoipa::ToSchema;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -104,12 +105,16 @@ impl Error {
     }
 }
 
-#[derive(Debug, Serialize, strum_macros::AsRefStr)]
+#[derive(Debug, Serialize, strum_macros::AsRefStr, ToSchema)]
 #[serde(tag = "message", content = "detail")]
 #[allow(non_camel_case_types)]
 pub enum ClientError {
     LOGIN_FAIL,
     NO_AUTH,
-    ENTITY_NOT_FOUND { entity: &'static str, id: i64 },
+    #[schema(example = 34)]
+    ENTITY_NOT_FOUND {
+        entity: &'static str,
+        id: i64,
+    },
     SERVICE_ERROR,
 }

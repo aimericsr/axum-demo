@@ -6,10 +6,10 @@ use crate::web::{self, remove_token_cookie, Error, Result};
 use axum::extract::State;
 use axum::routing::post;
 use axum::{Json, Router};
-use serde::Deserialize;
-use serde_json::{json, Value};
+use serde::{Deserialize, Serialize};
 use tower_cookies::Cookies;
 use tracing::debug;
+use utoipa::{IntoParams, ToSchema};
 
 pub fn routes(mm: ModelManager) -> Router {
     Router::new()
@@ -18,11 +18,43 @@ pub fn routes(mm: ModelManager) -> Router {
         .with_state(mm)
 }
 
+// region:    --- Structs
+#[derive(Serialize, ToSchema)]
+pub struct LoginResponse {
+    result: LoginResponseResult,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct LoginResponseResult {
+    success: bool,
+}
+// endregion: --- Structs
+
+// region:    --- Login
+#[derive(Debug, Deserialize, ToSchema)]
+pub(super) struct LoginPayload {
+    username: String,
+    pwd: String,
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/login",
+    request_body = LoginPayload,
+    responses(
+        (status = 200, description = "Login successfully", body = LoginResponse),
+        (status = 403, description = "Login Fail"),
+        (status = 500, description = "Internal Server Error")
+    ),
+    security(
+        ("api_key" = ["aaa","bb"])
+    )
+)]
 async fn api_login(
     State(mm): State<ModelManager>,
     cookies: Cookies,
     Json(payload): Json<LoginPayload>,
-) -> Result<Json<Value>> {
+) -> Result<Json<LoginResponse>> {
     debug!("{:<12} - api_login", "HANDLER");
 
     let LoginPayload {
@@ -54,27 +86,36 @@ async fn api_login(
     // -- Set web token.
     web::set_token_cookie(&cookies, &user.username, &user.token_salt.to_string())?;
 
-    // Create the success body.
-    let body = Json(json!({
-        "result": {
-            "success": true
-        }
-    }));
+    let body = Json(LoginResponse {
+        result: LoginResponseResult { success: true },
+    });
 
     Ok(body)
 }
 
-#[derive(Debug, Deserialize)]
-struct LoginPayload {
-    username: String,
-    pwd: String,
-}
+// endregion:    --- Login
 
 // region:    --- Logoff
+#[derive(Debug, Deserialize, ToSchema, IntoParams)]
+pub struct LogoffPayload {
+    logoff: bool,
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/logoff",
+    params(
+        LogoffPayload
+    ),
+    responses(
+        (status = 200, description = "Logoff succesful",  body = LoginResponse),
+        (status = 500, description = "Internal Server Error")
+    )
+)]
 async fn api_logoff_handler(
     cookies: Cookies,
     Json(payload): Json<LogoffPayload>,
-) -> Result<Json<Value>> {
+) -> Result<Json<LoginResponse>> {
     debug!("{:<12} - api_logoff_handler", "HANDLER");
     let should_logoff = payload.logoff;
 
@@ -83,17 +124,12 @@ async fn api_logoff_handler(
     }
 
     // Create the success body.
-    let body = Json(json!({
-        "result": {
-            "logged_off": should_logoff
-        }
-    }));
+    let body = Json(LoginResponse {
+        result: LoginResponseResult {
+            success: should_logoff,
+        },
+    });
 
     Ok(body)
-}
-
-#[derive(Debug, Deserialize)]
-struct LogoffPayload {
-    logoff: bool,
 }
 // endregion: --- Logoff
