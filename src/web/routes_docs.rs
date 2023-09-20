@@ -9,12 +9,12 @@ use utoipa_swagger_ui::SwaggerUi;
     info(description = "My Api description"),
     paths(
         // Hello
-        crate::web::routes_hello::handler_hello,
-        crate::web::routes_hello::handler_hello_2,
+        crate::web::rest::routes_hello::handler_hello,
+        crate::web::rest::routes_hello::handler_hello_2,
 
         // Login
-        crate::web::routes_login::api_login,
-        crate::web::routes_login::api_logoff_handler,
+        crate::web::rest::routes_login::api_login,
+        crate::web::rest::routes_login::api_logoff_handler,
     ),
     components(
         schemas(crate::web::ClientError, 

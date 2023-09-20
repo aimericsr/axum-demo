@@ -32,7 +32,7 @@ pub struct LoginResponseResult {
 
 // region:    --- Login
 #[derive(Debug, Deserialize, ToSchema)]
-pub(super) struct LoginPayload {
+pub struct LoginPayload {
     username: String,
     pwd: String,
 }
