@@ -40,11 +40,14 @@ metrics-exporter-prometheus = "0.12.1"
 sysinfo = "0.27.1"
 # -- OpenTelemetry
 opentelemetry = {version = "0.20.0", features = ["rt-tokio"]}
+opentelemetry_sdk ={version = "0.20.0", features = ["rt-tokio"] }
 opentelemetry-jaeger = {version = "0.19.0", features = ["rt-tokio"]}
+opentelemetry-otlp = {version = "0.13.0", features = ["http-proto", "reqwest-client"]}
 # -- Tracing
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["std", "env-filter", "json", "fmt", "tracing-log"] }
 tracing-opentelemetry = "0.21.0"
+tonic = "0.10.0"
 
 # -- Test
 serial_test = "2"

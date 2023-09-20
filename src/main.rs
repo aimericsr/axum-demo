@@ -11,7 +11,6 @@ mod web;
 
 pub mod _dev_utils;
 pub use self::error::{Error, Result};
-use ::log::error;
 pub use config::config;
 use tracing_subscriber::fmt::format;
 use tracing_subscriber::Layer;
@@ -121,7 +120,6 @@ async fn main() -> Result<()> {
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     info!("LISTENING on {addr}\n");
 
-    error!("LOG");
     axum::Server::bind(&addr)
         .serve(routes_all.into_make_service())
         .await
