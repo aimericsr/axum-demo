@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8080:8080"
+  prometheus:
+    image: "prom/prometheus:v2.47.0"
+    ports:
+      - "9090:9090"
+    volumes:
+      - /Users/aimericsorin/Documents/Techno/Rust/axum-demo/config/prometheus.yml:/etc/prometheus/prometheus.yml
+  postgres:
+    image: "postgres:15"
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: "welcome"

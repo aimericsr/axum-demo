@@ -20,6 +20,7 @@ COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/axum-demo /usr
 # COPY firebase-key.json firebase-key.json
 # ENV APP_ENVIRONMENT production
 COPY .cargo/config.toml /usr/local/bin/.cargo/config.toml
+COPY sql /usr/local/bin/sql
 ENV SERVICE_WEB_FOLDER static
 ENV RUST_LOG=debug 
 USER myuser
