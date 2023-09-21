@@ -11,7 +11,7 @@ axum = { version = "0.6", features = ["macros"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_with = "3"
-tower-http = { version = "0.4", features = ["fs"] }
+tower-http = { version = "0.4", features = ["fs", "timeout", "cors"] }
 tower-cookies = "0.9"
 lazy-regex = "2"
 async-trait = "0.1"

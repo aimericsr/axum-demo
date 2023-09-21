@@ -11,30 +11,41 @@ use opentelemetry_sdk::{metrics::MeterProvider, runtime, trace as sdktrace, Reso
 use std::env;
 use std::fmt::Display;
 use tonic::metadata::MetadataMap;
+use tracing::Subscriber;
+use tracing_opentelemetry::OpenTelemetryLayer;
+use tracing_subscriber::fmt::format::{Format, Pretty};
+use tracing_subscriber::fmt::layer;
+use tracing_subscriber::fmt::MakeWriter;
+use tracing_subscriber::layer::Layered;
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::{layer::SubscriberExt, Registry};
+use tracing_subscriber::{EnvFilter, Layer};
+
+use crate::config;
 
 // -- TODO: See if we can use the classic OpenTelemetry exporter insted of the Jaeger one
 
 struct JaegerConfig {
     jaeger_agent_host: String,
-    jaeger_agent_port: String,
+    jaeger_agent_port: i64,
     jaeger_tracing_service_name: String,
 }
 
-pub fn create_tracer_from_env() -> Option<sdktrace::Tracer> {
-    let jaeger_enabled: bool = env::var("JAEGER_ENABLED")
-        .unwrap_or_else(|_| "false".into())
-        .parse()
-        .unwrap();
+pub fn get_subscriber(env_filter: String) {
+    let env_filter =
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(env_filter));
+    let config = get_jaeger_config_from_env();
+    let tracer = init_optl_tracer(config);
 
-    if jaeger_enabled {
-        let config = get_jaeger_config_from_env();
-        Some(init_tracer(config))
-    } else {
-        None
-    }
+    Registry::default()
+        .with(env_filter)
+        .with(tracing_subscriber::fmt::layer().json())
+        .with(tracing_opentelemetry::layer().with_tracer(tracer))
+        .try_init()
+        .expect("Failed");
 }
 
-fn init_tracer(config: JaegerConfig) -> sdktrace::Tracer {
+fn init_optl_tracer(config: JaegerConfig) -> sdktrace::Tracer {
     global::set_text_map_propagator(TraceContextPropagator::new());
 
     // Metadata
@@ -74,9 +85,8 @@ fn init_tracer(config: JaegerConfig) -> sdktrace::Tracer {
 
 fn get_jaeger_config_from_env() -> JaegerConfig {
     JaegerConfig {
-        jaeger_agent_host: env::var("JAEGER_AGENT_HOST").unwrap_or_else(|_| "localhost".into()),
-        jaeger_agent_port: env::var("JAEGER_AGENT_PORT").unwrap_or_else(|_| "4317".into()),
-        jaeger_tracing_service_name: env::var("TRACING_SERVICE_NAME")
-            .unwrap_or_else(|_| "axum-graphql".into()),
+        jaeger_agent_host: config().JAEGER_AGENT_HOST.clone(),
+        jaeger_agent_port: config().JAEGER_AGENT_PORT.clone(),
+        jaeger_tracing_service_name: config().TRACING_SERVICE_NAME.clone(),
     }
 }

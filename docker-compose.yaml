@@ -1,44 +1,19 @@
 version: '3.8'
 
 services:
-  # web:
-  #   build: .
-  #   ports:
-  #     - 8080:8080
   prometheus:
     image: prom/prometheus:v2.47.0
     ports:
       - 9090:9090
     volumes:
-      - /Users/aimericsorin/Documents/Techno/Rust/axum-demo/config/prometheus.yml:/etc/prometheus/prometheus.yml
+     # - /Users/aimericsorin/Documents/Techno/Rust/axum-demo/config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ${ABSOLUTE_PATH}/config/prometheus.yml:/etc/prometheus/prometheus.yml
   db:
     image: postgres:15
     ports:
       - 5432:5432
     environment:
       POSTGRES_PASSWORD: "welcome"
-
-  # jaeger-all-in-one:
-  #   image: jaegertracing/all-in-one:latest
-  #   ports:
-  #     - "16686:16686"
-  #     - "14268"
-  #     - "14250"
-
-  # Collector
-  # otel-collector:
-  #   image: otel/opentelemetry-collector:latest
-  #   command: ["--config=/etc/otel-collector-config.yaml", "${OTELCOL_ARGS}"]
-  #   volumes:
-  #     - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
-  #   ports:
-  #     - "1888:1888"   # pprof extension
-  #     - "13133:13133" # health_check extension
-  #     - "4317:4317"   # OTLP gRPC receiver
-  #     - "4318:4318"   # OTLP HTTP receiver
-  #     - "55670:55679" # zpages extension
-  #   depends_on:
-  #     - jaeger-all-in-one
   jeager:
     image: jaegertracing/all-in-one:1.49
     ports:
@@ -58,8 +33,9 @@ services:
     environment:
       COLLECTOR_ZIPKIN_HTTP_PORT: "9411"
       COLLECTOR_OTLP_ENABLED: true
-  # otel-collector:
-  #   image: otel/opentelemetry-collector:latest
+  # web:
+  #   build: .
   #   ports:
-  #     - 4317:4317
-    
+  #     - 8080:8080
+ 
+# export ABSOLUTE_PATH=$(pwd)

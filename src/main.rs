@@ -11,84 +11,41 @@ mod web;
 
 pub mod _dev_utils;
 pub use self::error::{Error, Result};
+use axum::http::HeaderValue;
+use axum::http::Method;
 pub use config::config;
-use tracing_subscriber::fmt::format;
-use tracing_subscriber::Layer;
+use tokio::signal;
+use tower_http::timeout::TimeoutLayer;
+use tracing::Level;
 
 use crate::model::ModelManager;
-use crate::observability::tracing::create_tracer_from_env;
+use crate::observability::tracing::get_subscriber;
 use crate::web::mw_auth::mw_ctx_require;
 use crate::web::mw_res_map::mw_res_map;
-use axum::routing::get;
-use axum::Json;
-use axum_tracing_opentelemetry::middleware::OtelAxumLayer;
-use axum_tracing_opentelemetry::middleware::OtelInResponseLayer;
-use axum_tracing_opentelemetry::opentelemetry_tracing_layer;
-use serde_json::json;
-use tracing::Level;
-use tracing_subscriber::FmtSubscriber;
-use tracing_subscriber::{fmt, Registry};
-
+use crate::web::rest::routes_health::routes as routes_health;
+use crate::web::rest::routes_hello::routes as routes_hello;
+use crate::web::rest::routes_login::routes as routes_login;
 use crate::web::rest::routes_prometheus::routes as routes_prometheus;
+use crate::web::rest::routes_static::serve_dir as routes_static;
+use crate::web::routes_docs::routes as routes_docs;
 use crate::web::rpc;
+
 use axum::middleware;
 use axum::Router;
-use std::fmt::Debug;
-use std::fs::File;
+use axum_tracing_opentelemetry::middleware::OtelAxumLayer;
+use axum_tracing_opentelemetry::middleware::OtelInResponseLayer;
 use std::net::SocketAddr;
+use std::time::Duration;
 use tower_cookies::CookieManagerLayer;
+use tower_http::cors::CorsLayer;
 use tracing::info;
-use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::util::SubscriberInitExt;
-use tracing_subscriber::EnvFilter;
-use web::rest::routes_hello::routes as routes_hello;
-use web::rest::routes_login::routes as routes_login;
-use web::rest::routes_static::serve_dir as routes_static;
-use web::routes_docs::routes as routes_docs;
+
 // endregion: --- Modules
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // Tracing
-
-    // let subscriber = FmtSubscriber::builder()
-    //     // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
-    //     // will be written to stdout.
-    //     .with_max_level(Level::INFO)
-    //     // completes the builder.
-    //     .finish();
-
-    // tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-
-    // tracing_subscriber::fmt()
-    //     .with_env_filter(EnvFilter::from_default_env())
-    //     .init();
-
-    let file = File::create("test.txt").expect("Not file found");
-
-    let fmt_layer = fmt::layer().with_target(false);
-
-    let env_filter = tracing::Level::INFO.as_str();
-    let env_filter =
-        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(env_filter));
-
-    let registry = Registry::default()
-        .with(fmt_layer)
-        .with(env_filter)
-        .with(tracing_subscriber::fmt::layer().pretty());
-
-    match create_tracer_from_env() {
-        Some(tracer) => registry
-            // Add Layer to format and send trace to OpenTelemetry
-            .with(tracing_opentelemetry::layer().with_tracer(tracer))
-            .try_init()
-            .expect("Failed to register tracer with registry and jaeger"),
-        None => registry
-            .try_init()
-            .expect("Failed to register tracer with registry and no jaeger"),
-    }
-
-    //init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()?;
+    get_subscriber(Level::INFO.to_string());
 
     // -- FOR DEV ONLY
     _dev_utils::init_dev().await;
@@ -115,6 +72,12 @@ async fn main() -> Result<()> {
         .layer(OtelInResponseLayer::default())
         //start OpenTelemetry trace on incoming request
         .layer(OtelAxumLayer::default())
+        .layer(TimeoutLayer::new(Duration::from_secs(5)))
+        .layer(
+            CorsLayer::new()
+                .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
+                .allow_methods([Method::GET]),
+        )
         .fallback_service(routes_static());
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
@@ -122,29 +85,35 @@ async fn main() -> Result<()> {
 
     axum::Server::bind(&addr)
         .serve(routes_all.into_make_service())
+        .with_graceful_shutdown(shutdown_signal())
         .await
         .unwrap();
     Ok(())
 }
 
-fn routes_health() -> Router {
-    Router::new()
-        .route("/health/ready", get(health_ready))
-        .route("/health/live", get(health_live))
-        .route("/health", get(health))
-}
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
 
-async fn health_ready() -> Json<Vec<String>> {
-    info!("Health ready");
-    Json(vec!["ready".to_owned(), "true".to_owned()])
-}
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
 
-async fn health_live() -> Json<Vec<String>> {
-    info!("Health live");
-    Json(vec!["alive".to_owned(), "true".to_owned()])
-}
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
 
-async fn health() -> Json<Vec<String>> {
-    info!("Health");
-    Json(vec!["general".to_owned(), "true".to_owned()])
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
+
+    info!("signal received, starting graceful shutdown");
+    opentelemetry::global::shutdown_tracer_provider();
 }

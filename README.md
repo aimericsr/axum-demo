@@ -82,3 +82,19 @@ Prometheuse : docker run -d \
 
 Jaeger :
 docker run -d -p6831:6831/udp -p6832:6832/udp -p16686:16686 -p14268:14268 jaegertracing/all-in-one:1.6
+
+Features : 
+Timout
+CORS
+Tracing / metrics export to jeager / prometheus
+Helth check routes
+OpenAPI docs
+Rest Routes
+RPC Routes
+Auth with cookies and jwt
+Serve static file 
+Graceful Shutdown for sending last traces
+
+TO Do:
+add more filter to tracing
+add more test

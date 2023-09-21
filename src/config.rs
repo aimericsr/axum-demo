@@ -22,6 +22,11 @@ pub struct Config {
     pub TOKEN_KEY: Vec<u8>,
     pub TOKEN_DURATION_SEC: f64,
 
+    // -- Jaeger
+    pub JAEGER_AGENT_HOST: String,
+    pub JAEGER_AGENT_PORT: i64,
+    pub TRACING_SERVICE_NAME: String,
+
     // -- Db
     pub DB_URL: String,
 
@@ -37,6 +42,11 @@ impl Config {
 
             TOKEN_KEY: get_env_b64u_as_u8s("SERVICE_TOKEN_KEY")?,
             TOKEN_DURATION_SEC: get_env_parse("SERVICE_TOKEN_DURATION_SEC")?,
+
+            // -- Jaeger
+            JAEGER_AGENT_HOST: get_env("JAEGER_AGENT_HOST")?,
+            JAEGER_AGENT_PORT: get_env_parse("JAEGER_AGENT_PORT")?,
+            TRACING_SERVICE_NAME: get_env("TRACING_SERVICE_NAME")?,
 
             // -- Db
             DB_URL: get_env("SERVICE_DB_URL")?,
