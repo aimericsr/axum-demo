@@ -10,7 +10,7 @@ use utoipa_swagger_ui::SwaggerUi;
     paths(
         // Hello
         crate::web::rest::routes_hello::handler_hello,
-        crate::web::rest::routes_hello::handler_hello_2,
+        crate::web::rest::routes_hello::handler_hello_greeting,
 
         // Login
         crate::web::rest::routes_login::api_login,

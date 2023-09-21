@@ -5,7 +5,6 @@ use opentelemetry::{global, runtime::Tokio, sdk::propagation::TraceContextPropag
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::trace::{BatchConfig, RandomIdGenerator};
 use opentelemetry_sdk::{trace as sdktrace, Resource};
-use tonic::metadata::MetadataMap;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::{layer::SubscriberExt, Registry};
@@ -28,17 +27,12 @@ pub fn get_subscriber(env_filter: String) {
 fn init_optl_tracer() -> sdktrace::Tracer {
     global::set_text_map_propagator(TraceContextPropagator::new());
 
-    // Metadata
-    let mut map = MetadataMap::with_capacity(1);
-    map.insert("x-host", "example.com".parse().unwrap());
-
     opentelemetry_otlp::new_pipeline()
         .tracing()
         // where to send the traces
         .with_exporter(
             opentelemetry_otlp::new_exporter()
                 .tonic()
-                //.with_metadata(map)
                 .with_endpoint(format!(
                     "http://{}:{}",
                     &config().jeager.agent_host,
@@ -63,11 +57,3 @@ fn init_optl_tracer() -> sdktrace::Tracer {
         .install_batch(Tokio)
         .expect("pipeline install error")
 }
-
-// fn get_jaeger_config_from_env() -> JaegerConfig {
-//     JaegerConfig {
-//         jaeger_agent_host: config().JAEGER_AGENT_HOST.clone(),
-//         jaeger_agent_port: config().JAEGER_AGENT_PORT.clone(),
-//         jaeger_tracing_service_name: config().TRACING_SERVICE_NAME.clone(),
-//     }
-// }

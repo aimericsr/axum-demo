@@ -12,9 +12,13 @@ use tracing::debug;
 use utoipa::{IntoParams, ToSchema};
 
 pub fn routes(mm: ModelManager) -> Router {
+    Router::new().nest("/api", sub_routes(mm))
+}
+
+fn sub_routes(mm: ModelManager) -> Router {
     Router::new()
-        .route("/api/login", post(api_login))
-        .route("/api/logoff", post(api_logoff_handler))
+        .route("/login", post(api_login))
+        .route("/logoff", post(api_logoff_handler))
         .with_state(mm)
 }
 

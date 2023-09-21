@@ -10,7 +10,7 @@ use tracing::debug;
 use uuid::Uuid;
 use web::Error;
 
-#[tracing::instrument(name = "Generate response")]
+#[tracing::instrument]
 pub async fn mw_res_map(ctx: Option<Ctx>, uri: Uri, req_method: Method, res: Response) -> Response {
     debug!("{:<12} - main_response_mapper", "RES_MAPPER");
     let uuid = Uuid::new_v4();

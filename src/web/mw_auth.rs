@@ -17,6 +17,7 @@ use tracing::debug;
 use super::set_token_cookie;
 
 #[allow(dead_code)] // For now, until we have the rpc.
+#[tracing::instrument(skip(ctx, req, next))]
 pub async fn mw_ctx_require<B>(
     ctx: Result<Ctx>,
     req: Request<B>,
@@ -30,6 +31,7 @@ pub async fn mw_ctx_require<B>(
 }
 
 // Save info in the request extensions
+#[tracing::instrument(skip(mm, cookies, req, next))]
 pub async fn mw_ctx_resolve<B>(
     mm: State<ModelManager>,
     cookies: Cookies,
@@ -51,6 +53,7 @@ pub async fn mw_ctx_resolve<B>(
     Ok(next.run(req).await)
 }
 
+#[tracing::instrument(skip(mm, cookies))]
 async fn _ctx_resolve(mm: State<ModelManager>, cookies: &Cookies) -> CtxExtResult {
     // -- Get Token String
     let token = cookies

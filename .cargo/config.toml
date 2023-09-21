@@ -10,7 +10,7 @@ linker = "x86_64-linux-gnu-gcc"
 
 # Scope down tracing, to filter out external lib tracing.
 #RUST_LOG="trace,axum_demo=trace,tower_http=error,hyper=error,otel_tracing=trace"
-RUST_LOG="info"
+RUST_LOG="trace,sqlx::query=error,hyper=error,h2=error,tokio_util=error,tower=error,tonic=info"
 
 # -- Service Environment Variables
 # IMPORTANT: 

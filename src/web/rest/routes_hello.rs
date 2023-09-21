@@ -8,9 +8,13 @@ use serde::Deserialize;
 use tracing::debug;
 
 pub fn routes() -> Router {
+    Router::new().nest("/hello", sub_routes())
+}
+
+fn sub_routes() -> Router {
     Router::new()
-        .route("/hello", get(handler_hello))
-        .route("/hello2/:name", get(handler_hello_2))
+        .route("/", get(handler_hello))
+        .route("/:name", get(handler_hello_greeting))
 }
 
 #[utoipa::path(
@@ -33,7 +37,7 @@ pub struct HelloParams {
 
 #[utoipa::path(
     get,
-    path = "/hello2/{name}",
+    path = "/hello/{name}",
     params(
         ("name" = String, Path, description = "Name to greet")
     ),
@@ -41,7 +45,7 @@ pub struct HelloParams {
         (status = 200, description = "Greetings with the name provided ", example = "Hello <strong>World</strong>")
     )
 )]
-async fn handler_hello_2(Path(name): Path<String>) -> impl IntoResponse {
+async fn handler_hello_greeting(Path(name): Path<String>) -> impl IntoResponse {
     debug!("{:<12} - handler_hello2 - {name:?}", "HANDLER");
 
     Html(format!("Hello2 <strong>{name}</strong>"))
