@@ -1,4 +1,5 @@
 use crate::{Error, Result};
+use secrecy::Secret;
 use std::env;
 use std::str::FromStr;
 use std::sync::OnceLock;
@@ -14,45 +15,75 @@ pub fn config() -> &'static Config {
     })
 }
 
-#[allow(non_snake_case)]
+// #[allow(non_snake_case)]
+// pub struct Config {
+//     // -- Crypt
+//     pub PWD_KEY: Vec<u8>,
+//     pub TOKEN_KEY: Vec<u8>,
+//     pub TOKEN_DURATION_SEC: f64,
+
+//     // -- Jaeger
+//     pub JAEGER_AGENT_HOST: String,
+//     pub JAEGER_AGENT_PORT: i64,
+//     pub TRACING_SERVICE_NAME: String,
+
+//     // -- Db
+//     pub DB_URL: Secret<String>,
+
+//     // -- Web
+//     pub WEB_FOLDER: String,
+// }
+
 pub struct Config {
-    // -- Crypt
-    pub PWD_KEY: Vec<u8>,
+    pub application: ApplicationSettings,
+    pub postgres: Postgres,
+    pub jeager: Jaeger,
+    pub crypt: Crypt,
+}
 
-    pub TOKEN_KEY: Vec<u8>,
-    pub TOKEN_DURATION_SEC: f64,
+pub struct ApplicationSettings {
+    pub host: String,
+    pub port: u16,
+    pub web_folder: String,
+}
 
-    // -- Jaeger
-    pub JAEGER_AGENT_HOST: String,
-    pub JAEGER_AGENT_PORT: i64,
-    pub TRACING_SERVICE_NAME: String,
+pub struct Postgres {
+    pub db_url: Secret<String>,
+}
 
-    // -- Db
-    pub DB_URL: String,
+pub struct Crypt {
+    pub pwd_key: Vec<u8>,
+    pub token_key: Vec<u8>,
+    pub token_duration_sec: f64,
+}
 
-    // -- Web
-    pub WEB_FOLDER: String,
+pub struct Jaeger {
+    pub agent_host: String,
+    pub agent_port: i64,
+    pub tracing_service_name: String,
 }
 
 impl Config {
     fn load_from_env() -> Result<Config> {
         Ok(Config {
-            // -- Crypt
-            PWD_KEY: get_env_b64u_as_u8s("SERVICE_PWD_KEY")?,
-
-            TOKEN_KEY: get_env_b64u_as_u8s("SERVICE_TOKEN_KEY")?,
-            TOKEN_DURATION_SEC: get_env_parse("SERVICE_TOKEN_DURATION_SEC")?,
-
-            // -- Jaeger
-            JAEGER_AGENT_HOST: get_env("JAEGER_AGENT_HOST")?,
-            JAEGER_AGENT_PORT: get_env_parse("JAEGER_AGENT_PORT")?,
-            TRACING_SERVICE_NAME: get_env("TRACING_SERVICE_NAME")?,
-
-            // -- Db
-            DB_URL: get_env("SERVICE_DB_URL")?,
-
-            // -- Web
-            WEB_FOLDER: get_env("SERVICE_WEB_FOLDER")?,
+            application: ApplicationSettings {
+                host: get_env("APP_HOST")?,
+                port: get_env_parse("APP_PORT")?,
+                web_folder: get_env("APP_WEB_FOLDER")?,
+            },
+            postgres: Postgres {
+                db_url: get_env("SERVICE_DB_URL")?.into(),
+            },
+            jeager: Jaeger {
+                agent_host: get_env("JAEGER_AGENT_HOST")?,
+                agent_port: get_env_parse("JAEGER_AGENT_PORT")?,
+                tracing_service_name: get_env("TRACING_SERVICE_NAME")?,
+            },
+            crypt: Crypt {
+                pwd_key: get_env_b64u_as_u8s("SERVICE_PWD_KEY")?,
+                token_key: get_env_b64u_as_u8s("SERVICE_TOKEN_KEY")?,
+                token_duration_sec: get_env_parse("SERVICE_TOKEN_DURATION_SEC")?,
+            },
         })
     }
 }

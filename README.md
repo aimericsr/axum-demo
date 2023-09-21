@@ -3,7 +3,7 @@
 ## Starting the DB
 
 ```sh
-# Start needed services
+# Start the needed services
 docker compose up -d
 
 ## Dev (REPL)
@@ -56,19 +56,21 @@ function test name : test*[function_name]*[ok/err]\_[case_tested]
 ## Features
 - Timout
 - CORS
-- Tracing / metrics export to jeager / - prometheus
+- Serve static file 
 - Helth check routes
-- OpenAPI docs
 - Rest Routes
 - RPC Routes
+- OpenAPI docs
 - Auth with cookies and jwt
-- Serve static file 
+- Tracing / metrics export to jeager / - prometheus
 - Graceful Shutdown for sending last traces
 
 TO Do:
 - add more filter to tracing
-- add more test
+- add more unit test / do integration test
+- load env variable only at the beginning
+- version the api (path or url ?)
 
 ## License
 
-This project is licensed under the [Apache License][license].
+This project is licensed under the [Apache License](LICENSE).

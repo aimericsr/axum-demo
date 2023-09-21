@@ -9,7 +9,8 @@ linker = "x86_64-linux-gnu-gcc"
 [env]
 
 # Scope down tracing, to filter out external lib tracing.
-RUST_LOG="trace,axum_demo=trace,tower_http=error,hyper=error,otel_tracing=trace"
+#RUST_LOG="trace,axum_demo=trace,tower_http=error,hyper=error,otel_tracing=trace"
+RUST_LOG="info"
 
 # -- Service Environment Variables
 # IMPORTANT: 
@@ -32,8 +33,9 @@ SERVICE_TOKEN_DURATION_SEC="1800" # 30 minutes
 
 # This will be relative to Cargo.toml
 # In deployed images, probably use absolute path.
-SERVICE_WEB_FOLDER="static/"
-JAEGER_ENABLED="true"
+APP_HOST="0.0.0.0"
+APP_PORT="8080"
+APP_WEB_FOLDER="static/"
 
 JAEGER_AGENT_HOST="localhost"
 JAEGER_AGENT_PORT="4317"
