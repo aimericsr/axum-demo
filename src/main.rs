@@ -38,7 +38,6 @@ use std::net::SocketAddr;
 use std::time::Duration;
 use tower_cookies::CookieManagerLayer;
 use tower_http::cors::CorsLayer;
-use tower_http::trace::TraceLayer;
 use tracing::info;
 
 // endregion: --- Modules
