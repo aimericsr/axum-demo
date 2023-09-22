@@ -1,6 +1,6 @@
+use super::{Error, Result};
 use crate::ctx::Ctx;
 use crate::model::ModelManager;
-use crate::model::{Error, Result};
 use sqlb::HasFields;
 use sqlx::postgres::PgRow;
 use sqlx::FromRow;

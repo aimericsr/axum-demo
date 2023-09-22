@@ -14,6 +14,7 @@ pub struct ModelManager {
 }
 
 impl ModelManager {
+    /// Setup the connection to the db
     pub async fn new() -> Result<Self> {
         let db = new_db_pool().await?;
         Ok(ModelManager { db })

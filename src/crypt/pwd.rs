@@ -1,5 +1,5 @@
 use super::{Error, Result};
-use crate::config;
+use crate::config::config;
 use crate::crypt::{encrypt_into_b64u, EncryptContent};
 
 /// Encrypt the password with the default scheme.

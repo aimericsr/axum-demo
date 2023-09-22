@@ -1,4 +1,4 @@
-use crate::{Error, Result};
+use crate::error::{Error, Result};
 use secrecy::Secret;
 use std::env;
 use std::str::FromStr;

@@ -9,11 +9,11 @@ use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::{layer::SubscriberExt, Registry};
 
-use crate::config;
+use crate::config::config;
 
-pub fn get_subscriber(env_filter: String) {
-    let env_filter =
-        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(env_filter));
+/// Init tracing for the lifetime of the application
+pub fn get_subscriber() {
+    let env_filter = EnvFilter::builder().try_from_env().unwrap();
     let tracer = init_optl_tracer();
 
     Registry::default()
@@ -21,9 +21,10 @@ pub fn get_subscriber(env_filter: String) {
         .with(tracing_subscriber::fmt::layer().json())
         .with(tracing_opentelemetry::layer().with_tracer(tracer))
         .try_init()
-        .expect("Failed");
+        .expect("Failed to init the registry");
 }
 
+/// Init the opentelemetry tracer
 fn init_optl_tracer() -> sdktrace::Tracer {
     global::set_text_map_propagator(TraceContextPropagator::new());
 
@@ -47,13 +48,13 @@ fn init_optl_tracer() -> sdktrace::Tracer {
                 .with_max_events_per_span(64)
                 .with_max_attributes_per_span(16)
                 .with_max_events_per_span(16)
-                .with_resource(Resource::new(vec![KeyValue::new(
-                    "service.name",
-                    &*config().jeager.tracing_service_name,
-                )])),
+                .with_resource(Resource::new(vec![
+                    KeyValue::new("service.name", &*config().jeager.tracing_service_name),
+                    KeyValue::new("service.version", "v1"),
+                ])),
         )
         // batch exporter instead of exporting each span synchronously on drop
         .with_batch_config(BatchConfig::default())
         .install_batch(Tokio)
-        .expect("pipeline install error")
+        .expect("Opentelemetry pipeline install error")
 }
