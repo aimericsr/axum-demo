@@ -74,3 +74,8 @@ TO Do:
 ## License
 
 This project is licensed under the [Apache License](LICENSE).
+
+## Rust : 
+
+brew install openssl@1.1
+cargo install cargo-edit
