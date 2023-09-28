@@ -22,7 +22,14 @@ RUST_LOG="trace,sqlx::query=error,hyper=error,h2=error,tokio_util=error,tower=er
 # Keys and passwords below are for localhost dev ONLY.
 # e.g., "welcome" type of passwords.
 # i.e., Encryption not needed.
-SERVICE_DB_URL="postgres://app_user:dev_only_pwd@localhost/app_db"
+#SERVICE_DB_URL="postgres://app_user:dev_only_pwd@localhost/app_db"
+
+SERVICE_DB_USER="postgres"
+SERVICE_DB_PASSWORD="welcome"
+SERVICE_DB_HOST="localhost"
+SERVICE_DB_NAME="app_db"
+SERVICE_DB_PORT="5432"
+
 
 SERVICE_PWD_KEY="CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA"
 

@@ -20,6 +20,6 @@ RUN cargo build --release --target x86_64-unknown-linux-musl --bin axum-demo
 FROM alpine AS runtime
 RUN addgroup -S myuser && adduser -S myuser -G myuser
 COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/axum-demo /usr/local/bin/
-COPY sql /usr/local/bin/sql
+COPY migrations /usr/local/bin/migrations
 USER myuser
 CMD ["/usr/local/bin/axum-demo"]

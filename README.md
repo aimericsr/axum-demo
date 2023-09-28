@@ -63,6 +63,7 @@ function test name : test*[function_name]*[ok/err]\_[case_tested]
 - OpenAPI docs
 - Auth with cookies and jwt
 - Tracing / metrics export to jeager / - prometheus
+- Visualize data with grafana
 - Graceful Shutdown for sending last traces
 
 TO Do:
@@ -71,6 +72,7 @@ TO Do:
 - load env variable only at the beginning
 - version the api (path or url ?)
 - handle db connection retry system
+- handle request body validation
 
 ## License
 
@@ -81,3 +83,5 @@ This project is licensed under the [Apache License](LICENSE).
 brew install openssl@1.1
 cargo install cargo-edit
 cargo install cargo-expand
+
+cargo install --version=0.7.2 sqlx-cli --no-default-features --features postgres 

@@ -7,6 +7,7 @@ services:
       - 5432:5432
     environment:
       POSTGRES_PASSWORD: "welcome"
+      POSTGRES_DB: "app_db"
   prometheus:
     image: prom/prometheus:v2.47.0
     ports:
@@ -40,11 +41,11 @@ services:
       GF_USERS_DEFAULT_THEME: "light"
     volumes:
       - ./config/grafana/provisioning:/etc/grafana/provisioning
-    
-  # web:
-  #   image: aimeric/axum-demo:v1.0.1
-  #   ports:
-  #     - 8080:8080
-  #   env_file:
-  #     - compose.env
+  web:
+    image: aimeric/axum-demo:v1.0.2
+    #build: .
+    ports:
+      - 8080:8080
+    env_file:
+      - compose.env
 

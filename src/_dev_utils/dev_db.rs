@@ -25,30 +25,30 @@ pub async fn init_dev_db() -> Result<(), Box<dyn std::error::Error>> {
     sleep(Duration::from_secs(5)).await;
     info!("{:<12} - init_dev_db()", "FOR-DEV-ONLY");
 
-    // -- Create the app_db/app_user with the postgres user.
-    {
-        let root_db = new_db_pool(PG_DEV_POSTGRES_URL).await?;
-        pexec(&root_db, SQL_RECREATE_DB).await?;
-    }
+    // // -- Create the app_db/app_user with the postgres user.
+    // {
+    //     let root_db = new_db_pool(PG_DEV_POSTGRES_URL).await?;
+    //     pexec(&root_db, SQL_RECREATE_DB).await?;
+    // }
 
-    // -- Get sql files.
-    let mut paths: Vec<PathBuf> = fs::read_dir(SQL_DIR)?
-        .filter_map(|entry| entry.ok().map(|e| e.path()))
-        .collect();
-    paths.sort();
+    // // -- Get sql files.
+    // let mut paths: Vec<PathBuf> = fs::read_dir(SQL_DIR)?
+    //     .filter_map(|entry| entry.ok().map(|e| e.path()))
+    //     .collect();
+    // paths.sort();
 
-    // -- SQL Execute each file.
-    let app_db = new_db_pool(PG_DEV_APP_URL).await?;
-    for path in paths {
-        if let Some(path) = path.to_str() {
-            let path = path.replace('\\', "/"); // for windows.
+    // // -- SQL Execute each file.
+    // let app_db = new_db_pool(PG_DEV_APP_URL).await?;
+    // for path in paths {
+    //     if let Some(path) = path.to_str() {
+    //         let path = path.replace('\\', "/"); // for windows.
 
-            // Only take the .sql and skip the SQL_RECREATE_DB
-            if path.ends_with(".sql") && path != SQL_RECREATE_DB {
-                pexec(&app_db, &path).await?;
-            }
-        }
-    }
+    //         // Only take the .sql and skip the SQL_RECREATE_DB
+    //         if path.ends_with(".sql") && path != SQL_RECREATE_DB {
+    //             pexec(&app_db, &path).await?;
+    //         }
+    //     }
+    // }
 
     // -- Init model layer.
     let mm = ModelManager::new().await?;

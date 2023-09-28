@@ -48,7 +48,11 @@ pub struct ApplicationSettings {
 }
 
 pub struct Postgres {
-    pub db_url: Secret<String>,
+    pub db_user: Secret<String>,
+    pub db_password: Secret<String>,
+    pub db_host: Secret<String>,
+    pub db_name: Secret<String>,
+    pub db_port: i64,
 }
 
 pub struct Crypt {
@@ -72,7 +76,11 @@ impl Config {
                 web_folder: get_env("APP_WEB_FOLDER")?,
             },
             postgres: Postgres {
-                db_url: get_env("SERVICE_DB_URL")?.into(),
+                db_user: get_env("SERVICE_DB_USER")?.into(),
+                db_password: get_env("SERVICE_DB_PASSWORD")?.into(),
+                db_host: get_env("SERVICE_DB_HOST")?.into(),
+                db_name: get_env("SERVICE_DB_NAME")?.into(),
+                db_port: get_env_parse("SERVICE_DB_PORT")?,
             },
             jeager: Jaeger {
                 agent_host: get_env("JAEGER_AGENT_HOST")?,

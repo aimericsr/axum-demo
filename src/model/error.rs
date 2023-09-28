@@ -1,6 +1,7 @@
 use crate::{crypt, model::store};
 use serde::Serialize;
 use serde_with::{serde_as, DisplayFromStr};
+use sqlx::migrate::MigrateError;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -15,6 +16,7 @@ pub enum Error {
 
     // - Externals
     Sqlx(#[serde_as(as = "DisplayFromStr")] sqlx::Error),
+    MigrateError(#[serde_as(as = "DisplayFromStr")] MigrateError),
 }
 
 // region:    --- Error Boilerplate

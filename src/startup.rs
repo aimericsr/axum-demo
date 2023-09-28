@@ -39,14 +39,17 @@ use tracing::info_span;
 pub async fn build() -> Result<()> {
     init_subscriber();
 
-    _dev_utils::init_dev().await;
-
+    //_dev_utils::init_dev().await;
+    info!("Create connection to db");
     let mm = ModelManager::new().await?;
+    info!("Creating migrations");
+    mm.clone().migrate().await?;
+    info!("Created migrations");
 
     let routes_all = routes(mm);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], config().application.port));
-    info!("LISTENING on {addr}\n");
+    info!("LISTENING on {addr}");
 
     axum::Server::bind(&addr)
         .serve(routes_all.into_make_service())
