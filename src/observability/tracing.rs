@@ -8,8 +8,8 @@ use opentelemetry_sdk::trace::{BatchConfig, RandomIdGenerator};
 use opentelemetry_sdk::{trace as sdktrace, Resource};
 use tracing::subscriber::set_global_default;
 use tracing::Subscriber;
+use tracing_subscriber::EnvFilter;
 use tracing_subscriber::{layer::SubscriberExt, Registry};
-use tracing_subscriber::{EnvFilter, Layer};
 
 use crate::config::config;
 

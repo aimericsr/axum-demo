@@ -1,7 +1,14 @@
-use axum::{extract::MatchedPath, http::Request, middleware::Next, response::IntoResponse};
+use axum::{
+    extract::MatchedPath,
+    http::{request, Request},
+    middleware::Next,
+    response::IntoResponse,
+};
+use metrics::{gauge, histogram, increment_counter};
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder, PrometheusHandle};
 use std::time::Instant;
-use sysinfo::{CpuExt, System, SystemExt};
+use sysinfo::{CpuExt, CpuRefreshKind, System, SystemExt};
+use tracing::info;
 
 const REQUEST_DURATION_METRIC_NAME: &str = "http_requests_duration_seconds";
 const MEMORY_USAGE_METRIC_NAME: &str = "memory_usage";
@@ -37,6 +44,7 @@ pub(crate) async fn track_metrics<B>(req: Request<B>, next: Next<B>) -> impl Int
     } else {
         req.uri().path().to_owned()
     };
+    let path_clone = path.clone();
     let method = req.method().clone();
 
     let response = next.run(req).await;
@@ -50,22 +58,25 @@ pub(crate) async fn track_metrics<B>(req: Request<B>, next: Next<B>) -> impl Int
         ("status", status),
     ];
 
-    let mut sys = System::new_all();
-    sys.refresh_all();
-
     // App metrics
-    metrics::increment_counter!("http_requests_total", &labels);
-    metrics::histogram!(REQUEST_DURATION_METRIC_NAME, latency, &labels);
+    increment_counter!("http_requests_total", &labels);
+    histogram!(REQUEST_DURATION_METRIC_NAME, latency, &labels);
 
-    // System metrics
-    metrics::gauge!(MEMORY_TOTAL_METRIC_NAME, sys.total_memory() as f64);
-    metrics::gauge!(MEMORY_USAGE_METRIC_NAME, sys.used_memory() as f64);
-    metrics::gauge!(MEMORY_FREE_METRIC_NAME, sys.free_memory() as f64);
-    metrics::gauge!(MEMORY_SWAP_METRIC_NAME, sys.used_swap() as f64);
-    metrics::gauge!(
-        CPU_USAGE_METRIC_NAME,
-        sys.global_cpu_info().cpu_usage() as f64
-    );
+    if path_clone.eq("/metrics") {
+        let mut sys = System::new();
+        sys.refresh_memory();
+        sys.refresh_cpu();
+
+        // System metrics
+        gauge!(MEMORY_TOTAL_METRIC_NAME, sys.total_memory() as f64);
+        gauge!(MEMORY_USAGE_METRIC_NAME, sys.used_memory() as f64);
+        gauge!(MEMORY_FREE_METRIC_NAME, sys.free_memory() as f64);
+        gauge!(MEMORY_SWAP_METRIC_NAME, sys.used_swap() as f64);
+        gauge!(
+            CPU_USAGE_METRIC_NAME,
+            sys.global_cpu_info().cpu_usage() as f64
+        );
+    }
 
     response
 }

@@ -4,6 +4,7 @@ use crate::_dev_utils;
 use crate::config::config;
 pub use crate::error::{Error, Result};
 use crate::model::ModelManager;
+use crate::observability::metrics::track_metrics;
 use crate::observability::tracing::init_subscriber;
 use crate::web;
 use crate::web::mw_auth::mw_ctx_require;
@@ -19,6 +20,7 @@ use axum::body::Body;
 use axum::http::HeaderValue;
 use axum::http::Method;
 use axum::http::Request;
+use axum::middleware;
 use axum::middleware::{from_fn, from_fn_with_state, map_response};
 use axum::Router;
 use axum_tracing_opentelemetry::middleware::OtelAxumLayer;
@@ -58,11 +60,11 @@ fn routes(mm: ModelManager) -> Router {
     let routes_rpc = rpc::routes(mm.clone()).route_layer(from_fn(mw_ctx_require));
 
     let routes_all = Router::new()
+        .merge(routes_prometheus())
         .merge(routes_docs())
         .merge(routes_login(mm.clone()))
         .merge(routes_hello())
         .merge(routes_health())
-        .merge(routes_prometheus())
         .nest("/api", routes_rpc)
         .layer(map_response(mw_res_map))
         // above CookieManagerLayer because we need it
@@ -79,6 +81,7 @@ fn routes(mm: ModelManager) -> Router {
             }),
         )
         .layer(RequestIdLayer)
+        .layer(middleware::from_fn(track_metrics))
         // include trace context as header into the response
         .layer(OtelInResponseLayer::default())
         //start OpenTelemetry trace on incoming request
