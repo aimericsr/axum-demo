@@ -43,7 +43,9 @@ pub struct LoginPayload {
 
 #[utoipa::path(
     post,
-    path = "/api/login",
+    context_path = "/api",
+    path = "/login",
+    tag = "account",
     request_body = LoginPayload,
     responses(
         (status = 200, description = "Login successfully", body = LoginResponse),
@@ -107,7 +109,9 @@ pub struct LogoffPayload {
 
 #[utoipa::path(
     post,
-    path = "/api/logoff",
+    context_path = "/api",
+    path = "/logoff",
+    tag = "account",
     params(
         LogoffPayload
     ),

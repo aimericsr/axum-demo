@@ -15,17 +15,26 @@ use utoipa_swagger_ui::SwaggerUi;
         // Login
         crate::web::rest::routes_login::api_login,
         crate::web::rest::routes_login::api_logoff_handler,
+
+         // Health Check
+         crate::web::rest::routes_health::health,
+         crate::web::rest::routes_health::health_ready,
+         crate::web::rest::routes_health::health_live,
     ),
     components(
-        schemas(crate::web::ClientError, 
+        schemas(
+            // Error 
+            crate::web::ClientError, 
+
+            // Login
             crate::web::rest::routes_login::LoginResponse, 
             crate::web::rest::routes_login::LoginResponseResult, 
             crate::web::rest::routes_login::LogoffPayload, 
             crate::web::rest::routes_login::LoginPayload)
     ),
-    tags(
-        (name = "test", description = "Test")
-    )
+    // tags(
+    //     (name = "test", description = "Test")
+    // )
 )]
 struct ApiDoc;
 

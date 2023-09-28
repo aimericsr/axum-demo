@@ -20,6 +20,7 @@ fn sub_routes() -> Router {
 #[utoipa::path(
     get,
     path = "/hello",
+    tag = "hello",
     responses(
         (status = 200, description = "Greetings with the name provided or default to World", example = "Hello <strong>World</strong>"),
     )
@@ -38,6 +39,7 @@ pub struct HelloParams {
 #[utoipa::path(
     get,
     path = "/hello/{name}",
+    tag = "hello",
     params(
         ("name" = String, Path, description = "Name to greet")
     ),
