@@ -6,15 +6,14 @@ services:
     ports:
       - 9090:9090
     volumes:
-     # - /Users/aimericsorin/Documents/Techno/Rust/axum-demo/config/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ${ABSOLUTE_PATH}/config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
   db:
     image: postgres:15
     ports:
       - 5432:5432
     environment:
       POSTGRES_PASSWORD: "welcome"
-  jeager:
+  jaeger:
     image: jaegertracing/all-in-one:1.49
     ports:
       # Agent
@@ -33,9 +32,19 @@ services:
     environment:
       COLLECTOR_ZIPKIN_HTTP_PORT: "9411"
       COLLECTOR_OTLP_ENABLED: true
+  grafana:
+    image: grafana/grafana:10.1.2
+    ports:
+      - 3000:3000
+    environment:
+      GF_USERS_DEFAULT_THEME: "light"
+    volumes:
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
+    
   # web:
-  #   build: .
+  #   image: aimeric/axum-demo:v1.0.1
   #   ports:
   #     - 8080:8080
- 
-# export ABSOLUTE_PATH=$(pwd)
+  #   env_file:
+  #     - compose.env
+

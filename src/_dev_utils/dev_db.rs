@@ -6,6 +6,7 @@ use sqlx::{Pool, Postgres};
 use std::fs;
 use std::path::PathBuf;
 use std::time::Duration;
+use tokio::time::sleep;
 use tracing::info;
 
 type Db = Pool<Postgres>;
@@ -21,6 +22,7 @@ const SQL_DIR: &str = "sql/dev_initial";
 const DEMO_PWD: &str = "welcome";
 
 pub async fn init_dev_db() -> Result<(), Box<dyn std::error::Error>> {
+    sleep(Duration::from_secs(5)).await;
     info!("{:<12} - init_dev_db()", "FOR-DEV-ONLY");
 
     // -- Create the app_db/app_user with the postgres user.

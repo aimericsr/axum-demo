@@ -70,6 +70,7 @@ TO Do:
 - add more unit test / do integration test
 - load env variable only at the beginning
 - version the api (path or url ?)
+- handle db connection retry system
 
 ## License
 
@@ -79,3 +80,4 @@ This project is licensed under the [Apache License](LICENSE).
 
 brew install openssl@1.1
 cargo install cargo-edit
+cargo install cargo-expand

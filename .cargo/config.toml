@@ -5,12 +5,12 @@
 [target.x86_64-unknown-linux-musl]
 linker = "x86_64-linux-gnu-gcc"
 
-# Environments variables set for all `cargo ...` commands.
+#Environments variables set for all `cargo ...` commands.
 [env]
 
 # Scope down tracing, to filter out external lib tracing.
 #RUST_LOG="trace,axum_demo=trace,tower_http=error,hyper=error,otel_tracing=trace"
-RUST_LOG="trace,sqlx::query=error,hyper=error,h2=error,tokio_util=error,tower=error,tonic=info"
+RUST_LOG="trace,sqlx::query=error,hyper=error,h2=error,tokio_util=error,tower=error,tonic=info,otel::setup=trace"
 
 # -- Service Environment Variables
 # IMPORTANT: 
@@ -40,3 +40,12 @@ APP_WEB_FOLDER="static/"
 JAEGER_AGENT_HOST="localhost"
 JAEGER_AGENT_PORT="4317"
 TRACING_SERVICE_NAME="axum-otpl"
+
+
+
+
+
+
+
+
+

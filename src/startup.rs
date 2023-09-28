@@ -4,7 +4,7 @@ use crate::_dev_utils;
 use crate::config::config;
 pub use crate::error::{Error, Result};
 use crate::model::ModelManager;
-use crate::observability::tracing::get_subscriber;
+use crate::observability::tracing::init_subscriber;
 use crate::web;
 use crate::web::mw_auth::mw_ctx_require;
 use crate::web::mw_res_map::mw_res_map;
@@ -35,7 +35,7 @@ use tracing::info;
 use tracing::info_span;
 
 pub async fn build() -> Result<()> {
-    get_subscriber();
+    init_subscriber();
 
     _dev_utils::init_dev().await;
 

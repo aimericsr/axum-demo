@@ -1,8 +1,8 @@
 [package]
 name = "axum-demo"
-version = "0.1.0"
+version = "1.0.1"
 edition = "2021"
-rust-version = "1.70"
+rust-version = "1.72"
 authors = ["Aimeric Sorin <aimeric.sorin@gmail.com>"]
 license = "Apache-2.0"
 description = "Simple rust web api to demonstrate axum framework capabilities. Based on https://github.com/rust10x/rust-web-app"
@@ -51,10 +51,10 @@ metrics = "0.21.1"
 metrics-exporter-prometheus = "0.12.1"
 sysinfo = "0.29.10"
 # -- OpenTelemetry
-axum-tracing-opentelemetry = "0.14.1"
 opentelemetry = { version = "0.20.0", features = ["rt-tokio"] }
 opentelemetry_sdk ={ version = "0.20.0", features = ["rt-tokio"] }
 opentelemetry-otlp = { version = "0.13.0", features = ["http-proto"] }
+axum-tracing-opentelemetry = "0.14.1"
 # -- Utils
 async-trait = "0.1.73"
 strum_macros = "0.25.2"
