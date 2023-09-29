@@ -11,7 +11,7 @@ The observability architecture is based on the official [exemple](https://opente
 
 ```sh
 # Start the needed services
-docker compose up -d
+docker compose --profile app up -d
 
 ## Dev (REPL)
 ```sh
@@ -96,4 +96,7 @@ cargo install --version=0.7.2 sqlx-cli --no-default-features --features postgres
 docker pull grafana/k6
 brew install k6
 
-curl -fsSL https://bun.sh/install | bash
+## Run load
+```sh
+docker-compose --profile load-test run k6 run -o experimental-prometheus-rw /scripts/script.js
+```

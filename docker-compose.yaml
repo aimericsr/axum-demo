@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   db:
+    profiles: ["app"]
     image: postgres:15
     ports:
       - 5432:5432
@@ -9,12 +10,18 @@ services:
       POSTGRES_PASSWORD: "welcome"
       POSTGRES_DB: "app_db"
   prometheus:
+    profiles: ["app"]
     image: prom/prometheus:v2.47.0
     ports:
       - 9090:9090
+    command:
+      - --web.enable-remote-write-receiver
+      - --enable-feature=native-histograms
+      - --config.file=/etc/prometheus/prometheus.yml
     volumes:
       - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
   jaeger:
+    profiles: ["app"]
     image: jaegertracing/all-in-one:1.49
     ports:
       # Query
@@ -25,18 +32,32 @@ services:
       COLLECTOR_ZIPKIN_HTTP_PORT: "9411"
       COLLECTOR_OTLP_ENABLED: true
   grafana:
+    profiles: ["app"]
     image: grafana/grafana:10.1.2
     ports:
       - 3000:3000
     environment:
       GF_USERS_DEFAULT_THEME: "light"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_BASIC_ENABLED: "false"
     volumes:
-      - ./config/grafana/provisioning:/etc/grafana/provisioning
+      - ./config/grafana:/etc/grafana/provisioning
   web:
+    profiles: ["app"]
     image: aimeric/axum-demo:v1.0.2
     #build: .
     ports:
       - 8080:8080
     env_file:
       - compose.env
+  k6:
+    profiles: ["load-test"]
+    image: grafana/k6:0.46.0
+    environment:
+      K6_PROMETHEUS_RW_SERVER_URL: "http://prometheus:9090/api/v1/write"
+      K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: "true"
+    volumes:
+      - ./k6:/scripts
+ 
 
