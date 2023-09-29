@@ -35,9 +35,13 @@ use tower_http::trace::TraceLayer;
 use tower_request_id::{RequestId, RequestIdLayer};
 use tracing::info;
 use tracing::info_span;
+use tracing::span;
+use tracing::Level;
 
 pub async fn build() -> Result<()> {
     init_subscriber();
+
+    let span = span!(Level::INFO, "startup_info").entered();
 
     //_dev_utils::init_dev().await;
     info!("Create connection to db");
@@ -50,6 +54,8 @@ pub async fn build() -> Result<()> {
 
     let addr = SocketAddr::from(([0, 0, 0, 0], config().application.port));
     info!("LISTENING on {addr}");
+
+    let _span = span.exit();
 
     axum::Server::bind(&addr)
         .serve(routes_all.into_make_service())
@@ -65,9 +71,9 @@ fn routes(mm: ModelManager) -> Router {
     let routes_all = Router::new()
         .merge(routes_prometheus())
         .merge(routes_docs())
-        .merge(routes_login(mm.clone()))
-        .merge(routes_hello())
         .merge(routes_health())
+        .merge(routes_hello())
+        .merge(routes_login(mm.clone()))
         .nest("/api", routes_rpc)
         .layer(map_response(mw_res_map))
         // above CookieManagerLayer because we need it

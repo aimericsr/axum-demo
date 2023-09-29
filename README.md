@@ -1,5 +1,12 @@
 # AwesomeApp rust-web-app
 
+
+## Web API to demonstrate axum-web capabilities
+
+
+The observability architecture is based on the official [exemple](https://opentelemetry.io/docs/demo/architecture/) of the opentelemetry website.
+
+
 ## Starting the DB
 
 ```sh
@@ -85,3 +92,8 @@ cargo install cargo-edit
 cargo install cargo-expand
 
 cargo install --version=0.7.2 sqlx-cli --no-default-features --features postgres 
+
+docker pull grafana/k6
+brew install k6
+
+curl -fsSL https://bun.sh/install | bash
