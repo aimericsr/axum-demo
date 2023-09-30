@@ -1,20 +1,39 @@
 import http from "k6/http";
-import { check } from "k6";
+import { check, group, sleep } from "k6";
 
-export let options = {
+export const options = {
     stages: [
-        // Ramp-up from 1 to 30 VUs in 30s
         { duration: "30s", target: 30 },
-
-        // Stay on 30 VUs for 60s
         { duration: "60s", target: 30 },
-
-        // Ramp-down from 30 to 0 VUs in 10s
         { duration: "10s", target: 0 }
-    ]
+    ],
+    thresholds: {
+        http_req_duration: ["p(95)<100", "p(90)<80"],
+        http_req_failed: ['rate<0.01'],
+    }
 };
 
 export default function() {
-    let res = http.get("http://web:8080/health");
-    check(res, { "status is 200": (r) => r.status === 200 });
+    const BASE_URL = 'http://web:8080'
+
+    group('health check', function () {
+        group("health check live", function() {
+            const res = http.get(`${BASE_URL}/health/live`);
+            check(res, {
+                "status is 200": (res) => res.status === 200,
+            });
+        });
+    
+        group("health check ready", function() {
+            const res = http.get(`${BASE_URL}/health/ready`);
+            check(res, {
+                "status is 200": (res) => res.status === 200,
+            });
+        });
+        sleep(0.3)
+    });
+
+    group('login', function () {
+        
+    });
 }

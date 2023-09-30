@@ -1,0 +1,253 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+spec:
+  selector:
+    app: postgres # Match the labels of the StatefulSet pods
+  ports:
+  - protocol: TCP
+    port: 5432 # PostgreSQL default port
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-statefulset
+spec:
+  replicas: 1 # Set the desired number of replicas
+  serviceName: "postgres" # A headless service to manage network identities
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_PASSWORD
+          value: "welcome"
+        - name: POSTGRES_DB
+          value: "app_db"
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus:v2.47.0
+        ports:
+        - containerPort: 9090
+        command:
+        - /bin/prometheus
+        - --config.file=/etc/prometheus/prometheus.yml
+        - --web.enable-remote-write-receiver
+        - --enable-feature=native-histograms
+        # volumeMounts:
+        # - name: prom-config
+        #   mountPath: /etc/prometheus/prometheus.yml
+      # volumes:
+      # - name: prom-config
+      #   configMap:
+      #     name: prometheus-config
+
+---
+
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: prometheus-config
+# data:
+#   prometheus.yml: |
+#     # Paste your Prometheus configuration here
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger
+spec:
+  selector:
+    matchLabels:
+      app: jaeger
+  template:
+    metadata:
+      labels:
+        app: jaeger
+    spec:
+      containers:
+      - name: jaeger
+        image: jaegertracing/all-in-one:1.49
+        ports:
+        - containerPort: 16686
+        - containerPort: 4317
+        env:
+        - name: COLLECTOR_ZIPKIN_HTTP_PORT
+          value: "9411"
+        - name: COLLECTOR_OTLP_ENABLED
+          value: "true"
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+spec:
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:10.1.2
+        ports:
+        - containerPort: 3000
+        env:
+        - name: GF_USERS_DEFAULT_THEME
+          value: "light"
+        - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+          value: "Admin"
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "true"
+        - name: GF_AUTH_BASIC_ENABLED
+          value: "false"
+          # volumeMounts:
+          # - name: grafana-config
+          #   mountPath: /etc/grafana/provisioning
+# volumes:
+#   - name: grafana-config
+#     configMap:
+#       name: grafana-config
+
+---
+
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: grafana-config
+# data:
+#   custom-grafana.ini: |
+#     # Custom Grafana configuration content here
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  selector:
+    app: web
+  ports:
+  - port: 60000
+    targetPort: 8080
+  type: LoadBalancer # You can change this to ClusterIP or NodePort as needed
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: nginx
+        image: aimeric/axum-demo:v1.0.2
+        ports:
+        - containerPort: 8080
+        env:
+        - name: RUST_LOG
+          value: "trace,sqlx::query=error,hyper=error,h2=error,tokio_util=error,tower=error,tonic=info"
+        - name: SERVICE_DB_USER
+          value: "postgres"
+        - name: SERVICE_DB_PASSWORD
+          value: "welcome"
+        - name: SERVICE_DB_HOST
+          value: "postgres-service.default.svc.cluster.local"
+        - name: SERVICE_DB_NAME
+          value: "app_db"
+        - name: SERVICE_DB_PORT
+          value: "5432"
+        - name: SERVICE_PWD_KEY
+          value: "CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA"
+        - name: SERVICE_TOKEN_KEY
+          value: "9FoHBmkyxbgu_xFoQK7e0jz3RMNVJWgfvbVn712FBNH9LLaAWS3CS6Zpcg6RveiObvCUb6a2z-uAiLjhLh2igw"
+        - name: SERVICE_TOKEN_DURATION_SEC
+          value: "1800"
+        - name: APP_HOST
+          value: "0.0.0.0"
+        - name: APP_PORT
+          value: "8080"
+        - name: APP_WEB_FOLDER
+          value: "static/"
+        - name: JAEGER_AGENT_HOST
+          value: "jaeger"
+        - name: JAEGER_AGENT_PORT
+          value: "4317"
+        - name: TRACING_SERVICE_NAME
+          value: "axum-otpl"
+
+
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: k6
+# spec:
+#   selector:
+#     matchLabels:
+#       app: k6
+#   template:
+#     metadata:
+#       labels:
+#         app: k6
+#     spec:
+#       containers:
+#       - name: k6
+#         image: grafana/k6:0.46.0
+#         env:
+#         - name: K6_PROMETHEUS_RW_SERVER_URL
+#           value: "http://prometheus:9090/api/v1/write"
+#         - name: K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM
+#           value: "true"
+#       volumeMounts:
+#       - name: k6-scripts
+#         mountPath: /scripts
+# volumes:
+#   - name: k6-scripts
+#     emptyDir: {}
+
+---

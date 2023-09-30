@@ -2,7 +2,8 @@
 #   https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
 
 apiVersion: 1
-
+# native dashboard --> https://grafana.com/grafana/dashboards/18030-k6-prometheus-native-histograms/
+#
 providers:
   # We're defining a directory from which to load file-based dashboards
   - name: 'prometheus'
