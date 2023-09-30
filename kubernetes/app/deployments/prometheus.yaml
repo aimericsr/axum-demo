@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: development
+spec:
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus:v2.47.0
+        ports:
+        - containerPort: 9090
+        command:
+        - /bin/prometheus
+        - --config.file=/etc/prometheus/prometheus.yml
+        - --web.enable-remote-write-receiver
+        - --enable-feature=native-histograms
+        # volumeMounts:
+        # - name: prom-config
+        #   mountPath: /etc/prometheus/prometheus.yml
+      # volumes:
+      # - name: prom-config
+      #   configMap:
+      #     name: prometheus-config

@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: axum-demo
+  namespace: development
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: axum-demo
+  template:
+    metadata:
+      labels:
+        app: axum-demo
+    spec:
+      containers:
+      - name: axum-demo
+        image: aimeric/axum-demo:v1.0.2
+        ports:
+        - containerPort: 8080
+        env:
+        - name: RUST_LOG
+          value: "trace,sqlx::query=error,hyper=error,h2=error,tokio_util=error,tower=error,tonic=info"
+        - name: SERVICE_DB_USER
+          value: "postgres"
+        - name: SERVICE_DB_PASSWORD
+          value: "welcome"
+        - name: SERVICE_DB_HOST
+          value: "postgres.development.svc.cluster.local"
+        - name: SERVICE_DB_NAME
+          value: "app_db"
+        - name: SERVICE_DB_PORT
+          value: "5432"
+        - name: SERVICE_PWD_KEY
+          value: "CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA"
+        - name: SERVICE_TOKEN_KEY
+          value: "9FoHBmkyxbgu_xFoQK7e0jz3RMNVJWgfvbVn712FBNH9LLaAWS3CS6Zpcg6RveiObvCUb6a2z-uAiLjhLh2igw"
+        - name: SERVICE_TOKEN_DURATION_SEC
+          value: "1800"
+        - name: APP_HOST
+          value: "0.0.0.0"
+        - name: APP_PORT
+          value: "8080"
+        - name: APP_WEB_FOLDER
+          value: "static/"
+        - name: JAEGER_AGENT_HOST
+          value: "jaeger.development.svc.cluster.local"
+        - name: JAEGER_AGENT_PORT
+          value: "4317"
+        - name: TRACING_SERVICE_NAME
+          value: "axum-otpl"

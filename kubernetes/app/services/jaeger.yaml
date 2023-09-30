@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger
+  namespace: development
+spec:
+  selector:
+    app: jaeger
+  ports:
+  - protocol: TCP
+    name: collector
+    port: 4317
+  - protocol: TCP
+    name: query
+    port: 16686
