@@ -131,18 +131,29 @@ minikube tunnel
 
 To use Ingress on local with a host add the following line to your /etc/hosts file: 127.0.0.1 <host-name> 
 
-## Helm
+## Lunch k8 cluster
 
 ```sh
+# Kubernetes
+kubectl apply -f kubernetes/app/namespaces/development.yaml 
+kubectl apply -R -f kubernetes/app/configmaps
+kubectl apply -R -f kubernetes/app/secrets
+kubectl apply -R -f kubernetes/app/services
+kubectl apply -R -f kubernetes/app/deployments
+kubectl apply -R -f kubernetes/app/statefulsets
+kubectl apply -R -f kubernetes/app/ingresses
+
+# Helm
+# Install Prometheus, Grafana and Postgres Exporter
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm search repo prometheus-community/kube-prometheus-stack --versions
 
-helm install prometheus prometheus-community/kube-prometheus-stack --version "51.2.0"
+helm install prometheus prometheus-community/kube-prometheus-stack --version "51.2.0" \
+     -f kubernetes/helm/kube-prometheus-stack/values.yaml \
+     --namespace=development
+
 helm install postgres-exporter prometheus-community/prometheus-postgres-exporter --version "5.1.0" \
-    -f kubernetes/app/statefulsets/values.yaml   
-
-helm upgrade postgres-exporter prometheus-community/prometheus-postgres-exporter --version "5.1.0" \
-    -f kubernetes/app/statefulsets/values.yaml   
+    -f kubernetes/helm/prometheus-postgres-exporter/values.yaml \
+     --namespace=development
 ```
 
 

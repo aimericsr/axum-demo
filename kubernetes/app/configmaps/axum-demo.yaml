@@ -11,7 +11,7 @@ data:
   app_host: "0.0.0.0"
   app_port: "8080"
   app_web_folder: "static/"
-  jaeger_agent_host: "jaeger"
+  jaeger_agent_host: "jaeger.development.svc.cluster.local"
   jaeger_agent_port: "4317"
   tracing_service_name: "axum-otpl"
   service_pwd_key: CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA

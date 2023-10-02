@@ -38,8 +38,8 @@ spec:
           httpGet:
             path: /health/live
             port: 8080
-          initialDelaySeconds: 3
-          periodSeconds: 3
+          initialDelaySeconds: 5
+          periodSeconds: 15
         ports:
         - containerPort: 8080
         env:

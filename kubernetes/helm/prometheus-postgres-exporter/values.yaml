@@ -5,7 +5,7 @@ serviceMonitor:
 
 config:
   datasource:
-    host: 'postgres.default.svc.cluster.local'
+    host: 'postgres.development.svc.cluster.local'
     userSecret:
       name: axum-demo
       key: service_db_user
