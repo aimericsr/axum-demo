@@ -7,6 +7,8 @@ spec:
   selector:
     app: axum-demo
   ports:
-  - port: 60000
+  - name: axum-demo
+    port: 80
+    protocol: TCP
     targetPort: 8080
-  type: LoadBalancer
+

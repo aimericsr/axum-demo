@@ -7,9 +7,9 @@ spec:
   selector:
     app: jaeger
   ports:
-  - protocol: TCP
-    name: collector
+  - name: collector
+    protocol: TCP
     port: 4317
-  - protocol: TCP
-    name: query
+  - name: query
+    protocol: TCP
     port: 16686

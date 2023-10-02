@@ -3,8 +3,16 @@ kind: Deployment
 metadata:
   name: axum-demo
   namespace: development
+  labels:
+    app.kubernetes.io/name: axum-demo
+    app.kubernetes.io/version: v1.0.2
+    app.kubernetes.io/component: web-api
+    app.kubernetes.io/environment: development
+  annotations:
+    imageregistry: "https://hub.docker.com"
+    imagelink: "https://hub.docker.com/layers/aimeric/axum-demo/v1.0.2/images/sha256-b72fdc18ec47e5eba3cdbf9e6716c10042957fdd30acf84ad2871ef53c8ac262?context=repo"
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: axum-demo
@@ -13,39 +21,101 @@ spec:
       labels:
         app: axum-demo
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: "minikube"
       containers:
       - name: axum-demo
         image: aimeric/axum-demo:v1.0.2
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            memory: 256Mi
+            cpu: 100m
+          limits:
+            memory: 1Gi
+            cpu: 200m
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 3
         ports:
         - containerPort: 8080
         env:
         - name: RUST_LOG
-          value: "trace,sqlx::query=error,hyper=error,h2=error,tokio_util=error,tower=error,tonic=info"
+          valueFrom:
+            configMapKeyRef:
+              name: axum-demo
+              key: rust_log
         - name: SERVICE_DB_USER
-          value: "postgres"
+          valueFrom:
+            secretKeyRef:
+              name: axum-demo
+              key: service_db_user
         - name: SERVICE_DB_PASSWORD
-          value: "welcome"
+          valueFrom:
+            secretKeyRef:
+              name: axum-demo
+              key: service_db_password
         - name: SERVICE_DB_HOST
-          value: "postgres.development.svc.cluster.local"
+          valueFrom:
+            configMapKeyRef:
+              name: axum-demo
+              key: service_db_host
         - name: SERVICE_DB_NAME
-          value: "app_db"
+          valueFrom:
+            configMapKeyRef:
+              name: axum-demo
+              key: service_db_name
         - name: SERVICE_DB_PORT
-          value: "5432"
+          valueFrom:
+            configMapKeyRef:
+              name: axum-demo
+              key: service_db_port
         - name: SERVICE_PWD_KEY
-          value: "CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA"
+          valueFrom:
+            configMapKeyRef:
+              name: axum-demo
+              key: service_pwd_key
         - name: SERVICE_TOKEN_KEY
-          value: "9FoHBmkyxbgu_xFoQK7e0jz3RMNVJWgfvbVn712FBNH9LLaAWS3CS6Zpcg6RveiObvCUb6a2z-uAiLjhLh2igw"
+          valueFrom:
+            configMapKeyRef:
+              name: axum-demo
+              key: service_token_key
         - name: SERVICE_TOKEN_DURATION_SEC
-          value: "1800"
+          valueFrom:
+            secretKeyRef:
+              name: axum-demo
+              key: service_token_duration_sec
         - name: APP_HOST
-          value: "0.0.0.0"
+          valueFrom:
+            configMapKeyRef:
+              name: axum-demo
+              key: app_host
         - name: APP_PORT
-          value: "8080"
+          valueFrom:
+            configMapKeyRef:
+              name: axum-demo
+              key: app_port
         - name: APP_WEB_FOLDER
-          value: "static/"
+          valueFrom:
+            configMapKeyRef:
+              name: axum-demo
+              key: app_web_folder
         - name: JAEGER_AGENT_HOST
-          value: "jaeger.development.svc.cluster.local"
+          valueFrom:
+            configMapKeyRef:
+              name: axum-demo
+              key: jaeger_agent_host
         - name: JAEGER_AGENT_PORT
-          value: "4317"
+          valueFrom:
+            configMapKeyRef:
+              name: axum-demo
+              key: jaeger_agent_port
         - name: TRACING_SERVICE_NAME
-          value: "axum-otpl"
+          valueFrom:
+            configMapKeyRef:
+              name: axum-demo
+              key: tracing_service_name
+

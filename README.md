@@ -140,6 +140,9 @@ helm search repo prometheus-community/kube-prometheus-stack --versions
 helm install prometheus prometheus-community/kube-prometheus-stack --version "51.2.0"
 helm install postgres-exporter prometheus-community/prometheus-postgres-exporter --version "5.1.0" \
     -f kubernetes/app/statefulsets/values.yaml   
+
+helm upgrade postgres-exporter prometheus-community/prometheus-postgres-exporter --version "5.1.0" \
+    -f kubernetes/app/statefulsets/values.yaml   
 ```
 
 

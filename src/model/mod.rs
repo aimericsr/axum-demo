@@ -6,7 +6,7 @@ mod base;
 mod error;
 mod store;
 
-use self::store::{new_db_pool, new_db_pool_without_db, Db};
+use self::store::{new_db_pool, Db};
 
 #[derive(Clone)]
 pub struct ModelManager {

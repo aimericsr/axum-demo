@@ -25,7 +25,6 @@ fn sub_routes() -> Router {
         (status = 200, description = "Greetings with the name provided or default to World", example = "Hello <strong>World</strong>"),
     )
 )]
-#[tracing::instrument(name = "Get greetings")]
 async fn handler_hello(Query(params): Query<HelloParams>) -> impl IntoResponse {
     let name = params.name.as_deref().unwrap_or("World");
     Html(format!("Hello <strong>{name}</strong>"))

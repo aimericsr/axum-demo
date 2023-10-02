@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgres
-  namespace: development
+  #namespace: development
 spec:
   replicas: 1
   serviceName: "postgres" # A headless service to manage network identities
@@ -17,6 +17,13 @@ spec:
       containers:
       - name: postgres
         image: postgres:15
+        resources:
+          requests:
+            memory: 256Mi
+            cpu: 100m
+          limits:
+            memory: 256Mi
+            cpu: 150m
         ports:
         - containerPort: 5432
         env:

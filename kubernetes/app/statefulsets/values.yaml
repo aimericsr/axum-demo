@@ -1,0 +1,15 @@
+serviceMonitor:
+  enabled: true
+  labels:
+    release: prometheus
+
+config:
+  datasource:
+    host: 'postgres.default.svc.cluster.local'
+    userSecret:
+      name: axum-demo
+      key: service_db_user
+    passwordSecret:
+      name: axum-demo
+      key: service_db_password
+

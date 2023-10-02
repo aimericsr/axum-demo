@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   name: prometheus
   namespace: development
@@ -12,9 +12,18 @@ spec:
       labels:
         app: prometheus
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: "minikube"
       containers:
       - name: prometheus
         image: prom/prometheus:v2.47.0
+        resources:
+          requests:
+            memory: 256Mi
+            cpu: 100m
+          limits:
+            memory: 256Mi
+            cpu: 100m
         ports:
         - containerPort: 9090
         command:
@@ -22,10 +31,3 @@ spec:
         - --config.file=/etc/prometheus/prometheus.yml
         - --web.enable-remote-write-receiver
         - --enable-feature=native-histograms
-        # volumeMounts:
-        # - name: prom-config
-        #   mountPath: /etc/prometheus/prometheus.yml
-      # volumes:
-      # - name: prom-config
-      #   configMap:
-      #     name: prometheus-config

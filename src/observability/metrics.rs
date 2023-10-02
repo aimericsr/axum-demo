@@ -1,14 +1,8 @@
-use axum::{
-    extract::MatchedPath,
-    http::{request, Request},
-    middleware::Next,
-    response::IntoResponse,
-};
+use axum::{extract::MatchedPath, http::Request, middleware::Next, response::IntoResponse};
 use metrics::{gauge, histogram, increment_counter};
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder, PrometheusHandle};
 use std::time::Instant;
-use sysinfo::{CpuExt, CpuRefreshKind, System, SystemExt};
-use tracing::info;
+use sysinfo::{CpuExt, System, SystemExt};
 
 const REQUEST_DURATION_METRIC_NAME: &str = "http_requests_duration_seconds";
 const MEMORY_USAGE_METRIC_NAME: &str = "memory_usage";
