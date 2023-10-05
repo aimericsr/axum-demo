@@ -113,3 +113,115 @@ where
         Ok(())
     }
 }
+
+// #[cfg(test)]
+// mod tests {
+//     use std::env;
+
+//     use serde::{Deserialize, Serialize};
+//     use sqlb::Fields;
+
+//     use super::*;
+//     use crate::model::{base, ModelManager};
+
+//     pub struct UserBmc;
+
+//     impl DbBmc for UserBmc {
+//         const TABLE: &'static str = "users";
+//     }
+
+//     #[derive(Debug, Clone, Fields, FromRow, Serialize)]
+//     pub struct User {
+//         pub id: i64,
+//         pub email: String,
+//     }
+
+//     #[derive(Deserialize, Fields)]
+//     pub struct UserForCreate {
+//         pub email: String,
+//     }
+
+//     #[derive(Deserialize, Fields)]
+//     pub struct UserForUpdate {
+//         pub email: Option<String>,
+//     }
+
+//     #[tokio::test]
+//     async fn test_create() {
+//         // Set env var for connect to db
+//         env::set_var("SERVICE_DB_USER", "postgres");
+//         env::set_var("SERVICE_DB_PASSWORD", "welcome");
+//         env::set_var("SERVICE_DB_HOST", "db");
+//         env::set_var("SERVICE_DB_NAME", "app_db");
+//         env::set_var("SERVICE_DB_PORT", "5432");
+
+//         let db = connect_without_db();
+
+//         let mm = ModelManager::new()
+//             .await
+//             .expect("Failed to create ModelManger");
+//         mm.
+//         let ctx = Ctx::root_ctx();
+//         let data = UserForCreate {
+//             email: "test".to_string(),
+//         };
+
+//         let result = base::create::<UserBmc, UserForCreate>(&ctx, &mm, data).await;
+
+//         assert!(result.is_ok());
+//     }
+
+//     #[tokio::test]
+//     async fn test_get() {
+//         let mm = ModelManager::new()
+//             .await
+//             .expect("Failed to create ModelManger");
+//         let ctx = &Ctx::root_ctx();
+//         let id = 4;
+
+//         let result = base::get::<UserBmc, User>(&ctx, &mm, id).await;
+
+//         assert!(result.is_ok());
+//     }
+
+//     #[tokio::test]
+//     async fn test_list() {
+//         let mm = ModelManager::new()
+//             .await
+//             .expect("Failed to create ModelManger");
+//         let ctx = Ctx::root_ctx();
+
+//         let result = base::list::<UserBmc, User>(&ctx, &mm).await;
+
+//         assert!(result.is_ok());
+//     }
+
+//     #[tokio::test]
+//     async fn test_update() {
+//         let mm = ModelManager::new()
+//             .await
+//             .expect("Failed to create ModelManger");
+//         let ctx = Ctx::root_ctx();
+//         let id = 34;
+//         let data = UserForUpdate {
+//             email: Some("aiemric".to_string()),
+//         };
+
+//         let result = base::update::<UserBmc, _>(&ctx, &mm, id, data).await;
+
+//         assert!(result.is_ok());
+//     }
+
+//     #[tokio::test]
+//     async fn test_delete() {
+//         let mm = ModelManager::new()
+//             .await
+//             .expect("Failed to create ModelManger");
+//         let ctx = Ctx::root_ctx();
+//         let id = 32;
+
+//         let result = base::delete::<UserBmc>(&ctx, &mm, id).await;
+
+//         assert!(result.is_ok());
+//     }
+// }

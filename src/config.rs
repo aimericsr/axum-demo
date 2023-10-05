@@ -1,11 +1,12 @@
 use crate::error::{Error, Result};
+use dotenv::dotenv;
 use secrecy::Secret;
 use std::env;
 use std::str::FromStr;
 use std::sync::OnceLock;
 
 // be sure to be available during the whole execution of the program
-// be sure the init it only once
+// be sure the init it only do once
 pub fn config() -> &'static Config {
     static INSTANCE: OnceLock<Config> = OnceLock::new();
 
@@ -14,25 +15,6 @@ pub fn config() -> &'static Config {
             .unwrap_or_else(|ex| panic!("FATAL - WHILE LOADING CONF - Cause: {ex:?}"))
     })
 }
-
-// #[allow(non_snake_case)]
-// pub struct Config {
-//     // -- Crypt
-//     pub PWD_KEY: Vec<u8>,
-//     pub TOKEN_KEY: Vec<u8>,
-//     pub TOKEN_DURATION_SEC: f64,
-
-//     // -- Jaeger
-//     pub JAEGER_AGENT_HOST: String,
-//     pub JAEGER_AGENT_PORT: i64,
-//     pub TRACING_SERVICE_NAME: String,
-
-//     // -- Db
-//     pub DB_URL: Secret<String>,
-
-//     // -- Web
-//     pub WEB_FOLDER: String,
-// }
 
 pub struct Config {
     pub application: ApplicationSettings,
@@ -69,6 +51,7 @@ pub struct Jaeger {
 
 impl Config {
     fn load_from_env() -> Result<Config> {
+        dotenv().expect("Failed to read .env file");
         Ok(Config {
             application: ApplicationSettings {
                 host: get_env("APP_HOST")?,

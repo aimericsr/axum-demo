@@ -37,7 +37,7 @@ hmac = "0.12.1"
 sha2 = "0.10.8"
 base64-url = "2.0.0"
 time = "0.3.29"
- # -- Docs
+# -- Docs
 utoipa = { version= "3.5.0", features = ["axum_extras"] }
 utoipa-swagger-ui = { version= "3.1.5", features = ["axum"] }
 utoipa-redoc = { version= "0.1.0", features = ["axum"] }
@@ -60,6 +60,7 @@ async-trait = "0.1.73"
 strum_macros = "0.25.2"
 uuid = { version = "1.4.1", features = ["v4", "fast-rng"] }
 secrecy = "0.8.0" 
+dotenv = "0.15.0"
 
 [dev-dependencies]
 anyhow = "1.0.75"

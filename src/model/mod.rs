@@ -1,12 +1,13 @@
 pub mod task;
 pub mod user;
+use sqlx::{Connection, Executor, PgConnection};
+
 pub use self::error::{Error, Result};
+use self::store::{new_db_pool, Db};
 
 mod base;
 mod error;
 mod store;
-
-use self::store::{new_db_pool, Db};
 
 #[derive(Clone)]
 pub struct ModelManager {
@@ -19,6 +20,30 @@ impl ModelManager {
         let db = new_db_pool().await?;
         Ok(ModelManager { db })
     }
+
+    /// Create the db and setup the connection to the db
+    /// Only for tests
+    // pub async fn new_for_test(db_name: String) -> Result<Self> {
+    //     let db = new_db_pool_without_db().await;
+    //     let mut connection = PgConnection::connect_with(&db)
+    //         .await
+    //         .expect("Failed to connect to Postgres");
+    //     connection
+    //         .execute(format!(r#"CREATE DATABASE "{}";"#, db_name).as_str())
+    //         .await
+    //         .expect("Failed to create database.");
+    //     // Migrate database
+    //     // let connection_pool = PgPool::connect_with(config.with_db())
+    //     //     .await
+    //     //     .expect("Failed to connect to Postgres.");
+    //     connection
+    //     sqlx::migrate!("./migrations")
+    //         .run(&mut connection)
+    //         .await
+    //         .expect("Failed to migrate the database");
+
+    //     Ok(ModelManager { db })
+    // }
 
     pub async fn migrate(self) -> Result<()> {
         sqlx::migrate!("./migrations")

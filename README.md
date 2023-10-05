@@ -135,25 +135,25 @@ To use Ingress on local with a host add the following line to your /etc/hosts fi
 
 ```sh
 # Kubernetes
-kubectl apply -f kubernetes/app/namespaces/development.yaml 
-kubectl apply -f kubernetes/app/serviceaccount.yaml/github-ci.yaml 
-kubectl apply -R -f kubernetes/app/configmaps
-kubectl apply -R -f kubernetes/app/secrets
-kubectl apply -R -f kubernetes/app/services
-kubectl apply -R -f kubernetes/app/deployments
-kubectl apply -R -f kubernetes/app/statefulsets
-kubectl apply -R -f kubernetes/app/ingresses
+kubectl apply -f external-services/kubernetes/app/namespaces/development.yaml 
+kubectl apply -f external-services/kubernetes/app/serviceaccount.yaml/github-ci.yaml 
+kubectl apply -R -f external-services/kubernetes/app/configmaps
+kubectl apply -R -f external-services/kubernetes/app/secrets
+kubectl apply -R -f external-services/kubernetes/app/services
+kubectl apply -R -f external-services/kubernetes/app/deployments
+kubectl apply -R -f external-services/kubernetes/app/statefulsets
+kubectl apply -R -f external-services/kubernetes/app/ingresses
 
 # Helm
 # Install Prometheus, Grafana and Postgres Exporter
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 
 helm install prometheus prometheus-community/kube-prometheus-stack --version "51.2.0" \
-     -f kubernetes/helm/kube-prometheus-stack/values.yaml \
+     -f external-services/kubernetes/helm/kube-prometheus-stack/values.yaml \
      --namespace=development
 
 helm install postgres-exporter prometheus-community/prometheus-postgres-exporter --version "5.1.0" \
-    -f kubernetes/helm/prometheus-postgres-exporter/values.yaml \
+    -f external-services/kubernetes/helm/prometheus-postgres-exporter/values.yaml \
      --namespace=development
 
 # Create Service account

@@ -2,7 +2,7 @@ mod error;
 pub use self::error::{Error, Result};
 use crate::config::config;
 use secrecy::ExposeSecret;
-use sqlx::postgres::PgPoolOptions;
+use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
 use sqlx::{Pool, Postgres};
 pub type Db = Pool<Postgres>;
 
@@ -17,3 +17,14 @@ pub async fn new_db_pool() -> Result<Db> {
         .await
         .map_err(|ex| Error::FailToCreatePool(ex.to_string()))
 }
+
+// pub async fn new_db_pool_without_db() -> PgConnectOptions {
+//     let user = config().postgres.db_user.expose_secret();
+//     let password = config().postgres.db_password.expose_secret();
+//     let host = config().postgres.db_host.expose_secret();
+
+//     PgConnectOptions::new()
+//         .host(host)
+//         .username(user)
+//         .password(password)
+// }

@@ -1,6 +1,7 @@
 use crate::ctx::Ctx;
 use crate::model::user::{User, UserBmc};
 use crate::model::ModelManager;
+use sqlx::postgres::PgConnectOptions;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
@@ -23,4 +24,12 @@ pub async fn init_dev_db() -> Result<(), Box<dyn std::error::Error>> {
     info!("{:<12} - init_dev_db - set demo1 pwd", "FOR-DEV-ONLY");
 
     Ok(())
+}
+
+pub fn connect_without_db() -> PgConnectOptions {
+    PgConnectOptions::new()
+        .host("db")
+        .username("postgres")
+        .password("welcome")
+        .port(5432)
 }

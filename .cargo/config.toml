@@ -10,7 +10,7 @@ linker = "x86_64-linux-gnu-gcc"
 
 # Scope down tracing, to filter out external lib tracing.
 #RUST_LOG="trace,axum_demo=trace,tower_http=error,hyper=error,otel_tracing=trace"
-RUST_LOG="trace,sqlx::query=error,hyper=error,h2=error,tokio_util=error,tower=error,tonic=info,otel::setup=trace"
+
 
 # -- Service Environment Variables
 # IMPORTANT: 
@@ -24,29 +24,31 @@ RUST_LOG="trace,sqlx::query=error,hyper=error,h2=error,tokio_util=error,tower=er
 # i.e., Encryption not needed.
 #SERVICE_DB_URL="postgres://app_user:dev_only_pwd@localhost/app_db"
 
-SERVICE_DB_USER="postgres"
-SERVICE_DB_PASSWORD="welcome"
-SERVICE_DB_HOST="localhost"
-SERVICE_DB_NAME="app_db"
-SERVICE_DB_PORT="5432"
+# RUST_LOG="trace,sqlx::query=error,hyper=error,h2=error,tokio_util=error,tower=error,tonic=info,otel::setup=trace"
+
+# SERVICE_DB_USER="postgres"
+# SERVICE_DB_PASSWORD="welcome"
+# SERVICE_DB_HOST="localhost"
+# SERVICE_DB_NAME="app_db"
+# SERVICE_DB_PORT="5432"
 
 
-SERVICE_PWD_KEY="CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA"
+# SERVICE_PWD_KEY="CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA"
 
-SERVICE_TOKEN_KEY="9FoHBmkyxbgu_xFoQK7e0jz3RMNVJWgfvbVn712FBNH9LLaAWS3CS6Zpcg6RveiObvCUb6a2z-uAiLjhLh2igw"
-SERVICE_TOKEN_DURATION_SEC="1800" # 30 minutes
+# SERVICE_TOKEN_KEY="9FoHBmkyxbgu_xFoQK7e0jz3RMNVJWgfvbVn712FBNH9LLaAWS3CS6Zpcg6RveiObvCUb6a2z-uAiLjhLh2igw"
+# SERVICE_TOKEN_DURATION_SEC="1800" # 30 minutes
 
-## -- ConfigMap
+# ## -- ConfigMap
 
-# This will be relative to Cargo.toml
-# In deployed images, probably use absolute path.
-APP_HOST="0.0.0.0"
-APP_PORT="8080"
-APP_WEB_FOLDER="static/"
+# # This will be relative to Cargo.toml
+# # In deployed images, probably use absolute path.
+# APP_HOST="0.0.0.0"
+# APP_PORT="8080"
+# APP_WEB_FOLDER="static/"
 
-JAEGER_AGENT_HOST="localhost"
-JAEGER_AGENT_PORT="4317"
-TRACING_SERVICE_NAME="axum-otpl"
+# JAEGER_AGENT_HOST="localhost"
+# JAEGER_AGENT_PORT="4317"
+# TRACING_SERVICE_NAME="axum-otpl"
 
 
 

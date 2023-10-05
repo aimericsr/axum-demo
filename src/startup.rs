@@ -1,6 +1,6 @@
 // region:    --- Modules
 
-use crate::config::config;
+use crate::config::Config;
 pub use crate::error::{Error, Result};
 use crate::model::ModelManager;
 use crate::observability::metrics::track_metrics;
@@ -16,6 +16,7 @@ use crate::web::rest::routes_static::serve_dir as routes_static;
 use crate::web::routes_docs::routes as routes_docs;
 use crate::web::rpc;
 use axum::body::Body;
+use axum::http::request::Builder;
 use axum::http::HeaderValue;
 use axum::http::Method;
 use axum::http::Request;
@@ -37,31 +38,50 @@ use tracing::info_span;
 use tracing::span;
 use tracing::Level;
 
-pub async fn build() -> Result<()> {
-    init_subscriber();
+// A new type to hold the newly built server and its port
+pub struct Application {
+    port: u16,
+}
 
-    let span = span!(Level::INFO, "startup_info").entered();
+impl Application {
+    pub async fn new(config: &Config) -> Result<Self> {
+        Ok(Self {
+            port: config.application.port,
+        })
+    }
 
-    //_dev_utils::init_dev().await;
-    info!("Create connection to db");
-    let mm = ModelManager::new().await?;
-    info!("Creating migrations");
-    mm.clone().migrate().await?;
-    info!("Created migrations");
+    pub async fn run_until_stopped(config: &Config) {
+        let span = span!(Level::INFO, "startup_info").entered();
 
-    let routes_all = routes(mm);
+        //_dev_utils::init_dev().await;
+        info!("Create connection to db");
+        let mm = ModelManager::new()
+            .await
+            .expect("Failed to create modelManager");
+        info!("Creating migrations");
+        mm.clone()
+            .migrate()
+            .await
+            .expect("Failed to migrate database");
+        info!("Created migrations");
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], config().application.port));
-    info!("LISTENING on {addr}");
+        let routes_all = routes(mm);
 
-    let _span = span.exit();
+        let addr = SocketAddr::from(([0, 0, 0, 0], config.application.port));
+        info!("LISTENING on {addr}");
 
-    axum::Server::bind(&addr)
-        .serve(routes_all.into_make_service())
-        .with_graceful_shutdown(shutdown_signal())
-        .await
-        .unwrap();
-    Ok(())
+        let _span = span.exit();
+
+        axum::Server::bind(&addr)
+            .serve(routes_all.into_make_service())
+            .with_graceful_shutdown(shutdown_signal())
+            .await
+            .unwrap();
+    }
+
+    pub fn port(&self) -> u16 {
+        self.port
+    }
 }
 
 fn routes(mm: ModelManager) -> Router {

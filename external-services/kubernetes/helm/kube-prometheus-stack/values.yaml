@@ -2,3 +2,6 @@ commonLabels:
   app.kubernetes.io/name: prometheus
   app.kubernetes.io/component: monitoring
   app.kubernetes.io/environment: development
+
+grafana:
+  adminPassword: admin

@@ -1,2 +1,2 @@
 pub(crate) mod metrics;
-pub(crate) mod tracing;
+pub mod tracing;
