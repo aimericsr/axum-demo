@@ -1,0 +1,35 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+processors:
+  filter/allowlist:
+    spans:
+      include:
+        match_type: strict
+        services:
+        - axum-otpl
+  attributes/k8s.cluster.name:
+    actions:
+    - key: k8s.cluster.name
+      value: k8s-cluster
+      action: insert
+
+
+exporters:
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+
+extensions:
+  pprof:
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [filter/allowlist, attributes/k8s.cluster.name]
+      exporters: [otlp/jaeger]
