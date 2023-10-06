@@ -22,4 +22,5 @@ RUN addgroup -S myuser && adduser -S myuser -G myuser
 COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/axum-demo /usr/local/bin/
 COPY .env /usr/local/bin/
 USER myuser
-CMD ["/usr/local/bin/axum-demo"]
+WORKDIR "/usr/local/bin/"
+CMD ["./axum-demo"]

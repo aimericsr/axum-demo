@@ -19,7 +19,7 @@ pub fn config() -> &'static Config {
 pub struct Config {
     pub application: ApplicationSettings,
     pub postgres: Postgres,
-    pub jeager: Jaeger,
+    pub otel: Otel,
     pub crypt: Crypt,
 }
 
@@ -43,10 +43,10 @@ pub struct Crypt {
     pub token_duration_sec: f64,
 }
 
-pub struct Jaeger {
-    pub agent_host: String,
-    pub agent_port: i64,
-    pub tracing_service_name: String,
+pub struct Otel {
+    pub endpoint: String,
+    pub service_name: String,
+    pub service_version: String,
 }
 
 impl Config {
@@ -65,10 +65,10 @@ impl Config {
                 db_name: get_env("SERVICE_DB_NAME")?.into(),
                 db_port: get_env_parse("SERVICE_DB_PORT")?,
             },
-            jeager: Jaeger {
-                agent_host: get_env("JAEGER_AGENT_HOST")?,
-                agent_port: get_env_parse("JAEGER_AGENT_PORT")?,
-                tracing_service_name: get_env("TRACING_SERVICE_NAME")?,
+            otel: Otel {
+                endpoint: get_env("OTEL_EXPORTER_OTLP_ENDPOINT")?,
+                service_name: get_env("OTEL_SERVICE_NAME")?,
+                service_version: get_env("OTEL_SERVICE_VERSION")?,
             },
             crypt: Crypt {
                 pwd_key: get_env_b64u_as_u8s("SERVICE_PWD_KEY")?,

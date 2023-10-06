@@ -62,13 +62,13 @@ services:
       - ./external-services/grafana:/etc/grafana/provisioning
   web:
     profiles: ["app"]
-    image: aimeric/axum-demo:v1.0.2
+    image: aimeric/axum-demo:v1.0.3
     #build: .
     ports:
       - 8080:8080
     environment:
       SERVICE_DB_HOST: "db"
-      JAEGER_AGENT_HOST: "otel-collector"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
     env_file:
       - .env
   k6:

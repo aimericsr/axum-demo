@@ -1,6 +1,11 @@
-.env
 .vscode
+.github
+external-services/
 target/
-exemples/
 tests/
+.dockerignore
+.gitignore
+docker-compose.yaml
 Dockerfile
+LICENSE
+README.md

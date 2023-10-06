@@ -17,7 +17,6 @@ processors:
       value: k8s-cluster
       action: insert
 
-
 exporters:
   otlp/jaeger:
     endpoint: jaeger:4317

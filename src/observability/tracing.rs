@@ -48,11 +48,7 @@ fn init_optl_tracer() -> Result<sdktrace::Tracer, TraceError> {
         .with_exporter(
             opentelemetry_otlp::new_exporter()
                 .tonic()
-                .with_endpoint(format!(
-                    "http://{}:{}",
-                    &config().jeager.agent_host,
-                    &config().jeager.agent_port
-                ))
+                .with_endpoint(&config().otel.endpoint)
                 .with_timeout(Duration::from_secs(3)),
         )
         .with_trace_config(
@@ -63,8 +59,8 @@ fn init_optl_tracer() -> Result<sdktrace::Tracer, TraceError> {
                 .with_max_attributes_per_span(16)
                 .with_max_events_per_span(16)
                 .with_resource(Resource::new(vec![
-                    KeyValue::new("service.name", &*config().jeager.tracing_service_name),
-                    KeyValue::new("service.version", "v1"),
+                    KeyValue::new("service.name", &*config().otel.service_name),
+                    KeyValue::new("service.version", &*config().otel.service_version),
                 ])),
         )
         // batch exporter instead of exporting each span synchronously on drop

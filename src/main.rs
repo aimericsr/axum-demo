@@ -10,8 +10,8 @@ async fn main() -> std::io::Result<()> {
 
     // Setup tracing
     init_subscriber();
-    let application = Application::new(config);
-    Application::run_until_stopped(config);
+    let _ = Application::new(config);
+    Application::run_until_stopped(config).await;
 
     Ok(())
 }
