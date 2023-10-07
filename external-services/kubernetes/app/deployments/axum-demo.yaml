@@ -5,12 +5,12 @@ metadata:
   namespace: development
   labels:
     app.kubernetes.io/name: axum-demo
-    app.kubernetes.io/version: v1.0.2
+    app.kubernetes.io/version: v1.0.3
     app.kubernetes.io/component: web-api
     app.kubernetes.io/environment: development
   annotations:
     imageregistry: "https://hub.docker.com"
-    imagelink: "https://hub.docker.com/layers/aimeric/axum-demo/v1.0.2/images/sha256-b72fdc18ec47e5eba3cdbf9e6716c10042957fdd30acf84ad2871ef53c8ac262?context=repo"
+    imagelink: "https://hub.docker.com/layers/aimeric/axum-demo/v1.0.3/images/sha256-6ca46403a8d2ff4eafb7cd9cf2b8c24d990b084137f41efef7ec1a2bd28a7400?context=repo"
 spec:
   replicas: 1
   selector:
@@ -20,12 +20,14 @@ spec:
     metadata:
       labels:
         app: axum-demo
+        # annotations:
+        #   sidecar.opentelemetry.io/inject: "true"
     spec:
       nodeSelector:
         kubernetes.io/hostname: "minikube"
       containers:
       - name: axum-demo
-        image: aimeric/axum-demo:v1.0.2
+        image: aimeric/axum-demo:v1.0.3
         imagePullPolicy: IfNotPresent
         resources:
           requests:
@@ -39,7 +41,7 @@ spec:
             path: /health/live
             port: 8080
           initialDelaySeconds: 5
-          periodSeconds: 15
+          periodSeconds: 20
         ports:
         - containerPort: 8080
         env:
@@ -103,19 +105,19 @@ spec:
             configMapKeyRef:
               name: axum-demo
               key: app_web_folder
-        - name: JAEGER_AGENT_HOST
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
           valueFrom:
             configMapKeyRef:
               name: axum-demo
-              key: jaeger_agent_host
-        - name: JAEGER_AGENT_PORT
+              key: otel_exporter_otlp_endpoint
+        - name: OTEL_SERVICE_NAME
           valueFrom:
             configMapKeyRef:
               name: axum-demo
-              key: jaeger_agent_port
-        - name: TRACING_SERVICE_NAME
+              key: otel_service_name
+        - name: OTEL_SERVICE_VERSION
           valueFrom:
             configMapKeyRef:
               name: axum-demo
-              key: tracing_service_name
+              key: otel_service_version
 

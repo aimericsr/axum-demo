@@ -45,7 +45,7 @@ graph LR;
 - [Minikube](https://minikube.sigs.k8s.io/docs/start/) (also install kubectl)
 - [Helm](https://helm.sh/docs/intro/install/)
 - [k6](https://k6.io/docs/get-started/installation/)
-
+- [cmctl](https://cert-manager.io/docs/reference/cmctl/#installation)
 
 ## Starting the needed services
 
@@ -125,7 +125,6 @@ minikube addons enable dashboard
 minikube addons enable metrics-server  
 minikube addons enable ingress
 minikube start
-kubectl config set-context minikube --namespace=development
 minikube tunnel
 ```
 
@@ -136,12 +135,14 @@ To use Ingress on local with a host add the following line to your /etc/hosts fi
 ```sh
 # Kubernetes
 kubectl apply -f external-services/kubernetes/app/namespaces/development.yaml 
+kubectl config set-context minikube --namespace=development
 kubectl apply -f external-services/kubernetes/app/serviceaccount.yaml/github-ci.yaml 
 kubectl apply -R -f external-services/kubernetes/app/configmaps
 kubectl apply -R -f external-services/kubernetes/app/secrets
 kubectl apply -R -f external-services/kubernetes/app/services
-kubectl apply -R -f external-services/kubernetes/app/deployments
+kubectl apply -R -f external-services/kubernetes/app/opentelemetrycollectors
 kubectl apply -R -f external-services/kubernetes/app/statefulsets
+kubectl apply -R -f external-services/kubernetes/app/deployments
 kubectl apply -R -f external-services/kubernetes/app/ingresses
 
 # Helm
@@ -155,6 +156,27 @@ helm install prometheus prometheus-community/kube-prometheus-stack --version "51
 helm install postgres-exporter prometheus-community/prometheus-postgres-exporter --version "5.1.0" \
     -f external-services/kubernetes/helm/prometheus-postgres-exporter/values.yaml \
      --namespace=development
+
+# Install Cert manager 
+helm repo add jetstack https://charts.jetstack.io
+
+helm install \
+  cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --create-namespace \
+  --version v1.13.1 \
+  --set installCRDs=true
+
+# Test the install of cert manager
+cmctl check api --wait=2m
+
+# Install the opentelemetry Operator
+helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+
+# This automatically generate a self-signed cert and a secret for the webhook
+helm install my-opentelemetry-operator open-telemetry/opentelemetry-operator --version 0.39.1 \
+    -f external-services/kubernetes/helm/opentelemetry-operator/values.yaml 
+  
 
 # Create Service account
 kubectl config get-contexts          

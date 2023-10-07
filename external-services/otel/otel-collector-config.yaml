@@ -5,6 +5,8 @@ receivers:
         endpoint: 0.0.0.0:4317
 
 processors:
+  batch:
+    timeout: 1s
   filter/allowlist:
     spans:
       include:
@@ -24,11 +26,15 @@ exporters:
       insecure: true
 
 extensions:
+  health_check:
   pprof:
+    endpoint: :1888
+  zpages:
+    endpoint: :55679
 
 service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [filter/allowlist, attributes/k8s.cluster.name]
+      processors: [batch, filter/allowlist, attributes/k8s.cluster.name]
       exporters: [otlp/jaeger]
