@@ -1,7 +1,4 @@
-# AwesomeApp rust-web-app
-
-
-## Web API to demonstrate axum-web capabilities
+# Web API to demonstrate axum-web capabilities
 
 The internal logic is intentionally keep simple. This allow to focus on the overwall logic of the Axum framework, it's observability and the deployment part.
 
