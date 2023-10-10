@@ -4,7 +4,7 @@ The internal logic is intentionally keep simple. This allow to focus on the over
 
 The observability architecture is based on the official [exemple](https://opentelemetry.io/docs/demo/architecture/) of the opentelemetry website, export of traces to jaeger(or other otlp compatible collector) and /metrics exposed to be scraped by prometheus.
 
-## Architecture 
+## Architecture
 
 ```mermaid
 graph LR;
@@ -35,8 +35,8 @@ graph LR;
  class cluster cluster;
 ```
 
-
 ## Prerequesite
+
 - [Rust](https://www.rust-lang.org/tools/install)
 - [Docker](https://docs.docker.com/engine/install/)(also install Docker compose)
 - [Minikube](https://minikube.sigs.k8s.io/docs/start/) (also install kubectl)
@@ -54,6 +54,12 @@ docker compose --profile app up -d
 
 ```sh
 cargo test -- --nocapture crypt
+```
+
+## Opening the docs
+
+```sh
+cargo doc --document-private-items --open
 ```
 
 ## Manage Different Rust Versions
@@ -74,7 +80,7 @@ function test name : test*[function_name]*[ok/err]\_[case_tested]
 
 - Timout
 - CORS
-- Serve static file 
+- Serve static file
 - Helth check routes
 - Rest Routes
 - RPC Routes
@@ -99,15 +105,14 @@ function test name : test*[function_name]*[ok/err]\_[case_tested]
 
 This project is licensed under the [Apache License](LICENSE).
 
-## Rust 
+## Rust
 
 ```sh
 brew install openssl@1.1
 cargo install cargo-edit
 cargo install cargo-expand
-cargo install --version=0.7.2 sqlx-cli --no-default-features --features postgres 
+cargo install --version=0.7.2 sqlx-cli --no-default-features --features postgres
 ```
-
 
 ## Run load
 
@@ -119,21 +124,21 @@ docker-compose --profile load-test run k6 run -o experimental-prometheus-rw /scr
 
 ```sh
 minikube addons enable dashboard
-minikube addons enable metrics-server  
+minikube addons enable metrics-server
 minikube addons enable ingress
 minikube start
 minikube tunnel
 ```
 
-To use Ingress on local with a host add the following line to your /etc/hosts file: 127.0.0.1 <host-name> 
+To use Ingress on local with a host add the following line to your /etc/hosts file: 127.0.0.1 <host-name>
 
 ## Lunch k8 cluster
 
 ```sh
 # Kubernetes
-kubectl apply -f external-services/kubernetes/app/namespaces/development.yaml 
+kubectl apply -f external-services/kubernetes/app/namespaces/development.yaml
 kubectl config set-context minikube --namespace=development
-kubectl apply -f external-services/kubernetes/app/serviceaccount.yaml/github-ci.yaml 
+kubectl apply -f external-services/kubernetes/app/serviceaccount.yaml/github-ci.yaml
 kubectl apply -R -f external-services/kubernetes/app/configmaps
 kubectl apply -R -f external-services/kubernetes/app/secrets
 kubectl apply -R -f external-services/kubernetes/app/services
@@ -154,7 +159,7 @@ helm install postgres-exporter prometheus-community/prometheus-postgres-exporter
     -f external-services/kubernetes/helm/prometheus-postgres-exporter/values.yaml \
      --namespace=development
 
-# Install Cert manager 
+# Install Cert manager
 helm repo add jetstack https://charts.jetstack.io
 
 helm install \
@@ -172,17 +177,13 @@ helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm
 
 # This automatically generate a self-signed cert and a secret for the webhook
 helm install my-opentelemetry-operator open-telemetry/opentelemetry-operator --version 0.39.1 \
-    -f external-services/kubernetes/helm/opentelemetry-operator/values.yaml 
-  
+    -f external-services/kubernetes/helm/opentelemetry-operator/values.yaml
+
 
 # Create Service account
-kubectl config get-contexts          
+kubectl config get-contexts
 kubectl create token github-ci -n development
 kubectl config set-credentials sa-user --token=$TOKEN
 kubectl config set-context sa-context --user=sa-user
-kubectl config use-context sa-context 
+kubectl config use-context sa-context
 ```
-
-
-
-

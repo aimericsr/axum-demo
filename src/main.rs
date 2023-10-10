@@ -4,15 +4,11 @@ use axum_demo::startup::Application;
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
-    // Setup environnement variables
     let config = config();
 
-    // Setup tracing
     init_subscriber();
 
-    // Lunch the application
     let _ = Application::new(config);
     Application::run_until_stopped(config).await;
-
     Ok(())
 }
