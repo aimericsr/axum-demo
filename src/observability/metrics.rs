@@ -1,13 +1,8 @@
 use axum::{extract::MatchedPath, http::Request, middleware::Next, response::IntoResponse};
 use metrics::{gauge, histogram, increment_counter};
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder, PrometheusHandle};
-use opentelemetry::metrics::ObservableGauge;
-use opentelemetry_otlp::WithExportConfig;
-use opentelemetry_sdk::util::tokio_interval_stream;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use sysinfo::{CpuExt, System, SystemExt};
-
-use crate::config::config;
 
 const REQUEST_DURATION_METRIC_NAME: &str = "http_requests_duration_seconds";
 const MEMORY_USAGE_METRIC_NAME: &str = "memory_usage";

@@ -6,10 +6,8 @@ use opentelemetry::{global, runtime::Tokio, sdk::propagation::TraceContextPropag
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::trace::{BatchConfig, RandomIdGenerator};
 use opentelemetry_sdk::{trace as sdktrace, Resource};
-use opentelemetry_semantic_conventions as smc;
 use opentelemetry_semantic_conventions::resource::{
-    SERVICE_NAME, SERVICE_NAMESPACE, SERVICE_VERSION, TELEMETRY_SDK_LANGUAGE, TELEMETRY_SDK_NAME,
-    TELEMETRY_SDK_VERSION,
+    SERVICE_NAME, SERVICE_NAMESPACE, SERVICE_VERSION,
 };
 use opentelemetry_semantic_conventions::SCHEMA_URL;
 use tracing::subscriber::set_global_default;

@@ -2,7 +2,7 @@ mod error;
 pub use self::error::{Error, Result};
 use crate::config::config;
 use secrecy::ExposeSecret;
-use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
+use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
 pub type Db = Pool<Postgres>;
 

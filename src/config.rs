@@ -93,3 +93,37 @@ fn get_env_parse<T: FromStr>(name: &'static str) -> Result<T> {
 fn get_env_b64u_as_u8s(name: &'static str) -> Result<Vec<u8>> {
     base64_url::decode(&get_env(name)?).map_err(|_| Error::ConfigWrongFormat(name))
 }
+
+// Importez les dépendances nécessaires pour les tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_env() {
+        env::set_var("APP_HOST", "localhost");
+        let result = get_env("APP_HOST").expect("Failed to get APP_HOST from env");
+        assert_eq!(result, "localhost".to_string());
+        env::remove_var("APP_HOST");
+    }
+
+    #[test]
+    fn test_get_env_parse() {
+        env::set_var("APP_PORT", "8080");
+        let result = get_env_parse::<u16>("APP_PORT").expect("Failed to get APP_PORT from env");
+        assert_eq!(result, 8080);
+        env::remove_var("APP_PORT");
+    }
+
+    #[test]
+    fn test_get_env_b64u_as_u8s() {
+        env::set_var("SERVICE_TOKEN_KEY", "SGVsbG8gV29ybGQ");
+        let result = get_env_b64u_as_u8s("SERVICE_TOKEN_KEY")
+            .expect("Failed to get SERVICE_TOKEN_KEY from env");
+        assert_eq!(
+            result,
+            vec![72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100]
+        );
+        env::remove_var("SERVICE_TOKEN_KEY");
+    }
+}

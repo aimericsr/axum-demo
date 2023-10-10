@@ -47,7 +47,5 @@ mod model;
 pub mod observability;
 /// All of the functions needed to start the application
 pub mod startup;
-/// Useful small block of code to be use
-//mod utils;
-/// Exposing the application via HTTP
+/// All the routing and controllers logic
 mod web;

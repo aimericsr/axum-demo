@@ -2,7 +2,7 @@ use serde::Serialize;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, PartialEq)]
 pub enum Error {
     FailToCreatePool(String),
 }
