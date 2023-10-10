@@ -12,25 +12,25 @@ graph LR;
  subgraph cluster
  ingress;
  ingress-->|routing rule|service_web[Web API Service];
- service_web-->pod1[Pod];
- service_web-->pod2[Pod];
+ service_web-->pod_web_1[Pod];
+ service_web-->pod_web_2[Pod];
 
- pod1-->service_database[Database Service];
- pod2-->service_database[Database Service];
- service_database-->pod3[Pod];
+ pod_web_1-->service_database[Database Service];
+ pod_web_2-->service_database[Database Service];
+ service_database-->pod_database_1[Pod];
 
- pod1-->service_jaeger[Jaeger Service];
- pod2-->service_jaeger[Jaeger Service];
- service_jaeger-->pod4[Pod];
+ pod_web_1-->service_jaeger[Jaeger Service];
+ pod_web_2-->service_jaeger[Jaeger Service];
+ service_jaeger-->pod_jaeger_1[Pod];
 
  service_prometheus[Prometheus Service]-->|scrape /metrics|service_web;
- service_prometheus-->pod5[Pod];
+ service_prometheus-->pod_prometheus_1[Pod];
 
  end
  classDef plain fill:#ddd,stroke:#fff,stroke-width:4px,color:#000;
  classDef k8s fill:#326ce5,stroke:#fff,stroke-width:4px,color:#fff;
  classDef cluster fill:#fff,stroke:#bbb,stroke-width:2px,color:#326ce5;
- class ingress,service_web,service_database,service_prometheus,service_jaeger,pod1,pod2,pod3,pod4,pod5 k8s;
+ class ingress,service_web,service_database,service_prometheus,service_jaeger,pod_web_1,pod_web_2,pod_database_1,pod_jaeger_1,pod_prometheus_1 k8s;
  class client plain;
  class cluster cluster;
 ```

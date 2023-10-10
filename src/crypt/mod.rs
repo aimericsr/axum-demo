@@ -1,10 +1,11 @@
 // region:    --- Modules
 mod error;
-
 pub mod pwd;
 pub mod token;
+mod utils;
 
 pub use self::error::{Error, Result};
+pub use self::utils::*;
 
 use hmac::{Hmac, Mac};
 use sha2::Sha512;

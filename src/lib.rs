@@ -11,8 +11,6 @@ This section gives a brief overview of the primary types in this crate:
 * [`Application`](startup::Application) is the primary type and represents the application information
 and how to lunch it.
 
-
-
 # Basic Usage
 Build the app and lunch it
 ```
@@ -43,8 +41,6 @@ mod crypt;
 mod ctx;
 /// All possible errors that can occurs
 mod error;
-/// Simple logger to stdout for all request response
-mod log;
 /// All the model layer related functionnality : modele, controller ...
 mod model;
 /// Centralize the observability capabilities of the application : tracing and metrics
@@ -52,6 +48,6 @@ pub mod observability;
 /// All of the functions needed to start the application
 pub mod startup;
 /// Useful small block of code to be use
-mod utils;
+//mod utils;
 /// Exposing the application via HTTP
 mod web;

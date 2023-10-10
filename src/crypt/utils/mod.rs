@@ -1,7 +1,6 @@
 // region:    --- Modules
 
 mod error;
-
 pub use self::error::{Error, Result};
 
 use time::format_description::well_known::Rfc3339;
