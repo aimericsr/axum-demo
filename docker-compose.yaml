@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   db:
@@ -79,6 +79,3 @@ services:
       K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: "true"
     volumes:
       - ./external-services/k6:/scripts
- 
-
-

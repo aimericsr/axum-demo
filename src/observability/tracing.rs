@@ -20,6 +20,13 @@ use tracing_subscriber::{layer::SubscriberExt, Registry};
 use crate::config::config;
 
 /// Init tracing for the lifetime of the application
+
+///  # Overview
+///
+/// ```
+/// init_subscriber();
+/// ```
+
 pub fn init_subscriber() {
     let subscriber = get_subscriber();
     set_global_default(subscriber).expect("Failed to set subscriber");
