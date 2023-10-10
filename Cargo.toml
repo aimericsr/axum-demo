@@ -51,9 +51,10 @@ metrics = "0.21.1"
 metrics-exporter-prometheus = "0.12.1"
 sysinfo = "0.29.10"
 # -- OpenTelemetry
-opentelemetry = { version = "0.20.0", features = ["rt-tokio"] }
-opentelemetry_sdk ={ version = "0.20.0", features = ["rt-tokio"] }
-opentelemetry-otlp = { version = "0.13.0", features = ["http-proto"] }
+opentelemetry = { version = "0.20.0", features = ["rt-tokio", "metrics"] }
+opentelemetry_sdk ={ version = "0.20.0", features = ["rt-tokio", "metrics"] }
+opentelemetry-otlp = { version = "0.13.0", features = ["http-proto", "metrics"] }
+opentelemetry-semantic-conventions = "0.12.0"
 axum-tracing-opentelemetry = "0.14.1"
 # -- Utils
 async-trait = "0.1.73"

@@ -47,6 +47,7 @@ pub struct Otel {
     pub endpoint: String,
     pub service_name: String,
     pub service_version: String,
+    pub service_namespace: String,
 }
 
 impl Config {
@@ -69,6 +70,7 @@ impl Config {
                 endpoint: get_env("OTEL_EXPORTER_OTLP_ENDPOINT")?,
                 service_name: get_env("OTEL_SERVICE_NAME")?,
                 service_version: get_env("OTEL_SERVICE_VERSION")?,
+                service_namespace: get_env("OTEL_SERVICE_NAMESPACE")?,
             },
             crypt: Crypt {
                 pwd_key: get_env_b64u_as_u8s("SERVICE_PWD_KEY")?,

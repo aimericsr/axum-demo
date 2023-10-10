@@ -1,8 +1,13 @@
 use axum::{extract::MatchedPath, http::Request, middleware::Next, response::IntoResponse};
 use metrics::{gauge, histogram, increment_counter};
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder, PrometheusHandle};
-use std::time::Instant;
+use opentelemetry::metrics::ObservableGauge;
+use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_sdk::util::tokio_interval_stream;
+use std::time::{Duration, Instant};
 use sysinfo::{CpuExt, System, SystemExt};
+
+use crate::config::config;
 
 const REQUEST_DURATION_METRIC_NAME: &str = "http_requests_duration_seconds";
 const MEMORY_USAGE_METRIC_NAME: &str = "memory_usage";
@@ -74,3 +79,19 @@ pub(crate) async fn track_metrics<B>(req: Request<B>, next: Next<B>) -> impl Int
 
     response
 }
+
+// fn init_otlp_metrics() {
+//     let meter = opentelemetry_otlp::new_pipeline()
+//         .metrics()
+//         .with_exporter(
+//             opentelemetry_otlp::new_exporter()
+//                 .tonic()
+//                 .with_endpoint(&config().otel.endpoint)
+//                 .with_timeout(Duration::from_secs(3)),
+//         )
+//         .with_stateful(true)
+//         .with_period(Duration::from_secs(3))
+//         .with_timeout(Duration::from_secs(10))
+//         .with_aggregator_selector(selectors::simple::Selector::Exact)
+//         .build();
+// }

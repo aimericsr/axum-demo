@@ -61,7 +61,7 @@ services:
     volumes:
       - ./external-services/grafana:/etc/grafana/provisioning
   web:
-    profiles: ["app"]
+    profiles: ["app_prod"]
     image: aimeric/axum-demo:v1.0.3
     #build: .
     ports:

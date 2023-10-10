@@ -3,4 +3,3 @@ kind: ServiceAccount
 metadata:
   name: github-ci
   namespace: development
-

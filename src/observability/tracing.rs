@@ -6,6 +6,12 @@ use opentelemetry::{global, runtime::Tokio, sdk::propagation::TraceContextPropag
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::trace::{BatchConfig, RandomIdGenerator};
 use opentelemetry_sdk::{trace as sdktrace, Resource};
+use opentelemetry_semantic_conventions as smc;
+use opentelemetry_semantic_conventions::resource::{
+    SERVICE_NAME, SERVICE_NAMESPACE, SERVICE_VERSION, TELEMETRY_SDK_LANGUAGE, TELEMETRY_SDK_NAME,
+    TELEMETRY_SDK_VERSION,
+};
+use opentelemetry_semantic_conventions::SCHEMA_URL;
 use tracing::subscriber::set_global_default;
 use tracing::Subscriber;
 use tracing_subscriber::EnvFilter;
@@ -26,7 +32,7 @@ fn get_subscriber() -> impl Subscriber + Sync + Send {
     // Config multiple target to send traces
     let stdout_layer = tracing_subscriber::fmt::layer().json();
 
-    let tracer = init_optl_tracer().expect("Failed to init the otlp tracer");
+    let tracer = init_otlp_traces().expect("Failed to init the otlp tracer");
     let opentelemetry_layer = tracing_opentelemetry::layer().with_tracer(tracer);
 
     // let file = File::create("debug.log").expect("Failed to create log file");
@@ -39,7 +45,7 @@ fn get_subscriber() -> impl Subscriber + Sync + Send {
 }
 
 /// Init the opentelemetry tracer
-fn init_optl_tracer() -> Result<sdktrace::Tracer, TraceError> {
+fn init_otlp_traces() -> Result<sdktrace::Tracer, TraceError> {
     global::set_text_map_propagator(TraceContextPropagator::new());
 
     opentelemetry_otlp::new_pipeline()
@@ -57,10 +63,11 @@ fn init_optl_tracer() -> Result<sdktrace::Tracer, TraceError> {
                 .with_id_generator(RandomIdGenerator::default())
                 .with_max_events_per_span(64)
                 .with_max_attributes_per_span(16)
-                .with_max_events_per_span(16)
                 .with_resource(Resource::new(vec![
-                    KeyValue::new("service.name", &*config().otel.service_name),
-                    KeyValue::new("service.version", &*config().otel.service_version),
+                    KeyValue::new("service.schema.url", SCHEMA_URL),
+                    SERVICE_NAME.string(&*config().otel.service_name),
+                    SERVICE_VERSION.string(&*config().otel.service_version),
+                    SERVICE_NAMESPACE.string(&*config().otel.service_namespace),
                 ])),
         )
         // batch exporter instead of exporting each span synchronously on drop
