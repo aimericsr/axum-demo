@@ -45,7 +45,7 @@ graph LR;
 
 ## Exemple of a trace view in jaeger UI : 
 
-![alt text](trace_exemple.png "Title")
+![screenshot of jaeger](images/trace_exemple.png)
 
 We have the information from the application like the http route, thread.
 And the infrastructure information added by the otel collector like the kubernetes namespace, pod name, pod creation.
