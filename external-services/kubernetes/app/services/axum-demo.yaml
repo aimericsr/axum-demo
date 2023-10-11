@@ -3,12 +3,13 @@ kind: Service
 metadata:
   name: axum-demo
   namespace: development
+  labels:
+    app: axum-demo
 spec:
   selector:
     app: axum-demo
   ports:
-  - name: axum-demo
+  - name: web
     port: 80
-    protocol: TCP
     targetPort: 8080
 

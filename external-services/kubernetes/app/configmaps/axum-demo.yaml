@@ -12,7 +12,6 @@ data:
   service_db_name: "app_db"
   service_db_port: "5432"
   otel_exporter_otlp_endpoint: "http://basic-daemonset-collector.development.svc.cluster.local:4317"
-  #oteldfs_exporter_otlp_endpoint: "http://localhost:4317"
   otel_service_name: "axum-otpl"
   otel_service_version: "1.0.3"
   service_pwd_key: CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA

@@ -22,7 +22,13 @@ spec:
 
     processors:
       batch:
-        timeout: 1s
+        send_batch_max_size: 1000
+        timeout: 30s
+        send_batch_size : 800
+      memory_limiter:
+         check_interval: 1s
+         limit_percentage: 70
+         spike_limit_percentage: 30
       filter/allowlist:
         spans:
           include:
@@ -36,12 +42,12 @@ spec:
           node_from_env_var: KUBE_NODE_NAME
         extract:
           metadata: # extracted from the pod
-            - k8s.namespace.name
             - k8s.pod.name
-            - k8s.pod.start_time
             - k8s.pod.uid
             - k8s.deployment.name
+            - k8s.namespace.name
             - k8s.node.name
+            - k8s.pod.start_time
       resource:
         attributes:
           - key: testslkfjd
@@ -62,10 +68,11 @@ spec:
         endpoint: :55679
 
     service:
+      extensions: [health_check, pprof, zpages]
       pipelines:
         traces:
           receivers: [otlp]
-          processors: [batch, filter/allowlist, k8sattributes, resource]
+          processors: [memory_limiter, filter/allowlist, k8sattributes, batch]
           exporters: [otlp/jaeger]
 
 

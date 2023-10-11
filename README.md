@@ -17,23 +17,39 @@ graph LR;
 
  pod_web_1-->service_database[Database Service];
  pod_web_2-->service_database[Database Service];
+ pod_web_1-->|send traces|otel_collector[Otel Collector];
+ pod_web_2-->|send traces|otel_collector[Otel Collector];
  service_database-->pod_database_1[Pod];
 
- pod_web_1-->service_jaeger[Jaeger Service];
- pod_web_2-->service_jaeger[Jaeger Service];
+ otel_collector-->service_jaeger[Jaeger Service];
+
  service_jaeger-->pod_jaeger_1[Pod];
 
+ service_database_exporter[Database Exporter Service]-->|fetch metrics, convert it<br/>and expose to /metrics|service_database[Database Service];
+
  service_prometheus[Prometheus Service]-->|scrape /metrics|service_web;
+ service_prometheus[Prometheus Service]-->|scrape /metrics|service_database_exporter[Database Exporter Service];
  service_prometheus-->pod_prometheus_1[Pod];
+
+ grafana[Grafana UI]-->|fetch data|service_prometheus;
+ grafana[Grafana UI]-->|fetch data|service_jaeger;
 
  end
  classDef plain fill:#ddd,stroke:#fff,stroke-width:4px,color:#000;
  classDef k8s fill:#326ce5,stroke:#fff,stroke-width:4px,color:#fff;
  classDef cluster fill:#fff,stroke:#bbb,stroke-width:2px,color:#326ce5;
- class ingress,service_web,service_database,service_prometheus,service_jaeger,pod_web_1,pod_web_2,pod_database_1,pod_jaeger_1,pod_prometheus_1 k8s;
+ class ingress,service_web,service_database,service_database_exporter,service_prometheus,otel_collector,grafana,service_jaeger,pod_web_1,pod_web_2,pod_database_1,pod_jaeger_1,pod_prometheus_1 k8s;
  class client plain;
  class cluster cluster;
 ```
+
+## Exemple of a trace view in jaeger UI : 
+
+![alt text](trace_exemple.png "Title")
+
+We have the information from the application like the http route, thread.
+And the infrastructure information added by the otel collector like the kubernetes namespace, pod name, pod creation.
+With that, he can correlate application traces with prometeuses metrics from kubernetes.
 
 ## Prerequesite
 
@@ -127,6 +143,7 @@ minikube addons enable dashboard
 minikube addons enable metrics-server
 minikube addons enable ingress
 minikube start
+minikube start --memory 4096 --cpus 4
 minikube tunnel
 ```
 
@@ -135,33 +152,28 @@ To use Ingress on local with a host add the following line to your /etc/hosts fi
 ## Lunch k8 cluster
 
 ```sh
-# Kubernetes
 kubectl apply -f external-services/kubernetes/app/namespaces/development.yaml
 kubectl config set-context minikube --namespace=development
-kubectl apply -f external-services/kubernetes/app/serviceaccount.yaml/github-ci.yaml
-kubectl apply -R -f external-services/kubernetes/app/configmaps
-kubectl apply -R -f external-services/kubernetes/app/secrets
-kubectl apply -R -f external-services/kubernetes/app/services
-kubectl apply -R -f external-services/kubernetes/app/opentelemetrycollectors
-kubectl apply -R -f external-services/kubernetes/app/statefulsets
-kubectl apply -R -f external-services/kubernetes/app/deployments
-kubectl apply -R -f external-services/kubernetes/app/ingresses
 
-# Helm
-# Install Prometheus, Grafana and Postgres Exporter
+# Helm : add needed repositories
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo add jetstack https://charts.jetstack.io
+helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
 
+# Install Prometheus to scrape kubernetes engine metrics, install also Grafana with build-in dashboard
 helm install prometheus prometheus-community/kube-prometheus-stack --version "51.2.0" \
      -f external-services/kubernetes/helm/kube-prometheus-stack/values.yaml \
      --namespace=development
 
+# Create custom CRD for monitoring our applications
+kubectl apply -R -f external-services/kubernetes/app/servicemonitor
+
+# Create postgres exporter to be able to monitor with prometheus
 helm install postgres-exporter prometheus-community/prometheus-postgres-exporter --version "5.1.0" \
     -f external-services/kubernetes/helm/prometheus-postgres-exporter/values.yaml \
      --namespace=development
 
 # Install Cert manager
-helm repo add jetstack https://charts.jetstack.io
-
 helm install \
   cert-manager jetstack/cert-manager \
   --namespace cert-manager \
@@ -172,15 +184,24 @@ helm install \
 # Test the install of cert manager
 cmctl check api --wait=2m
 
-# Install the opentelemetry Operator
-helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
-
-# This automatically generate a self-signed cert and a secret for the webhook
+# Install the opentelemetry Operator, this automatically generate a self-signed cert and a secret for the webhook
 helm install my-opentelemetry-operator open-telemetry/opentelemetry-operator --version 0.39.1 \
     -f external-services/kubernetes/helm/opentelemetry-operator/values.yaml
 
+# Create custom CRD for otlp collectors
+kubectl apply -f external-services/kubernetes/app/rbac/otel-dev.yaml
+kubectl apply -R -f external-services/kubernetes/app/opentelemetrycollectors
+
+# Create the ressources for our applications
+kubectl apply -R -f external-services/kubernetes/app/configmaps
+kubectl apply -R -f external-services/kubernetes/app/secrets
+kubectl apply -R -f external-services/kubernetes/app/services
+kubectl apply -R -f external-services/kubernetes/app/statefulsets
+kubectl apply -R -f external-services/kubernetes/app/deployments
+kubectl apply -R -f external-services/kubernetes/app/ingresses
 
 # Create Service account
+kubectl apply -f external-services/kubernetes/app/rbac/github-ci.yaml
 kubectl config get-contexts
 kubectl create token github-ci -n development
 kubectl config set-credentials sa-user --token=$TOKEN
