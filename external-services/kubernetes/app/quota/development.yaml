@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ResourceQuota
 metadata:
-  namespace: development
+  namespace: dev
   name: compute-resources
 spec:
   hard:

@@ -2,6 +2,3 @@ admissionWebhooks:
   certManager:
     enabled: false
     autoGenerateCert: true
-# presets:
-#   kubernetesAttributes:
-#     enabled: true

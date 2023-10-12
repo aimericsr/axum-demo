@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: main
-  namespace: development
+  namespace: dev
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:

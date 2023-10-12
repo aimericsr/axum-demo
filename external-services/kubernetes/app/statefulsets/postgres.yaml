@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgres
-  namespace: development
+  namespace: dev
 spec:
   replicas: 1
   serviceName: "postgres" # A headless service to manage network identities
@@ -28,6 +28,9 @@ spec:
         - containerPort: 5432
         env:
         - name: POSTGRES_PASSWORD
-          value: "welcome"
+          valueFrom:
+            secretKeyRef:
+              name: axum-demo
+              key: service_db_password
         - name: POSTGRES_DB
           value: "app_db"

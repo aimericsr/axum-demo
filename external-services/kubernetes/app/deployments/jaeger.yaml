@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: jaeger
-  namespace: development
+  namespace: dev
 spec:
   selector:
     matchLabels:
@@ -24,6 +24,7 @@ spec:
             cpu: 100m
         ports:
         - containerPort: 16686
+        - containerPort: 14269
         - containerPort: 4317
         env:
         - name: COLLECTOR_ZIPKIN_HTTP_PORT

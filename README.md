@@ -8,28 +8,37 @@ The observability architecture is based on the official [exemple](https://opente
 
 ```mermaid
 graph LR;
- client([client])-. Ingress-managed <br> load balancer .->ingress[Ingress];
+ client([Client])-. Ingress-managed <br> load balancer .->ingress[Ingress];
  subgraph cluster
- ingress;
  ingress-->|routing rule|service_web[Web API Service];
+
+ subgraph app[Application]
  service_web-->pod_web_1[Pod];
- service_web-->pod_web_2[Pod];
+ end
 
  pod_web_1-->service_database[Database Service];
- pod_web_2-->service_database[Database Service];
  pod_web_1-->|send traces|otel_collector[Otel Collector];
- pod_web_2-->|send traces|otel_collector[Otel Collector];
- service_database-->pod_database_1[Pod];
 
- otel_collector-->service_jaeger[Jaeger Service];
+ subgraph otel[OpenTelemetry Collector]
+ otel_collector;
+ end
+ otel_collector-->service_jaeger[Service];
 
+ subgraph jaeger[Jaeger Backend]
  service_jaeger-->pod_jaeger_1[Pod];
+ end
 
+ subgraph database[Database]
+ service_database-->pod_database_1[Pod];
  service_database_exporter[Database Exporter Service]-->|fetch metrics, convert it<br/>and expose to /metrics|service_database[Database Service];
+ end
+
+ subgraph prometheus_operator[Prometheus Operator]
+ service_prometheus-->pod_prometheus_1[Pod];
+ end
 
  service_prometheus[Prometheus Service]-->|scrape /metrics|service_web;
  service_prometheus[Prometheus Service]-->|scrape /metrics|service_database_exporter[Database Exporter Service];
- service_prometheus-->pod_prometheus_1[Pod];
 
  grafana[Grafana UI]-->|fetch data|service_prometheus;
  grafana[Grafana UI]-->|fetch data|service_jaeger;
@@ -37,11 +46,18 @@ graph LR;
  end
  classDef plain fill:#ddd,stroke:#fff,stroke-width:4px,color:#000;
  classDef k8s fill:#326ce5,stroke:#fff,stroke-width:4px,color:#fff;
- classDef cluster fill:#fff,stroke:#bbb,stroke-width:2px,color:#326ce5;
- class ingress,service_web,service_database,service_database_exporter,service_prometheus,otel_collector,grafana,service_jaeger,pod_web_1,pod_web_2,pod_database_1,pod_jaeger_1,pod_prometheus_1 k8s;
+ classDef box fill:#fff,stroke:#bbb,stroke-width:2px,color:#326ce5;
+ class ingress,service_web,service_database,service_database_exporter,service_prometheus,otel_collector,grafana,service_jaeger,pod_web_1,pod_database_1,pod_jaeger_1,pod_prometheus_1 k8s;
  class client plain;
- class cluster cluster;
+ class cluster,prometheus_operator,jaeger,database,app,otel box;
 ```
+
+The prometheus operator is used to monitor kubernetes API, the postgres instance and the web application. The database is generally hosted outside of the kubernetes cluster but for the sake of the demonstration, we will deploy it inside the cluster. To add a new target to prometheus, we juste have to create a CRD of type ServiceMonitor and add the label: 
+release: prometheus.
+
+The opentelemetry operator give use new CRD for opentelmetry collectors with differents deployments modes(deployment, statefulset, daemonset, sidecar). Here we use the daemonset mode to be sure that one pod is available on all nodes. The collector is able to receive data from different sources, here we send it via grpc on the port 4317 on the collector. It then process data to add kubernetes metadata for all traces it receive to enriche the information of the traces and add more contexte.
+
+All of the traces are then exported to a backend : jaeger. All the traces will be store here and we can view it with the jaeger UI. There are also backends type for cloud integrations like cloud trace for GCP or AWS X-Ray. A full list of the available exporters can be found [here](https://opentelemetry.io/ecosystem/registry/?component=exporter)
 
 ## Exemple of a trace view in jaeger UI : 
 
@@ -116,6 +132,7 @@ function test name : test*[function_name]*[ok/err]\_[case_tested]
 - handle request body validation
 - Grpc routes
 - GraphQL routes
+- Infra : Deployments strategies and upgrade helm charts
 
 ## License
 
@@ -142,7 +159,6 @@ docker-compose --profile load-test run k6 run -o experimental-prometheus-rw /scr
 minikube addons enable dashboard
 minikube addons enable metrics-server
 minikube addons enable ingress
-minikube start
 minikube start --memory 4096 --cpus 4
 minikube tunnel
 ```
@@ -152,8 +168,8 @@ To use Ingress on local with a host add the following line to your /etc/hosts fi
 ## Lunch k8 cluster
 
 ```sh
-kubectl apply -f external-services/kubernetes/app/namespaces/development.yaml
-kubectl config set-context minikube --namespace=development
+kubectl apply -f external-services/kubernetes/app/namespaces/dev.yaml
+kubectl config set-context minikube --namespace=dev
 
 # Helm : add needed repositories
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -163,15 +179,12 @@ helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm
 # Install Prometheus to scrape kubernetes engine metrics, install also Grafana with build-in dashboard
 helm install prometheus prometheus-community/kube-prometheus-stack --version "51.2.0" \
      -f external-services/kubernetes/helm/kube-prometheus-stack/values.yaml \
-     --namespace=development
-
-# Create custom CRD for monitoring our applications
-kubectl apply -R -f external-services/kubernetes/app/servicemonitor
+     --namespace=dev
 
 # Create postgres exporter to be able to monitor with prometheus
 helm install postgres-exporter prometheus-community/prometheus-postgres-exporter --version "5.1.0" \
     -f external-services/kubernetes/helm/prometheus-postgres-exporter/values.yaml \
-     --namespace=development
+     --namespace=dev
 
 # Install Cert manager
 helm install \
