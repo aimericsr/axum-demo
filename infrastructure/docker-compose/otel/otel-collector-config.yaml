@@ -13,11 +13,6 @@ processors:
         match_type: strict
         services:
         - axum-otpl
-  attributes/k8s.cluster.name:
-    actions:
-    - key: k8s.cluster.name
-      value: k8s-cluster
-      action: insert
 
 exporters:
   otlp/jaeger:
@@ -36,5 +31,5 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [batch, filter/allowlist, attributes/k8s.cluster.name]
+      processors: [filter/allowlist, batch]
       exporters: [otlp/jaeger]
