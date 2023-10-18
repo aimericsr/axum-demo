@@ -5,8 +5,8 @@ use std::env;
 use std::str::FromStr;
 use std::sync::OnceLock;
 
-// be sure to be available during the whole execution of the program
-// be sure the init it only do once
+/// Be sure to be available during the whole execution of the program
+/// and to init it only once.
 pub fn config() -> &'static Config {
     static INSTANCE: OnceLock<Config> = OnceLock::new();
 
@@ -16,6 +16,7 @@ pub fn config() -> &'static Config {
     })
 }
 
+/// Struct holding all the variables needed to start the application.
 pub struct Config {
     pub application: ApplicationSettings,
     pub postgres: Postgres,
@@ -94,7 +95,6 @@ fn get_env_b64u_as_u8s(name: &'static str) -> Result<Vec<u8>> {
     base64_url::decode(&get_env(name)?).map_err(|_| Error::ConfigWrongFormat(name))
 }
 
-// Importez les dépendances nécessaires pour les tests
 #[cfg(test)]
 mod tests {
     use super::*;

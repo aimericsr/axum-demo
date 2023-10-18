@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use tower_cookies::Cookies;
 use tracing::debug;
 use utoipa::{IntoParams, ToSchema};
+use validator::{Validate, ValidationError};
 
 pub fn routes(mm: ModelManager) -> Router {
     Router::new().nest("/api", sub_routes(mm))
@@ -37,7 +38,9 @@ pub struct LoginResponseResult {
 // region:    --- Login
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct LoginPayload {
+    //#[validate(length(min = 1, message = "Can not be empty"))]
     username: String,
+    //#[validate]
     pwd: String,
 }
 

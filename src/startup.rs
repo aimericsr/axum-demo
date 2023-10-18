@@ -4,7 +4,6 @@ use crate::config::Config;
 pub use crate::error::{Error, Result};
 use crate::model::ModelManager;
 use crate::observability::metrics::track_metrics;
-use crate::observability::tracing::init_subscriber;
 use crate::web;
 use crate::web::mw_auth::mw_ctx_require;
 use crate::web::mw_res_map::mw_res_map;
@@ -12,115 +11,129 @@ use crate::web::rest::routes_health::routes as routes_health;
 use crate::web::rest::routes_hello::routes as routes_hello;
 use crate::web::rest::routes_login::routes as routes_login;
 use crate::web::rest::routes_prometheus::routes as routes_prometheus;
-use crate::web::rest::routes_static::serve_dir as routes_static;
+use crate::web::rest::routes_static::routes as routes_static;
 use crate::web::routes_docs::routes as routes_docs;
 use crate::web::rpc;
-use axum::body::Body;
-use axum::http::request::Builder;
+use axum::extract::connect_info::IntoMakeServiceWithConnectInfo;
 use axum::http::HeaderValue;
 use axum::http::Method;
-use axum::http::Request;
 use axum::middleware;
 use axum::middleware::{from_fn, from_fn_with_state, map_response};
+use axum::BoxError;
 use axum::Router;
+use axum::{error_handling::HandleErrorLayer, http::StatusCode};
 use axum_tracing_opentelemetry::middleware::OtelAxumLayer;
 use axum_tracing_opentelemetry::middleware::OtelInResponseLayer;
+use hyper::server::conn::AddrIncoming;
+use hyper::Server;
 use std::net::SocketAddr;
+use std::result::Result as ResultIO;
 use std::time::Duration;
 use tokio::signal;
+use tower::ServiceBuilder;
 use tower_cookies::CookieManagerLayer;
+use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 use tower_http::cors::CorsLayer;
 use tower_http::timeout::TimeoutLayer;
-use tower_http::trace::TraceLayer;
-use tower_request_id::{RequestId, RequestIdLayer};
 use tracing::info;
-use tracing::info_span;
-use tracing::span;
-use tracing::Level;
+use tracing::instrument;
 
-// A new type to hold the newly built server and its port
+/// Type to hold the newly built server and its port
 pub struct Application {
     port: u16,
+    server: Server<AddrIncoming, IntoMakeServiceWithConnectInfo<Router, SocketAddr>>,
 }
 
 impl Application {
-    pub async fn new(config: &Config) -> Result<Self> {
-        Ok(Self {
-            port: config.application.port,
-        })
-    }
-
-    pub async fn run_until_stopped(config: &Config) {
-        let span = span!(Level::INFO, "startup_info").entered();
-
-        //_dev_utils::init_dev().await;
-        info!("Create connection to db");
-        let mm = ModelManager::new()
-            .await
-            .expect("Failed to create modelManager");
-        info!("Creating migrations");
-        mm.clone()
-            .migrate()
-            .await
-            .expect("Failed to migrate database");
-        info!("Created migrations");
+    /// build the axum server with the provided configuration without lunch it
+    pub async fn build(config: &Config) -> Result<Self> {
+        let mm = setup_db_migrations().await;
 
         let routes_all = routes(mm);
 
         let addr = SocketAddr::from(([0, 0, 0, 0], config.application.port));
         info!("LISTENING on {addr}");
 
-        let _span = span.exit();
+        let server = axum::Server::bind(&addr)
+            .serve(routes_all.into_make_service_with_connect_info::<SocketAddr>());
 
-        axum::Server::bind(&addr)
-            .serve(routes_all.into_make_service())
-            .with_graceful_shutdown(shutdown_signal())
-            .await
-            .unwrap();
+        Ok(Self {
+            port: config.application.port,
+            server,
+        })
     }
 
+    /// Lunch the already build server to start listening to requests<br><br>
+    /// We append the function with_graceful_shutdown to the axum Server here because the type that it return is
+    /// private to hyper crate so we can't put it in the Application struct
+    pub async fn run_until_stopped(self) -> ResultIO<(), hyper::Error> {
+        self.server.with_graceful_shutdown(shutdown_signal()).await
+    }
+
+    /// Returns the port on which the application will be listening to
     pub fn port(&self) -> u16 {
         self.port
     }
 }
 
+#[instrument()]
+async fn setup_db_migrations() -> ModelManager {
+    info!("Create connection to db");
+    let mm = ModelManager::new()
+        .await
+        .expect("Failed to create modelManager");
+    info!("Creating migrations");
+    mm.clone()
+        .migrate()
+        .await
+        .expect("Failed to migrate database");
+    info!("Created migrations");
+    mm
+}
+
 fn routes(mm: ModelManager) -> Router {
+    let governor_conf = Box::new(
+        GovernorConfigBuilder::default()
+            .per_second(2)
+            .burst_size(5)
+            .use_headers()
+            .finish()
+            .unwrap(),
+    );
+
+    let rate_limit_layer = ServiceBuilder::new()
+        .layer(HandleErrorLayer::new(|_: BoxError| async move {
+            StatusCode::TOO_MANY_REQUESTS
+        }))
+        .layer(GovernorLayer {
+            config: Box::leak(governor_conf),
+        });
+
+    let cors_layer = CorsLayer::new()
+        .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
+        .allow_methods([Method::GET]);
+
     let routes_rpc = rpc::routes(mm.clone()).route_layer(from_fn(mw_ctx_require));
 
     let routes_all = Router::new()
-        .merge(routes_prometheus())
         .merge(routes_docs())
         .merge(routes_health())
+        .merge(routes_static())
         .merge(routes_hello())
         .merge(routes_login(mm.clone()))
         .nest("/api", routes_rpc)
+        .merge(routes_prometheus())
         .layer(map_response(mw_res_map))
-        // above CookieManagerLayer because we need it
         .layer(from_fn_with_state(mm.clone(), web::mw_auth::mw_ctx_resolve))
         .layer(CookieManagerLayer::new())
-        .layer(
-            TraceLayer::new_for_http().make_span_with(|request: &Request<Body>| {
-                let request_id = request
-                    .extensions()
-                    .get::<RequestId>()
-                    .map(ToString::to_string)
-                    .unwrap_or_else(|| "unknown".into());
-                info_span!("request_id", request_id)
-            }),
-        )
-        .layer(RequestIdLayer)
         .layer(middleware::from_fn(track_metrics))
         // include trace context as header into the response
         .layer(OtelInResponseLayer::default())
         //start OpenTelemetry trace on incoming request
         .layer(OtelAxumLayer::default())
-        .layer(TimeoutLayer::new(Duration::from_secs(5)))
-        .layer(
-            CorsLayer::new()
-                .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
-                .allow_methods([Method::GET]),
-        )
-        .fallback_service(routes_static());
+        .layer(cors_layer)
+        .layer(rate_limit_layer)
+        .layer(TimeoutLayer::new(Duration::from_secs(5)));
     routes_all
 }
 

@@ -52,14 +52,14 @@ graph LR;
  class cluster,prometheus_operator,jaeger,database,app,otel box;
 ```
 
-The prometheus operator is used to monitor kubernetes API, the postgres instance and the web application. The database is generally hosted outside of the kubernetes cluster but for the sake of the demonstration, we will deploy it inside the cluster. To add a new target to prometheus, we juste have to create a CRD of type ServiceMonitor and add the label: 
+The prometheus operator is used to monitor kubernetes API, the postgres instance and the web application. The database is generally hosted outside of the kubernetes cluster but for the sake of the demonstration, we will deploy it inside the cluster. To add a new target to prometheus, we juste have to create a CRD of type ServiceMonitor and add the label:
 release: prometheus.
 
 The opentelemetry operator give use new CRD for opentelmetry collectors with differents deployments modes(deployment, statefulset, daemonset, sidecar). Here we use the daemonset mode to be sure that one pod is available on all nodes. The collector is able to receive data from different sources, here we send it via grpc on the port 4317 on the collector. It then process data to add kubernetes metadata for all traces it receive to enriche the information of the traces and add more contexte.
 
 All of the traces are then exported to a backend : jaeger. All the traces will be store here and we can view it with the jaeger UI. There are also backends type for cloud integrations like cloud trace for GCP or AWS X-Ray. A full list of the available exporters can be found [here](https://opentelemetry.io/ecosystem/registry/?component=exporter)
 
-## Exemple of a trace view in jaeger UI : 
+## Exemple of a trace view in jaeger UI :
 
 ![screenshot of jaeger](images/trace_exemple.png)
 
@@ -111,16 +111,16 @@ function test name : test*[function_name]*[ok/err]\_[case_tested]
 ## Features
 
 - Timout
-- CORS
+- Rate Limiting
 - Serve static file
 - Helth check routes
 - Rest Routes
 - RPC Routes
 - OpenAPI docs
 - Auth with cookies and jwt
-- Tracing / metrics export to jeager / - prometheus
-- Visualize data with grafana
+- Tracing / metrics export to jeager / prometheus
 - Graceful Shutdown for sending last traces
+- Visualize data with grafana
 
 ## To Do
 
@@ -132,7 +132,7 @@ function test name : test*[function_name]*[ok/err]\_[case_tested]
 - handle request body validation
 - Grpc routes
 - GraphQL routes
-- Infra : Deployments strategies and upgrade helm charts
+- Infra : Deployments strategies and upgrade helm charts ?
 
 ## License
 
@@ -163,7 +163,7 @@ minikube start --memory 4096 --cpus 4
 minikube tunnel
 ```
 
-To use Ingress on local with a host add the following line to your /etc/hosts file: 127.0.0.1 <host-name>
+To use Ingress on local with a host add the following line to your /etc/hosts file: <br> 127.0.0.1 host-name-you-want
 
 ## Lunch k8 cluster
 

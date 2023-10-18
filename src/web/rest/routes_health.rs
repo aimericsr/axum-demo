@@ -1,4 +1,9 @@
+use std::time::Duration;
+
 use axum::{routing::get, Json, Router};
+use tokio::time::sleep;
+use tracing::info;
+use tracing_opentelemetry_instrumentation_sdk::find_current_trace_id;
 
 pub fn routes() -> Router {
     Router::new().nest("/health", sub_routes())
@@ -44,8 +49,12 @@ async fn health_ready() -> Json<Vec<String>> {
     tag = "health",
     responses(
         (status = 200, description = "Live health check"),
+        (status = 408, description = "Timeout"),
     )
 )]
 async fn health_live() -> Json<Vec<String>> {
+    let trace_id = find_current_trace_id();
+    info!(trace_id);
+    sleep(Duration::from_secs(6)).await;
     Json(vec!["alive".to_owned(), "true".to_owned()])
 }

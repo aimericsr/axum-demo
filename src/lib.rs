@@ -33,11 +33,11 @@ async fn main() -> std::io::Result<()> {
 
 /// For dev only, shoud be remove in a future release
 mod _dev_utils;
-/// Load the config from different locations
+/// Load the config for the app, can come from differents locations
 pub mod config;
 /// Handle all the JWT related operations
 mod crypt;
-/// Excract the contexte from the HTTP request
+/// Excract the context from the HTTP request
 mod ctx;
 /// All possible errors that can occurs
 mod error;

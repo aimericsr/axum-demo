@@ -8,7 +8,13 @@ async fn main() -> std::io::Result<()> {
 
     init_subscriber();
 
-    let _ = Application::new(config);
-    Application::run_until_stopped(config).await;
+    let application = Application::build(config)
+        .await
+        .expect("Failed to build the app");
+    application
+        .run_until_stopped()
+        .await
+        .expect("Failed to lunch the app");
+
     Ok(())
 }

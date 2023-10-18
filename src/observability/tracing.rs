@@ -25,11 +25,13 @@ use crate::config::config;
 /// init_subscriber();
 /// ```
 
+/// Set the subscriber as the default for the lifetime of the applications.
 pub fn init_subscriber() {
     let subscriber = get_subscriber();
     set_global_default(subscriber).expect("Failed to set subscriber");
 }
 
+/// Create the subscriber.
 fn get_subscriber() -> impl Subscriber + Sync + Send {
     // Config which trace levels to collect
     let env_filter = EnvFilter::builder().try_from_env().unwrap();
@@ -39,9 +41,6 @@ fn get_subscriber() -> impl Subscriber + Sync + Send {
 
     let tracer = init_otlp_traces().expect("Failed to init the otlp tracer");
     let opentelemetry_layer = tracing_opentelemetry::layer().with_tracer(tracer);
-
-    // let file = File::create("debug.log").expect("Failed to create log file");
-    // let file_layer = tracing_subscriber::fmt::layer().with_writer(Arc::new(file));
 
     Registry::default()
         .with(env_filter)
@@ -55,7 +54,6 @@ fn init_otlp_traces() -> Result<sdktrace::Tracer, TraceError> {
 
     opentelemetry_otlp::new_pipeline()
         .tracing()
-        // where to send the traces
         .with_exporter(
             opentelemetry_otlp::new_exporter()
                 .tonic()
