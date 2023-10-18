@@ -3,7 +3,7 @@ use opentelemetry::sdk::trace::{self, Sampler};
 use opentelemetry::trace::TraceError;
 use opentelemetry::KeyValue;
 use opentelemetry::{global, runtime::Tokio, sdk::propagation::TraceContextPropagator};
-use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_otlp::{Compression, WithExportConfig};
 use opentelemetry_sdk::trace::{BatchConfig, RandomIdGenerator};
 use opentelemetry_sdk::{trace as sdktrace, Resource};
 use opentelemetry_semantic_conventions::resource::{
@@ -31,7 +31,7 @@ pub fn init_subscriber() {
     set_global_default(subscriber).expect("Failed to set subscriber");
 }
 
-/// Create the subscriber.
+/// Retreive the subscriber configured
 fn get_subscriber() -> impl Subscriber + Sync + Send {
     // Config which trace levels to collect
     let env_filter = EnvFilter::builder().try_from_env().unwrap();
@@ -62,18 +62,17 @@ fn init_otlp_traces() -> Result<sdktrace::Tracer, TraceError> {
         )
         .with_trace_config(
             trace::config()
-                .with_sampler(Sampler::AlwaysOn)
                 .with_id_generator(RandomIdGenerator::default())
-                .with_max_events_per_span(64)
-                .with_max_attributes_per_span(16)
+                .with_max_attributes_per_event(128)
+                .with_max_attributes_per_link(128)
                 .with_resource(Resource::new(vec![
                     KeyValue::new("service.schema.url", SCHEMA_URL),
                     SERVICE_NAME.string(&*config().otel.service_name),
                     SERVICE_VERSION.string(&*config().otel.service_version),
                     SERVICE_NAMESPACE.string(&*config().otel.service_namespace),
-                ])),
+                ]))
+                .with_sampler(Sampler::AlwaysOn),
         )
-        // batch exporter instead of exporting each span synchronously on drop
         .with_batch_config(BatchConfig::default())
         .install_batch(Tokio)
 }

@@ -1,0 +1,72 @@
+use axum_demo::{config::get_configuration, startup::Application};
+use tokio::time::{sleep, Duration};
+use uuid::Uuid;
+
+pub struct TestApp {
+    pub address: String,
+}
+
+impl TestApp {
+    pub async fn post_subscriptions(&self, body: String) -> reqwest::Response {
+        reqwest::Client::new()
+            .post(&format!("{}/subscriptions", &self.address))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .body(body)
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    pub async fn post_newsletters(&self, body: serde_json::Value) -> reqwest::Response {
+        reqwest::Client::new()
+            .post(&format!("{}/newsletters", &self.address))
+            .basic_auth(Uuid::new_v4().to_string(), Some(Uuid::new_v4().to_string()))
+            .json(&body)
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+}
+
+pub async fn spawn_app() -> TestApp {
+    let configuration = {
+        let mut c = get_configuration().expect("Failed to read configuration");
+        //c.postgres.db_name = Uuid::new_v4().to_string().into();
+        c.application.port = 0;
+        c
+    };
+
+    // Create and migrate the database
+    //configure_database(&configuration.database).await;
+    // Launch the application as a background task
+
+    let application = Application::build(configuration)
+        .await
+        .expect("Failed to build the app");
+    let address = format!("http://127.0.0.1:{}", application.port());
+    dbg!(address.clone());
+    let _ = tokio::spawn(application.run_until_stopped());
+    //sleep(Duration::from_millis(100)).await;
+
+    TestApp { address }
+}
+
+// async fn configure_database(config: &DatabaseSettings) -> PgPool {
+//     // Create database
+//     let mut connection = PgConnection::connect_with(&config.without_db())
+//         .await
+//         .expect("Failed to connect to Postgres");
+//     connection
+//         .execute(format!(r#"CREATE DATABASE "{}";"#, config.database_name).as_str())
+//         .await
+//         .expect("Failed to create database.");
+//     // Migrate database
+//     let connection_pool = PgPool::connect_with(config.with_db())
+//         .await
+//         .expect("Failed to connect to Postgres.");
+//     sqlx::migrate!("./migrations")
+//         .run(&connection_pool)
+//         .await
+//         .expect("Failed to migrate the database");
+//     connection_pool
+// }

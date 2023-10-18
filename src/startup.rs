@@ -29,6 +29,7 @@ use hyper::Server;
 use std::net::SocketAddr;
 use std::result::Result as ResultIO;
 use std::time::Duration;
+use tokio::net::TcpListener;
 use tokio::signal;
 use tower::ServiceBuilder;
 use tower_cookies::CookieManagerLayer;
@@ -46,21 +47,32 @@ pub struct Application {
 
 impl Application {
     /// build the axum server with the provided configuration without lunch it
-    pub async fn build(config: &Config) -> Result<Self> {
+    pub async fn build(config: Config) -> Result<Self> {
         let mm = setup_db_migrations().await;
 
         let routes_all = routes(mm);
 
         let addr = SocketAddr::from(([0, 0, 0, 0], config.application.port));
-        info!("LISTENING on {addr}");
+
+        //let address = format!("{}:{}", config.application.host, config.application.port);
+        // let address = format!("{}:{}", config.application.host, config.application.port);
+        // let listener = TcpListener::bind(address)
+        //     .await
+        //     .expect("Failed to bind the port");
+        // let addr = listener
+        //     .local_addr()
+        //     .expect("Failed to retreive SocketAddr");
+        // let port = addr.port();
+
+        //info!("LISTENING on {addr}");
 
         let server = axum::Server::bind(&addr)
             .serve(routes_all.into_make_service_with_connect_info::<SocketAddr>());
+        let addr = server.local_addr();
+        info!("LISTENING on {addr}");
+        let port = addr.port();
 
-        Ok(Self {
-            port: config.application.port,
-            server,
-        })
+        Ok(Self { port, server })
     }
 
     /// Lunch the already build server to start listening to requests<br><br>
@@ -122,7 +134,7 @@ fn routes(mm: ModelManager) -> Router {
         .merge(routes_hello())
         .merge(routes_login(mm.clone()))
         .nest("/api", routes_rpc)
-        .merge(routes_prometheus())
+        //.merge(routes_prometheus())
         .layer(map_response(mw_res_map))
         .layer(from_fn_with_state(mm.clone(), web::mw_auth::mw_ctx_resolve))
         .layer(CookieManagerLayer::new())

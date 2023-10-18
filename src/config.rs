@@ -16,6 +16,10 @@ pub fn config() -> &'static Config {
     })
 }
 
+pub fn get_configuration() -> Result<Config> {
+    Config::load_from_env()
+}
+
 /// Struct holding all the variables needed to start the application.
 pub struct Config {
     pub application: ApplicationSettings,

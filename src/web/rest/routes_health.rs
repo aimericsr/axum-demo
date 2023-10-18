@@ -55,6 +55,5 @@ async fn health_ready() -> Json<Vec<String>> {
 async fn health_live() -> Json<Vec<String>> {
     let trace_id = find_current_trace_id();
     info!(trace_id);
-    sleep(Duration::from_secs(6)).await;
     Json(vec!["alive".to_owned(), "true".to_owned()])
 }
