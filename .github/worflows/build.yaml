@@ -7,164 +7,97 @@ on:
     branches: [main, dev]
 
 env:
-  RUST_VERSION: 1.67
+  RUST_VERSION: 1.73
 
 jobs:
-  # test:
-  #   runs-on: ubuntu-latest
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.0-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: welcome
+          POSTGRES_DB: app_db
+        ports:
+        - 5432:5432
 
-  #   container:
-  #     image: xd009642/tarpaulin:0.25.0
-  #     options: --security-opt seccomp=unconfined
+    steps:
+    - name: Check out the repo
+      uses: actions/checkout@v3
 
-  #   steps:
-  #     - uses: actions/checkout@v3
+    - name: Install rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ env.RUST_VERSION }}
 
-  #     - uses: dtolnay/rust-toolchain@stable
+    - name: Config env variables
+      run: export SERVICE_DB_HOST=postgres
 
-  #     - uses: Swatinem/rust-cache@v2
+    - name: Run test
+      run: cargo test --test api
 
-  #     - uses: actions/setup-java@v3
-  #       with:
-  #         distribution: "temurin"
-  #         java-version: "17"
+fmt:
+  name: Fmt
+  runs-on: ubuntu-latest
+  steps:
+  - name: Check out the repo
+    uses: actions/checkout@v3
 
-  #     - name: Installer curl et sudo
-  #       run: |
-  #         apt-get update
-  #         apt-get install -y curl sudo
+  - name: Install rust toolchain
+    uses: actions-rs/toolchain@v1
+    with:
+      toolchain: ${{ env.RUST_VERSION }}
+      components: rustfmt
 
-  #     - name: install firebase
-  #       run: curl -sL https://firebase.tools | bash
+  - name: Run fmt
+    run: cargo fmt --all -- --check
 
-  #     - name: Set Credential File For Firebase
-  #       run: |
-  #         echo $FIREBASE_ADMIN_KEY >> firebase-key.json
-  #       shell: bash
-  #       env:
-  #         FIREBASE_ADMIN_KEY: ${{secrets.FIREBASE_ADMIN_KEY}}
+clippy:
+  name: Clippy
+  runs-on: ubuntu-latest
+  steps:
+  - uses: actions/checkout@v3
 
-  #     - name: Run test
-  #       run: |
-  #         export FIRESTORE_EMULATOR_HOST=localhost:8080
-  #         export APP_FIREBASE__CREDENTIAL=firebase-key.json
-  #         firebase emulators:exec --project mspr-epsi-coffee 'cargo tarpaulin --out Xml --output-dir coverage --fail-under 50'
+  - name: Install rust toolchain
+    uses: actions-rs/toolchain@v1
+    with:
+      toolchain: ${{ env.RUST_VERSION }}
+      components: clippy
 
-  #     - name: Upload to codecov.io
-  #       uses: codecov/codecov-action@v3
-  #       with:
-  #         fail_ci_if_error: true
-  #         files: coverage/cobertura.xml
-  #         root_dir: /__w/mspr-coffee-erp-api/mspr-coffee-erp-api
+  - name: Run clippy
+    run: cargo clippy
 
-  #     - name: Add Coverage PR Comment
-  #       uses: marocchino/sticky-pull-request-comment@v2
-  #       if: github.event_name == 'pull_request'
-  #       with:
-  #         recreate: true
-  #         path: coverage/cobertura.xml
+build-and-push-to-artifact-registery:
+  #needs: [test, fmt, clippy]
+  runs-on: ubuntu-latest
 
-  #     - name: Archive code coverage results
-  #       uses: actions/upload-artifact@v1
-  #       with:
-  #         name: code-coverage-report
-  #         path: coverage/cobertura.xml
+  env:
+    HUB_NAME: "aimeric"
+    IMAGE_NAME: "axum-demo"
 
-  # fmt:
-  #   name: Rustfmt
-  #   runs-on: ubuntu-latest
+  steps:
+  - uses: actions/checkout@v3
 
-  #   steps:
-  #     - uses: actions/checkout@v3
+  - uses: docker/setup-buildx-action@v2
 
-  #     - name: Install rust toolchain
-  #       uses: actions-rs/toolchain@v1
-  #       with:
-  #         toolchain: ${{ env.RUST_VERSION }}
-  #         components: rustfmt
+  - name: Log in to Docker Hub
+    uses: docker/login-action@v3
+    with:
+      username: ${{ secrets.DOCKERHUB_USERNAME }}
+      password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-  #     - name: Run fmt
-  #       run: cargo fmt --all -- --check
+  - name: Build and Push docker image
+    uses: docker/build-push-action@v4
+    env:
+      IMAGE_URL: ${{ env.HUB_NAME }}/${{ env.IMAGE_NAME }}
+    with:
+      context: .
+      push: true
+      cache-from: type=gha
+      cache-to: type=gha,mode=max
+      platforms: |
+        linux/amd64
+      tags: |
+        ${{ env.IMAGE_URL }}:latest
 
-  # clippy:
-  #   name: Clippy
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-
-  #     - name: Install rust toolchain
-  #       uses: actions-rs/toolchain@v1
-  #       with:
-  #         toolchain: ${{ env.RUST_VERSION }}
-  #         components: clippy
-
-  #     - name: Run clippy
-  #       run: cargo clippy
-
-  # build-and-push-to-artifact-registery:
-  #   #needs: [test, fmt, clippy]
-  #   runs-on: ubuntu-latest
-
-  #   if: github.ref == 'refs/heads/main'
-  #   env:
-  #     ARTIFACT_REGISTRY: europe-west9-docker.pkg.dev
-  #     REPO_NAME: "erp-api"
-  #     IMAGE_NAME: "erp_api"
-  #     CLOUD_RUN_ID: erp-api-runner
-
-  #   steps:
-  #     - uses: actions/checkout@v3
-
-  #     - uses: docker/setup-buildx-action@v2
-
-  #     - name: Automatic Tagging of Releases
-  #       id: increment-git-tag
-  #       run: |
-  #         bash ./scripts/git_update.sh -v patch
-
-  #     - name: Set Credential File For Firebase
-  #       run: |
-  #         echo $FIREBASE_ADMIN_KEY >> firebase-key.json
-  #       shell: bash
-  #       env:
-  #         FIREBASE_ADMIN_KEY: ${{secrets.FIREBASE_ADMIN_KEY}}
-
-  #     - name: Login to GAR
-  #       uses: docker/login-action@v2
-  #       with:
-  #         registry: europe-west9-docker.pkg.dev
-  #         username: _json_key
-  #         password: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
-
-  #     - uses: docker/build-push-action@v4
-  #       env:
-  #         IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}
-  #         GIT_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
-  #       with:
-  #         context: .
-  #         push: true
-  #         cache-from: type=gha
-  #         cache-to: type=gha,mode=max
-  #         platforms: |
-  #           linux/amd64
-  #         tags: |
-  #           ${{ env.IMAGE_URL }}:${{ env.GIT_TAG }}
-  #           ${{ env.IMAGE_URL }}:latest
-
-  #     - id: "auth"
-  #       name: "Authenticate to Google Cloud"
-  #       uses: "google-github-actions/auth@v1"
-  #       with:
-  #         credentials_json: "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}"
-
-  #     - name: Deploy To Cloud Run
-  #       env:
-  #         IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}
-  #         GIT_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
-  #       run: |
-  #         gcloud run deploy $CLOUD_RUN_ID --image=${{ env.IMAGE_URL }}:${{ env.GIT_TAG }} \
-  #           --region=europe-west9 \
-  #           --min-instances=0 \
-  #           --max-instances=1 \
-  #           --no-allow-unauthenticated \
-  #           --port=8000
