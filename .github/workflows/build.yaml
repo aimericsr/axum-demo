@@ -73,7 +73,6 @@ jobs:
     #needs: [test, fmt, clippy]
     name: Build and push image to Docker Hub
     runs-on: ubuntu-latest
-
     env:
       HUB_NAME: "aimeric"
       IMAGE_NAME: "axum-demo"
