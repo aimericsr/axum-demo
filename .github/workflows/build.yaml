@@ -104,7 +104,7 @@ jobs:
         cache-to: type=gha,mode=max
         platforms: |
           linux/amd64
-          linux/arm64/v7
+          linux/arm64
         tags: |
           ${{ env.IMAGE_URL }}:latest
 
