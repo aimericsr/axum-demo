@@ -67,8 +67,9 @@ services:
       - ./infrastructure/docker-compose/grafana:/etc/grafana/provisioning
   # web:
   #   profiles: ["app"]
-  #   #image: aimeric/axum-demo:v1.0.3
-  #   build: .
+  #   image: aimeric/axum-demo:latest
+  #   platform: linux/amd64
+  #   #build: .
   #   healthcheck:
   #     test: wget --no-verbose --tries=1 --spider http://localhost:8080/health/live || exit 1
   #     interval: 30s

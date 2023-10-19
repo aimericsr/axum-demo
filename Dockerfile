@@ -1,5 +1,5 @@
 # Install cargo-chef
-FROM clux/muslrust:stable AS chef
+FROM clux/muslrust:1.73.0 AS chef
 USER root
 RUN cargo install cargo-chef
 WORKDIR /app
@@ -17,7 +17,7 @@ COPY . .
 RUN cargo build --release --target x86_64-unknown-linux-musl --bin axum-demo
 
 # Runtime images and loading configuration
-FROM alpine AS runtime
+FROM alpine:3.18.4 AS runtime
 RUN addgroup -S myuser && adduser -S myuser -G myuser
 COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/axum-demo /usr/local/bin/
 COPY .env /usr/local/bin/
