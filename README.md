@@ -1,4 +1,4 @@
-![build](https://github.com/aimericsr/axum-demo/actions/workflows/build.yml/badge.svg)
+![build](https://github.com/aimericsr/axum-demo/actions/workflows/build.yaml/badge.svg)
 
 # Web API to demonstrate axum-web capabilities
 
