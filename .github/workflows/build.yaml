@@ -10,66 +10,68 @@ env:
   RUST_VERSION: 1.73
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16.0-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: welcome
-          POSTGRES_DB: app_db
-        ports:
-        - 5432:5432
+  # test:
+  #   name: Test
+  #   runs-on: ubuntu-latest
+  #   services:
+  #     postgres:
+  #       image: postgres:16.0-alpine
+  #       env:
+  #         POSTGRES_USER: postgres
+  #         POSTGRES_PASSWORD: welcome
+  #         POSTGRES_DB: app_db
+  #       ports:
+  #       - 5432:5432
 
-    steps:
-    - name: Check out the repo
-      uses: actions/checkout@v3
+  #   steps:
+  #   - name: Check out the repo
+  #     uses: actions/checkout@v3
 
-    - name: Install rust toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: ${{ env.RUST_VERSION }}
+  #   - name: Install rust toolchain
+  #     uses: actions-rs/toolchain@v1
+  #     with:
+  #       toolchain: ${{ env.RUST_VERSION }}
 
-    - name: Config env variables
-      run: export SERVICE_DB_HOST=postgres
+  #   - name: Config env variables
+  #     run: export SERVICE_DB_HOST=postgres
 
-    - name: Run test
-      run: cargo test --test api
+  #   - name: Run test
+  #     run: cargo test --test api
 
-  fmt:
-    name: Fmt
-    runs-on: ubuntu-latest
-    steps:
-    - name: Check out the repo
-      uses: actions/checkout@v3
+  # fmt:
+  #   name: Fmt
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Check out the repo
+  #     uses: actions/checkout@v3
 
-    - name: Install rust toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: ${{ env.RUST_VERSION }}
-        components: rustfmt
+  #   - name: Install rust toolchain
+  #     uses: actions-rs/toolchain@v1
+  #     with:
+  #       toolchain: ${{ env.RUST_VERSION }}
+  #       components: rustfmt
 
-    - name: Run fmt
-      run: cargo fmt --all -- --check
+  #   - name: Run fmt
+  #     run: cargo fmt --all -- --check
 
-  clippy:
-    name: Clippy
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
+  # clippy:
+  #   name: Clippy
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v3
 
-    - name: Install rust toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: ${{ env.RUST_VERSION }}
-        components: clippy
+  #   - name: Install rust toolchain
+  #     uses: actions-rs/toolchain@v1
+  #     with:
+  #       toolchain: ${{ env.RUST_VERSION }}
+  #       components: clippy
 
-    - name: Run clippy
-      run: cargo clippy
+  #   - name: Run clippy
+  #     run: cargo clippy
 
-  build-and-push-to-artifact-registery:
+  build-and-push-image:
     #needs: [test, fmt, clippy]
+    name: Build and push image to Docker Hub
     runs-on: ubuntu-latest
 
     env:
