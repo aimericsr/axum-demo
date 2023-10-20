@@ -16,20 +16,20 @@ pub struct TestApp {
 }
 
 impl TestApp {
-    pub async fn post_subscriptions(&self, body: String) -> reqwest::Response {
+    pub async fn post_login(&self, body: serde_json::Value) -> reqwest::Response {
         reqwest::Client::new()
-            .post(&format!("{}/subscriptions", &self.address))
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .body(body)
+            .post(&format!("{}/login", &self.address))
+            .header("Content-Type", "application/json")
+            .json(&body)
             .send()
             .await
             .expect("Failed to execute request.")
     }
 
-    pub async fn post_newsletters(&self, body: serde_json::Value) -> reqwest::Response {
+    pub async fn post_logoff(&self, body: serde_json::Value) -> reqwest::Response {
         reqwest::Client::new()
-            .post(&format!("{}/newsletters", &self.address))
-            .basic_auth(Uuid::new_v4().to_string(), Some(Uuid::new_v4().to_string()))
+            .post(&format!("{}/logoff", &self.address))
+            .header("Content-Type", "application/json")
             .json(&body)
             .send()
             .await

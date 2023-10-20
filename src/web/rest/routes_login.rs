@@ -36,12 +36,12 @@ pub struct LoginResponseResult {
 // endregion: --- Structs
 
 // region:    --- Login
-#[derive(Debug, Deserialize, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct LoginPayload {
     //#[validate(length(min = 1, message = "Can not be empty"))]
-    username: String,
+    pub username: String,
     //#[validate]
-    pwd: String,
+    pub pwd: String,
 }
 
 #[utoipa::path(
@@ -105,9 +105,9 @@ async fn api_login(
 // endregion:    --- Login
 
 // region:    --- Logoff
-#[derive(Debug, Deserialize, ToSchema, IntoParams)]
+#[derive(Debug, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct LogoffPayload {
-    logoff: bool,
+    pub logoff: bool,
 }
 
 #[utoipa::path(
