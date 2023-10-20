@@ -1,5 +1,3 @@
-// region:    --- Modules
-
 use crate::config::Config;
 pub use crate::error::{Error, Result};
 use crate::model::ModelManager;
@@ -29,7 +27,6 @@ use hyper::Server;
 use std::net::SocketAddr;
 use std::result::Result as ResultIO;
 use std::time::Duration;
-use tokio::net::TcpListener;
 use tokio::signal;
 use tower::ServiceBuilder;
 use tower_cookies::CookieManagerLayer;
@@ -39,7 +36,7 @@ use tower_http::timeout::TimeoutLayer;
 use tracing::info;
 use tracing::instrument;
 
-/// Type to hold the newly built server and its port
+/// Type to hold the newly built server and his port
 pub struct Application {
     port: u16,
     server: Server<AddrIncoming, IntoMakeServiceWithConnectInfo<Router, SocketAddr>>,
@@ -47,6 +44,7 @@ pub struct Application {
 
 impl Application {
     /// build the axum server with the provided configuration without lunch it
+    #[instrument(skip_all)]
     pub async fn build(config: Config) -> Result<Self> {
         let mm = setup_db_migrations().await;
 
@@ -54,24 +52,11 @@ impl Application {
 
         let addr = SocketAddr::from(([0, 0, 0, 0], config.application.port));
 
-        //let address = format!("{}:{}", config.application.host, config.application.port);
-        // let address = format!("{}:{}", config.application.host, config.application.port);
-        // let listener = TcpListener::bind(address)
-        //     .await
-        //     .expect("Failed to bind the port");
-        // let addr = listener
-        //     .local_addr()
-        //     .expect("Failed to retreive SocketAddr");
-        // let port = addr.port();
-
-        //info!("LISTENING on {addr}");
-
         let server = axum::Server::bind(&addr)
             .serve(routes_all.into_make_service_with_connect_info::<SocketAddr>());
         let addr = server.local_addr();
-        info!("LISTENING on {addr}");
         let port = addr.port();
-
+        info!("Listening on {addr}");
         Ok(Self { port, server })
     }
 
@@ -88,7 +73,6 @@ impl Application {
     }
 }
 
-#[instrument()]
 async fn setup_db_migrations() -> ModelManager {
     info!("Create connection to db");
     let mm = ModelManager::new()
@@ -128,7 +112,6 @@ fn routes(mm: ModelManager) -> Router {
     let routes_rpc = rpc::routes(mm.clone()).route_layer(from_fn(mw_ctx_require));
 
     let routes_all = Router::new()
-        .merge(routes_docs())
         .merge(routes_health())
         .merge(routes_static())
         .merge(routes_hello())
@@ -139,13 +122,14 @@ fn routes(mm: ModelManager) -> Router {
         .layer(from_fn_with_state(mm.clone(), web::mw_auth::mw_ctx_resolve))
         .layer(CookieManagerLayer::new())
         .layer(middleware::from_fn(track_metrics))
+        .layer(cors_layer)
+        .layer(rate_limit_layer)
+        .merge(routes_docs())
+        .layer(TimeoutLayer::new(Duration::from_secs(5)))
         // include trace context as header into the response
         .layer(OtelInResponseLayer::default())
         //start OpenTelemetry trace on incoming request
-        .layer(OtelAxumLayer::default())
-        .layer(cors_layer)
-        .layer(rate_limit_layer)
-        .layer(TimeoutLayer::new(Duration::from_secs(5)));
+        .layer(OtelAxumLayer::default());
     routes_all
 }
 

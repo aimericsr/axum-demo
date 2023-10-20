@@ -2,7 +2,7 @@ use crate::{crypt, model, web};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
-use tracing::{debug, Value};
+use tracing::{debug, error};
 use utoipa::ToSchema;
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -15,7 +15,7 @@ pub enum Error {
     RpcFailJsonParams { rpc_method: String },
 
     // -- Login
-    LoginFailUsernameNotFound,
+    LoginFailUsernameNotFound { username: String },
     LoginFailUserHasNoPwd { user_id: i64 },
     LoginFailPwdNotMatching { user_id: i64 },
 
@@ -78,11 +78,10 @@ impl From<serde_json::Error> for Error {
 impl Error {
     pub fn client_status_and_error(&self) -> (StatusCode, ClientError) {
         use web::Error::*;
-
         #[allow(unreachable_patterns)]
         match self {
             // -- Login
-            LoginFailUsernameNotFound
+            LoginFailUsernameNotFound { .. }
             | LoginFailUserHasNoPwd { .. }
             | LoginFailPwdNotMatching { .. } => (StatusCode::FORBIDDEN, ClientError::LOGIN_FAIL),
 

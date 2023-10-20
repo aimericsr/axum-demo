@@ -1,6 +1,15 @@
-use axum_demo::{config::get_configuration, startup::Application};
-use tokio::time::{sleep, Duration};
+use axum_demo::{
+    config::{get_configuration, Otel},
+    observability::tracing::init_subscriber,
+    startup::Application,
+};
+use std::sync::OnceLock;
 use uuid::Uuid;
+pub fn tracing(otel: &Otel) -> &'static () {
+    static INSTANCE: OnceLock<()> = OnceLock::new();
+
+    INSTANCE.get_or_init(|| init_subscriber(otel))
+}
 
 pub struct TestApp {
     pub address: String,
@@ -33,8 +42,12 @@ pub async fn spawn_app() -> TestApp {
         let mut c = get_configuration().expect("Failed to read configuration");
         //c.postgres.db_name = Uuid::new_v4().to_string().into();
         c.application.port = 0;
+        c.otel.enabled = true;
+        c.otel.stdout_enabled = true;
         c
     };
+
+    tracing(&configuration.otel);
 
     // Create and migrate the database
     //configure_database(&configuration.database).await;
@@ -44,10 +57,7 @@ pub async fn spawn_app() -> TestApp {
         .await
         .expect("Failed to build the app");
     let address = format!("http://127.0.0.1:{}", application.port());
-    dbg!(address.clone());
     let _ = tokio::spawn(application.run_until_stopped());
-    //sleep(Duration::from_millis(100)).await;
-
     TestApp { address }
 }
 

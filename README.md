@@ -1,12 +1,44 @@
 ![build](https://github.com/aimericsr/axum-demo/actions/workflows/build.yaml/badge.svg)
 
-# Web API to demonstrate axum-web capabilities
+# Web API to demonstrate axum capabilities
 
-The internal logic is intentionally keep simple. This allow to focus on the overwall logic of the Axum framework, it's observability and the deployment part.
+[Axum](https://github.com/tokio-rs/axum) is a web framework that is supported by the tokio team. It integrate natively with the tower and tower-http ecosystem, so we can use middleware, services, and utilities with axum. Moreover, we can also use this with other framework that work with tower like hyper for http and tonic for grpc. 
 
-The observability architecture is based on the official [exemple](https://opentelemetry.io/docs/demo/architecture/) of the opentelemetry website, export of traces to jaeger(or other otlp compatible collector) and /metrics exposed to be scraped by prometheus.
+The internal logic is intentionally keep simple. This allow to focus on the overwall logic of the Axum framework, it's observability and the deployment part. As this app is a demo, the goal is to be compliant against the most web API standards.
+
+## Features
+
+- Timout
+- Rate Limiting
+- Serve static file
+- Helth check routes
+- Rest Routes
+- RPC Routes
+- Auth with cookies and jwt
+- [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807) compliant for error message
+- [OpenAPI](https://www.openapis.org) docs
+- Traces export to jeager in the [otlp](https://opentelemetry.io) format
+- Graceful Shutdown for sending last traces
+- Expose metrics in the [prometheus](https://prometheus.io) format
+- Visualize data with [grafana](https://grafana.com)
+
+## To Do
+
+- add more filter to tracing
+- add more unit test / integration test
+- load env variable only at the beginning
+- version the api (path or url ?)
+- handle db connection retry system
+- handle request body validation
+- Grpc routes
+- GraphQL routes
+- Infra : Deployments strategies and upgrade helm charts ?
 
 ## Architecture
+
+The observability architecture is based on the official [exemple](https://opentelemetry.io/docs/demo/architecture/) of the opentelemetry website exept that we are not using the prometheus pushgateway but the pull mechanisme.
+
+The architecture is using kubernetes to simulate a production environmment using [minikube](https://minikube.sigs.k8s.io/docs/start/).
 
 ```mermaid
 graph LR;
@@ -109,32 +141,6 @@ rustc --version
 ## Project Conventions
 
 function test name : test*[function_name]*[ok/err]\_[case_tested]
-
-## Features
-
-- Timout
-- Rate Limiting
-- Serve static file
-- Helth check routes
-- Rest Routes
-- RPC Routes
-- OpenAPI docs
-- Auth with cookies and jwt
-- Tracing / metrics export to jeager / prometheus
-- Graceful Shutdown for sending last traces
-- Visualize data with grafana
-
-## To Do
-
-- add more filter to tracing
-- add more unit test / do integration test
-- load env variable only at the beginning
-- version the api (path or url ?)
-- handle db connection retry system
-- handle request body validation
-- Grpc routes
-- GraphQL routes
-- Infra : Deployments strategies and upgrade helm charts ?
 
 ## License
 

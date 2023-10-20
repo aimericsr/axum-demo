@@ -1,4 +1,4 @@
-use axum_demo::config::{config, get_configuration};
+use axum_demo::config::get_configuration;
 use axum_demo::observability::tracing::init_subscriber;
 use axum_demo::startup::Application;
 
@@ -6,7 +6,7 @@ use axum_demo::startup::Application;
 async fn main() -> std::io::Result<()> {
     let config = get_configuration().expect("Failed to read configuration.");
 
-    init_subscriber();
+    init_subscriber(&config.otel);
 
     let application = Application::build(config)
         .await

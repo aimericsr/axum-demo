@@ -53,6 +53,8 @@ pub struct Otel {
     pub service_name: String,
     pub service_version: String,
     pub service_namespace: String,
+    pub enabled: bool,
+    pub stdout_enabled: bool,
 }
 
 impl Config {
@@ -76,6 +78,8 @@ impl Config {
                 service_name: get_env("OTEL_SERVICE_NAME")?,
                 service_version: get_env("OTEL_SERVICE_VERSION")?,
                 service_namespace: get_env("OTEL_SERVICE_NAMESPACE")?,
+                enabled: get_env_parse("OTEL_ENABLED")?,
+                stdout_enabled: get_env_parse("STDOUT_LOG_ENABLED")?,
             },
             crypt: Crypt {
                 pwd_key: get_env_b64u_as_u8s("SERVICE_PWD_KEY")?,

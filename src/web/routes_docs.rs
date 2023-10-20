@@ -32,9 +32,9 @@ use utoipa_swagger_ui::SwaggerUi;
             crate::web::rest::routes_login::LogoffPayload, 
             crate::web::rest::routes_login::LoginPayload)
     ),
-    // tags(
-    //     (name = "test", description = "Test")
-    // )
+    tags(
+        (name = "test", description = "Test")
+    )
 )]
 struct ApiDoc;
 

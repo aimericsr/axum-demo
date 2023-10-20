@@ -1,7 +1,5 @@
-use std::time::Duration;
-
 use axum::{routing::get, Json, Router};
-use tokio::time::sleep;
+use hyper::{header, HeaderMap};
 use tracing::info;
 use tracing_opentelemetry_instrumentation_sdk::find_current_trace_id;
 
@@ -19,14 +17,16 @@ fn sub_routes() -> Router {
 #[utoipa::path(
     get,
     context_path = "/health",
-    path = "/",
+    path = "",
     tag = "health",
     responses(
         (status = 200, description = "General health check"),
     )
 )]
-async fn health() -> Json<Vec<String>> {
-    Json(vec!["general".to_owned(), "true".to_owned()])
+async fn health() -> HeaderMap {
+    let mut headers = HeaderMap::new();
+    headers.insert(header::CACHE_CONTROL, "no-cache".parse().unwrap());
+    headers
 }
 
 #[utoipa::path(
@@ -53,7 +53,5 @@ async fn health_ready() -> Json<Vec<String>> {
     )
 )]
 async fn health_live() -> Json<Vec<String>> {
-    let trace_id = find_current_trace_id();
-    info!(trace_id);
     Json(vec!["alive".to_owned(), "true".to_owned()])
 }

@@ -75,7 +75,7 @@ async fn api_login(
     // -- Get the user.
     let user: UserForLogin = UserBmc::first_by_username(&root_ctx, &mm, &username)
         .await?
-        .ok_or(Error::LoginFailUsernameNotFound)?;
+        .ok_or(Error::LoginFailUsernameNotFound { username })?;
     let user_id = user.id;
 
     // -- Validate the password.
