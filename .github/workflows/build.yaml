@@ -73,7 +73,6 @@ jobs:
     #needs: [test, fmt, clippy]
     name: Build and push image to Docker Hub
     runs-on: ubuntu-latest
-
     env:
       HUB_NAME: "aimeric"
       IMAGE_NAME: "axum-demo"
@@ -104,7 +103,8 @@ jobs:
         cache-to: type=gha,mode=max
         platforms: |
           linux/amd64
-          linux/arm64
+          linux/arm/v7
+          linux/arm64/v8
         tags: |
           ${{ env.IMAGE_URL }}:latest
 

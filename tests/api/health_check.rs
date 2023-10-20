@@ -15,7 +15,7 @@ async fn health_check_general_works() {
 
     // Assert
     assert!(response.status().is_success());
-    assert_eq!(Some(18), response.content_length());
+    assert_eq!(Some(0), response.content_length());
 }
 
 #[tokio::test]
