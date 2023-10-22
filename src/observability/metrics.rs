@@ -11,7 +11,7 @@ const MEMORY_FREE_METRIC_NAME: &str = "memory_free";
 const MEMORY_SWAP_METRIC_NAME: &str = "memory_swap";
 const CPU_USAGE_METRIC_NAME: &str = "cpu_usage";
 
-pub(crate) fn create_prometheus_recorder() -> PrometheusHandle {
+pub fn create_prometheus_recorder() -> PrometheusHandle {
     const EXPONENTIAL_SECONDS: &[f64] = &[
         0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0,
     ];

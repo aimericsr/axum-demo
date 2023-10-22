@@ -25,7 +25,7 @@ The internal logic is intentionally keep simple. This allow to focus on the over
 ## To Do
 
 - add more filter to tracing
-- add more unit test / integration test
+- better handling of the errors
 - load env variable only at the beginning
 - version the api (path or url ?)
 - handle db connection retry system

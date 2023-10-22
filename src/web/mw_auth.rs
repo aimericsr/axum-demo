@@ -16,7 +16,7 @@ use tracing::debug;
 
 use super::set_token_cookie;
 
-#[allow(dead_code)] // For now, until we have the rpc.
+#[allow(dead_code)]
 pub async fn mw_ctx_require<B>(
     ctx: Result<Ctx>,
     req: Request<B>,

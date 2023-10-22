@@ -8,7 +8,6 @@ use crate::web::mw_res_map::mw_res_map;
 use crate::web::rest::routes_health::routes as routes_health;
 use crate::web::rest::routes_hello::routes as routes_hello;
 use crate::web::rest::routes_login::routes as routes_login;
-use crate::web::rest::routes_prometheus::routes as routes_prometheus;
 use crate::web::rest::routes_static::routes as routes_static;
 use crate::web::routes_docs::routes as routes_docs;
 use crate::web::rpc;
@@ -24,6 +23,8 @@ use axum_tracing_opentelemetry::middleware::OtelAxumLayer;
 use axum_tracing_opentelemetry::middleware::OtelInResponseLayer;
 use hyper::server::conn::AddrIncoming;
 use hyper::Server;
+use metrics_exporter_prometheus::PrometheusHandle;
+use std::future::ready;
 use std::net::SocketAddr;
 use std::result::Result as ResultIO;
 use std::time::Duration;
@@ -36,6 +37,8 @@ use tower_http::timeout::TimeoutLayer;
 use tracing::info;
 use tracing::instrument;
 
+use axum::routing::get;
+
 /// Type to hold the newly built server and his port
 pub struct Application {
     port: u16,
@@ -45,10 +48,10 @@ pub struct Application {
 impl Application {
     /// build the axum server with the provided configuration without lunch it
     #[instrument(skip_all)]
-    pub async fn build(config: Config) -> Result<Self> {
+    pub async fn build(config: Config, prom: PrometheusHandle) -> Result<Self> {
         let mm = setup_db_migrations().await;
 
-        let routes_all = routes(mm);
+        let routes_all = routes(mm, prom);
 
         let addr = SocketAddr::from(([0, 0, 0, 0], config.application.port));
 
@@ -87,7 +90,7 @@ async fn setup_db_migrations() -> ModelManager {
     mm
 }
 
-fn routes(mm: ModelManager) -> Router {
+fn routes(mm: ModelManager, prom: PrometheusHandle) -> Router {
     let governor_conf = Box::new(
         GovernorConfigBuilder::default()
             .per_second(2)
@@ -96,7 +99,6 @@ fn routes(mm: ModelManager) -> Router {
             .finish()
             .unwrap(),
     );
-
     let rate_limit_layer = ServiceBuilder::new()
         .layer(HandleErrorLayer::new(|_: BoxError| async move {
             StatusCode::TOO_MANY_REQUESTS
@@ -109,6 +111,8 @@ fn routes(mm: ModelManager) -> Router {
         .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
         .allow_methods([Method::GET]);
 
+    let routes_prom: Router = Router::new().route("/metrics", get(move || ready(prom.render())));
+
     let routes_rpc = rpc::routes(mm.clone()).route_layer(from_fn(mw_ctx_require));
 
     let routes_all = Router::new()
@@ -117,7 +121,7 @@ fn routes(mm: ModelManager) -> Router {
         .merge(routes_hello())
         .merge(routes_login(mm.clone()))
         .nest("/api", routes_rpc)
-        //.merge(routes_prometheus())
+        .merge(routes_prom)
         .layer(map_response(mw_res_map))
         .layer(from_fn_with_state(mm.clone(), web::mw_auth::mw_ctx_resolve))
         .layer(CookieManagerLayer::new())

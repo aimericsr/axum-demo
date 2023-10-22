@@ -36,7 +36,7 @@ mod _dev_utils;
 /// Load the config for the app, can come from differents locations
 pub mod config;
 /// Handle all the JWT related operations
-mod crypt;
+pub mod crypt;
 /// Excract the context from the HTTP request
 mod ctx;
 /// All possible errors that can occurs

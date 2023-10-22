@@ -39,7 +39,7 @@ pub struct Postgres {
     pub db_password: Secret<String>,
     pub db_host: Secret<String>,
     pub db_name: Secret<String>,
-    pub db_port: i64,
+    pub db_port: u16,
 }
 
 pub struct Crypt {

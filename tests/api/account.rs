@@ -3,22 +3,26 @@ use axum_demo::web::rest::routes_login::LoginPayload;
 use axum_demo::web::rest::routes_login::LogoffPayload;
 use serde_json::to_value;
 
-// #[tokio::test]
-// async fn login_works() {
-//     // Arrange
-//     let app = spawn_app().await;
-//     let body = LoginPayload {
-//         username: "test".to_string(),
-//         pwd: "test".to_string(),
-//     };
-//     let json = to_value(body).expect("Failed to serialize body");
+// Models
 
-//     // Act
-//     let response = app.post_login(json).await;
+#[tokio::test]
+async fn login_works() {
+    // Arrange
+    let app = spawn_app().await;
+    let username = app.seed_user().await;
+    dbg!(app.db_pool.clone());
+    let body = LoginPayload {
+        username: username,
+        pwd: "test".to_string(),
+    };
+    let json = to_value(body).expect("Failed to serialize body");
 
-//     // Assert
-//     assert_eq!(response.status(), 404, "Status code should be 404");
-// }
+    // Act
+    let response = app.post_login(json).await;
+
+    // Assert
+    assert_eq!(response.status(), 404, "Status code should be 404");
+}
 
 #[tokio::test]
 async fn login_fails() {
