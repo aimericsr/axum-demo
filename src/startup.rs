@@ -16,6 +16,7 @@ use axum::http::HeaderValue;
 use axum::http::Method;
 use axum::middleware;
 use axum::middleware::{from_fn, from_fn_with_state, map_response};
+use axum::routing::get;
 use axum::BoxError;
 use axum::Router;
 use axum::{error_handling::HandleErrorLayer, http::StatusCode};
@@ -25,7 +26,9 @@ use hyper::server::conn::AddrIncoming;
 use hyper::Server;
 use metrics_exporter_prometheus::PrometheusHandle;
 use std::future::ready;
+use std::future::Future;
 use std::net::SocketAddr;
+use std::pin::Pin;
 use std::result::Result as ResultIO;
 use std::time::Duration;
 use tokio::signal;
@@ -37,12 +40,10 @@ use tower_http::timeout::TimeoutLayer;
 use tracing::info;
 use tracing::instrument;
 
-use axum::routing::get;
-
 /// Type to hold the newly built server and his port
 pub struct Application {
     port: u16,
-    server: Server<AddrIncoming, IntoMakeServiceWithConnectInfo<Router, SocketAddr>>,
+    server: Pin<Box<dyn Future<Output = hyper::Result<()>> + Send>>,
 }
 
 impl Application {
@@ -57,17 +58,20 @@ impl Application {
 
         let server = axum::Server::bind(&addr)
             .serve(routes_all.into_make_service_with_connect_info::<SocketAddr>());
-        let addr = server.local_addr();
-        let port = addr.port();
-        info!("Listening on {addr}");
-        Ok(Self { port, server })
+        let port = server.local_addr().port();
+        let server = server.with_graceful_shutdown(shutdown_signal());
+        Ok(Self {
+            port,
+            server: Box::pin(server),
+        })
     }
 
-    /// Lunch the already build server to start listening to requests<br><br>
-    /// We append the function with_graceful_shutdown to the axum Server here because the type that it return is
-    /// private to hyper crate so we can't put it in the Application struct
+    /// Lunch the already build server to start listening to requests
+    #[instrument(skip_all)]
     pub async fn run_until_stopped(self) -> ResultIO<(), hyper::Error> {
-        self.server.with_graceful_shutdown(shutdown_signal()).await
+        let port = self.port;
+        info!("Listening on {port}");
+        self.server.await
     }
 
     /// Returns the port on which the application will be listening to
