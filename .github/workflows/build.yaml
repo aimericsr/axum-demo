@@ -137,10 +137,10 @@ jobs:
     - name: Set variable into the yaml file for deployment
       env:
         IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}
-     run: |
-      cd infrastructure/cloud-run/otel-collector
-      sed -i s@%OTELCOL_IMAGE%@${IMAGE_URL}:latest@g run-service.yaml
-      sed -i s@%APP_IMAGE%@${IMAGE_URL}:latest@g run-service.yaml
+      run: |
+        cd infrastructure/cloud-run/otel-collector
+        sed -i s@%OTELCOL_IMAGE%@${IMAGE_URL}:latest@g run-service.yaml
+        sed -i s@%APP_IMAGE%@${IMAGE_URL}:latest@g run-service.yaml
 
     - name: Deploy To Cloud Run
       env:
