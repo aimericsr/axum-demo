@@ -6,7 +6,7 @@ services:
     image: postgres:15
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 10
     ports:
@@ -19,6 +19,7 @@ services:
     image: prom/prometheus:v2.47.0
     ports:
       - 9090:9090
+      - 1234:1234
     command:
       - --web.enable-remote-write-receiver
       - --enable-feature=native-histograms
@@ -29,12 +30,9 @@ services:
     profiles: ["app"]
     image: jaegertracing/all-in-one:1.49
     ports:
-      # Query
       - 16686:16686
       - 14250:14250
       - 14268:14268
-      # Collector
-      #- 4317:4317
     environment:
       COLLECTOR_ZIPKIN_HTTP_PORT: "9411"
       COLLECTOR_OTLP_ENABLED: true
@@ -45,13 +43,10 @@ services:
     volumes:
       - ./infrastructure/docker-compose/otel/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
     ports:
-      - 1888:1888 # pprof extension
-      - 8888:8888 # Prometheus metrics exposed by the collector
-      - 8889:8889 # Prometheus exporter metrics
-      - 13133:13133 # health_check extension
-      - 4317:4317 # OTLP gRPC receiver
-      - 4318:4318 # OTLP http receiver
-      - 55679:55679 # zpages extension
+      - 8888:8888 
+      - 8889:8889 
+      - 13133:13133 
+      - 4317:4317
 
   grafana:
     profiles: ["app"]
@@ -65,26 +60,26 @@ services:
       GF_AUTH_BASIC_ENABLED: "false"
     volumes:
       - ./infrastructure/docker-compose/grafana:/etc/grafana/provisioning
-  # web:
-  #   profiles: ["app"]
-  #   image: aimeric/axum-demo:latest
-  #   #build: .
-  #   healthcheck:
-  #     test: wget --no-verbose --tries=1 --spider http://localhost:8080/health/live || exit 1
-  #     interval: 30s
-  #     timeout: 5s
-  #     retries: 5
-  #     start_period: 5s
-  #   ports:
-  #     - 8080:8080
-  #   environment:
-  #     SERVICE_DB_HOST: "db"
-  #     OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
-  #   env_file:
-  #     - .env
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
+  web:
+    profiles: ["app"]
+    image: aimeric/axum-demo:latest
+    #build: .
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8080/health/live || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    ports:
+      - 8080:8080
+    environment:
+      SERVICE_DB_HOST: "db"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
   k6:
     profiles: ["load-test"]
     image: grafana/k6:0.46.0

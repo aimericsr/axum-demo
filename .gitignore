@@ -15,3 +15,9 @@ Cargo.lock
 
 
 .history
+
+# Terraform
+**/.terraform
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**/key.json

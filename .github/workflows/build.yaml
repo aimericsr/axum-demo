@@ -74,8 +74,9 @@ jobs:
     name: Build and push image to Docker Hub
     runs-on: ubuntu-latest
     env:
-      HUB_NAME: "aimeric"
-      IMAGE_NAME: "axum-demo"
+      ARTIFACT_REGISTRY: us-central1-docker.pkg.dev
+      HUB_NAME: "green-harvest"
+      IMAGE_NAME: "web-api"
 
     steps:
     - uses: actions/checkout@v3
@@ -89,13 +90,16 @@ jobs:
     - name: Log in to Docker Hub
       uses: docker/login-action@v3
       with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_PASSWORD }}
+        # username: ${{ secrets.DOCKERHUB_USERNAME }}
+        # password: ${{ secrets.DOCKERHUB_PASSWORD }}
+        registry: ${{ env.ARTIFACT_REGISTRY }}
+        username: _json_key
+        password: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
 
     - name: Build and Push docker image
       uses: docker/build-push-action@v4
       env:
-        IMAGE_URL: ${{ env.HUB_NAME }}/${{ env.IMAGE_NAME }}
+        IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}
       with:
         context: .
         push: true

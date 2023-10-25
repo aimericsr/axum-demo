@@ -2,11 +2,21 @@ receivers:
   otlp:
     protocols:
       grpc:
-        endpoint: 0.0.0.0:4317
+  prometheus:
+    config:
+      scrape_configs:
+      - job_name: axum-demo
+        scrape_interval: 15s
+        static_configs:
+        - targets: ['web:8080']
 
 processors:
   batch:
     timeout: 1s
+  resourcedetection:
+    detectors: [env, gcp]
+    timeout: 2s
+    override: false
   filter/allowlist:
     spans:
       include:
@@ -15,10 +25,14 @@ processors:
         - axum-otpl
 
 exporters:
+  logging:
+    loglevel: debug
   otlp/jaeger:
     endpoint: jaeger:4317
     tls:
       insecure: true
+  prometheus:
+    endpoint: prometheus:9090
 
 extensions:
   health_check:
@@ -28,8 +42,13 @@ extensions:
     endpoint: :55679
 
 service:
+  extensions: [health_check]
   pipelines:
+    metrics:
+      receivers: [prometheus]
+      processors: []
+      exporters: [logging]
     traces:
       receivers: [otlp]
-      processors: [filter/allowlist, batch]
+      processors: [filter/allowlist, resourcedetection, batch]
       exporters: [otlp/jaeger]
