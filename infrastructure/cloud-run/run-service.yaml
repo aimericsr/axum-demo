@@ -9,7 +9,7 @@ spec:
     metadata:
       annotations:
         run.googleapis.com/execution-environment: gen1
-        run.googleapis.com/container-dependencies: '{"app":["collector"]}'
+        #run.googleapis.com/container-dependencies: '{"app":["collector"]}'
     spec:
       containers:
       - image: "%APP_IMAGE%"
