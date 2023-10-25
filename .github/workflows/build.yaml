@@ -138,16 +138,13 @@ jobs:
       env:
         IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}
       run: |
-        cd infrastructure/cloud-run/otel-collector
+        cd infrastructure/cloud-run
         sed -i s@%OTELCOL_IMAGE%@${IMAGE_URL}:latest@g run-service.yaml
         sed -i s@%APP_IMAGE%@${IMAGE_URL}:latest@g run-service.yaml
 
     - name: Deploy To Cloud Run
-      env:
-        IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}
-        GIT_TAG: "latest"
       run: |
-        cd infrastructure/cloud-run/otel-collector
+        cd infrastructure/cloud-run
         gcloud run services replace run-service.yaml
         gcloud run services set-iam-policy $CLOUD_RUN_ID policy.yaml
 
