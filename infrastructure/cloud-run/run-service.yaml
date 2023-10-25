@@ -14,6 +14,10 @@ spec:
       containers:
       - image: "%APP_IMAGE%"
         name: app
+        startupProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
         ports:
         - containerPort: 8080
       - image: "%OTELCOL_IMAGE%"
