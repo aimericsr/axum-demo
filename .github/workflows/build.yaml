@@ -146,8 +146,8 @@ jobs:
       env:
         IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}
         GIT_TAG: "latest"
-        run: |
-          cd infrastructure/cloud-run/otel-collector
-          gcloud run services replace run-service.yaml
-          gcloud run services set-iam-policy $CLOUD_RUN_ID policy.yaml
+      run: |
+        cd infrastructure/cloud-run/otel-collector
+        gcloud run services replace run-service.yaml
+        gcloud run services set-iam-policy $CLOUD_RUN_ID policy.yaml
 
