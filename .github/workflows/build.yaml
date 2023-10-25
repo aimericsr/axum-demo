@@ -81,7 +81,7 @@ jobs:
       CLOUD_RUN_ID: "green-harvest-web-api"
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
@@ -150,12 +150,4 @@ jobs:
           cd infrastructure/cloud-run/otel-collector
           gcloud run services replace run-service.yaml
           gcloud run services set-iam-policy $CLOUD_RUN_ID policy.yaml
-       
-
-  #  gcloud run deploy $CLOUD_RUN_ID --image=${{ env.IMAGE_URL }}:${{ env.GIT_TAG }} \
-  #           --region=europe-west9 \
-  #           --min-instances=0 \
-  #           --max-instances=1 \
-  #           --no-allow-unauthenticated \
-  #           --port=8080
 
