@@ -20,9 +20,9 @@ spec:
             port: 8080
         ports:
         - containerPort: 8080
-      - image: "%OTELCOL_IMAGE%"
-        name: collector
-        startupProbe:
-          httpGet:
-            path: /
-            port: 13133
+      # - image: "%OTELCOL_IMAGE%"
+      #   name: collector
+      #   startupProbe:
+      #     httpGet:
+      #       path: /
+      #       port: 13133
