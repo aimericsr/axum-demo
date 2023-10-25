@@ -3,7 +3,7 @@ kind: Service
 metadata:
   annotations:
     run.googleapis.com/launch-stage: ALPHA
-  name: opentelemetry-cloud-run-sample
+  name: green-harvest-web-api
 spec:
   template:
     metadata:
