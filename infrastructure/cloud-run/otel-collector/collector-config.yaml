@@ -31,7 +31,7 @@ processors:
 exporters:
   googlecloud:
   logging:
-    verbosity: debug
+    verbosity: detailed
 
 extensions:
   health_check:
