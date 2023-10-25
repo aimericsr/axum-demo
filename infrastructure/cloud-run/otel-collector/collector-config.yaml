@@ -30,6 +30,8 @@ processors:
 
 exporters:
   googlecloud:
+  logging:
+    loglevel: debug
 
 extensions:
   health_check:
@@ -40,4 +42,4 @@ service:
     traces:
       receivers: [otlp]
       processors: [resourcedetection, resource, memory_limiter, batch]
-      exporters: [googlecloud]
+      exporters: [logging]
