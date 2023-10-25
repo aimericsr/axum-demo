@@ -83,50 +83,50 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
+    # - name: Set up QEMU
+    #   uses: docker/setup-qemu-action@v3
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+    # - name: Set up Docker Buildx
+    #   uses: docker/setup-buildx-action@v3
 
-    - name: Log in to Artifact Registry
-      uses: docker/login-action@v3
-      with:
-        # username: ${{ secrets.DOCKERHUB_USERNAME }}
-        # password: ${{ secrets.DOCKERHUB_PASSWORD }}
-        registry: ${{ env.ARTIFACT_REGISTRY }}
-        username: _json_key
-        password: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+    # - name: Log in to Artifact Registry
+    #   uses: docker/login-action@v3
+    #   with:
+    #     # username: ${{ secrets.DOCKERHUB_USERNAME }}
+    #     # password: ${{ secrets.DOCKERHUB_PASSWORD }}
+    #     registry: ${{ env.ARTIFACT_REGISTRY }}
+    #     username: _json_key
+    #     password: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
 
-    - name: Build and Push otel docker image
-      uses: docker/build-push-action@v4
-      env:
-        IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.OTEL_COLLECTOR_IMAGE_NAME }}
-      with:
-        context: infrastructure/cloud-run/otel-collector
-        push: true
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        platforms: |
-          linux/amd64
-          linux/arm64
-        tags: |
-          ${{ env.IMAGE_URL }}:latest
+    # - name: Build and Push otel docker image
+    #   uses: docker/build-push-action@v4
+    #   env:
+    #     IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.OTEL_COLLECTOR_IMAGE_NAME }}
+    #   with:
+    #     context: infrastructure/cloud-run/otel-collector
+    #     push: true
+    #     cache-from: type=gha
+    #     cache-to: type=gha,mode=max
+    #     platforms: |
+    #       linux/amd64
+    #       linux/arm64
+    #     tags: |
+    #       ${{ env.IMAGE_URL }}:latest
 
-    - name: Build and Push app docker image
-      uses: docker/build-push-action@v4
-      env:
-        IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}
-      with:
-        context: .
-        push: true
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        platforms: |
-          linux/amd64
-          linux/arm64
-        tags: |
-          ${{ env.IMAGE_URL }}:latest
+    # - name: Build and Push app docker image
+    #   uses: docker/build-push-action@v4
+    #   env:
+    #     IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}
+    #   with:
+    #     context: .
+    #     push: true
+    #     cache-from: type=gha
+    #     cache-to: type=gha,mode=max
+    #     platforms: |
+    #       linux/amd64
+    #       linux/arm64
+    #     tags: |
+    #       ${{ env.IMAGE_URL }}:latest
 
     - id: "auth"
       name: "Authenticate to Google Cloud"
@@ -145,6 +145,5 @@ jobs:
     - name: Deploy To Cloud Run
       run: |
         cd infrastructure/cloud-run
-        gcloud run services replace run-service.yaml
-        gcloud run services set-iam-policy $CLOUD_RUN_ID policy.yaml
-
+        gcloud run services replace --region=europe-west9 run-service.yaml
+        gcloud run services set-iam-policy --region=europe-west9 $CLOUD_RUN_ID policy.yaml
