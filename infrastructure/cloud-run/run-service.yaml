@@ -12,7 +12,7 @@ spec:
         run.googleapis.com/container-dependencies: '{"app":["collector"]}'
     spec:
       containers:
-      - image: "%SAMPLE_APP_IMAGE%"
+      - image: "%APP_IMAGE%"
         name: app
         ports:
         - containerPort: 8080

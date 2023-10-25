@@ -128,22 +128,34 @@ jobs:
         tags: |
           ${{ env.IMAGE_URL }}:latest
 
-
     - id: "auth"
       name: "Authenticate to Google Cloud"
       uses: "google-github-actions/auth@v1"
       with:
         credentials_json: "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}"
 
-    # - name: Deploy To Cloud Run
-    #   env:
-    #     IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}
-    #     GIT_TAG: "latest"
-    #     run: |
-    #       gcloud run deploy $CLOUD_RUN_ID --image=${{ env.IMAGE_URL }}:${{ env.GIT_TAG }} \
-    #         --region=europe-west9 \
-    #         --min-instances=0 \
-    #         --max-instances=1 \
-    #         --no-allow-unauthenticated \
-    #         --port=8080
+    - name: Set variable into the yaml file for deployment
+      env:
+        IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}
+     run: |
+      cd infrastructure/cloud-run/otel-collector
+      sed -i s@%OTELCOL_IMAGE%@${IMAGE_URL}:latest@g run-service.yaml
+      sed -i s@%APP_IMAGE%@${IMAGE_URL}:latest@g run-service.yaml
+
+    - name: Deploy To Cloud Run
+      env:
+        IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}
+        GIT_TAG: "latest"
+        run: |
+          cd infrastructure/cloud-run/otel-collector
+          gcloud run services replace run-service.yaml
+          gcloud run services set-iam-policy $CLOUD_RUN_ID policy.yaml
+       
+
+  #  gcloud run deploy $CLOUD_RUN_ID --image=${{ env.IMAGE_URL }}:${{ env.GIT_TAG }} \
+  #           --region=europe-west9 \
+  #           --min-instances=0 \
+  #           --max-instances=1 \
+  #           --no-allow-unauthenticated \
+  #           --port=8080
 
