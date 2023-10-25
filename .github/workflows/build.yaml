@@ -74,8 +74,8 @@ jobs:
     name: Build and push image to Docker Hub
     runs-on: ubuntu-latest
     env:
-      ARTIFACT_REGISTRY: us-central1-docker.pkg.dev
-      HUB_NAME: "green-harvest"
+      ARTIFACT_REGISTRY: "us-central1-docker.pkg.dev"
+      REPO_NAME: "green-harvest"
       IMAGE_NAME: "web-api"
 
     steps:
