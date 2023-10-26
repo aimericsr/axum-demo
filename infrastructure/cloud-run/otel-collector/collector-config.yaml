@@ -42,4 +42,4 @@ service:
     traces:
       receivers: [otlp]
       processors: [resourcedetection, memory_limiter, batch]
-      exporters: [logging]
+      exporters: [googlecloud]
