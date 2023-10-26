@@ -98,35 +98,35 @@ jobs:
         username: _json_key
         password: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
 
-    - name: Build and Push otel docker image
-      uses: docker/build-push-action@v4
-      env:
-        IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.OTEL_COLLECTOR_IMAGE_NAME }}
-      with:
-        context: infrastructure/cloud-run/otel-collector
-        push: true
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        platforms: |
-          linux/amd64
-          linux/arm64
-        tags: |
-          ${{ env.IMAGE_URL }}:latest
+    # - name: Build and Push otel docker image
+    #   uses: docker/build-push-action@v4
+    #   env:
+    #     IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.OTEL_COLLECTOR_IMAGE_NAME }}
+    #   with:
+    #     context: infrastructure/cloud-run/otel-collector
+    #     push: true
+    #     cache-from: type=gha
+    #     cache-to: type=gha,mode=max
+    #     platforms: |
+    #       linux/amd64
+    #       linux/arm64
+    #     tags: |
+    #       ${{ env.IMAGE_URL }}:latest
 
-    - name: Build and Push app docker image
-      uses: docker/build-push-action@v4
-      env:
-        IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}
-      with:
-        context: .
-        push: true
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        platforms: |
-          linux/amd64
-          linux/arm64
-        tags: |
-          ${{ env.IMAGE_URL }}:latest
+    # - name: Build and Push app docker image
+    #   uses: docker/build-push-action@v4
+    #   env:
+    #     IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}
+    #   with:
+    #     context: .
+    #     push: true
+    #     cache-from: type=gha
+    #     cache-to: type=gha,mode=max
+    #     platforms: |
+    #       linux/amd64
+    #       linux/arm64
+    #     tags: |
+    #       ${{ env.IMAGE_URL }}:latest
 
     - id: "auth"
       name: "Authenticate to Google Cloud"
@@ -137,10 +137,11 @@ jobs:
     - name: Set variable into the yaml file for deployment
       env:
         IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}
+        OTEL_IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.OTEL_COLLECTOR_IMAGE_NAME }}
       run: |
         cd infrastructure/cloud-run
-        sed -i s@%OTELCOL_IMAGE%@${IMAGE_URL}:latest@g run-service.yaml
         sed -i s@%APP_IMAGE%@${IMAGE_URL}:latest@g run-service.yaml
+        sed -i s@%OTELCOL_IMAGE%@${OTEL_IMAGE_URL}:latest@g run-service.yaml
 
     - name: Deploy To Cloud Run
       run: |
