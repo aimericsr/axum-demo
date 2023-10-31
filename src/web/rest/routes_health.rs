@@ -1,7 +1,5 @@
 use axum::{routing::get, Json, Router};
 use hyper::{header, HeaderMap};
-use tracing::info;
-use tracing_opentelemetry_instrumentation_sdk::find_current_trace_id;
 
 pub fn routes() -> Router {
     Router::new().nest("/health", sub_routes())

@@ -1,4 +1,4 @@
-use crate::web::rpc::RpcInfo;
+//use crate::web::rpc::RpcInfo;
 use crate::{error, web};
 use axum::http::Uri;
 use axum::response::{IntoResponse, Response};
@@ -10,7 +10,7 @@ use web::Error;
 
 pub async fn mw_res_map(uri: Uri, res: Response) -> impl IntoResponse {
     let trace_id = find_current_trace_id().unwrap_or("unknown".to_string());
-    let _ = res.extensions().get::<RpcInfo>();
+    //let _ = res.extensions().get::<RpcInfo>();
 
     // Get the eventual response error.
     let web_error = res.extensions().get::<Error>();

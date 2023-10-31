@@ -1,11 +1,9 @@
 // region:    --- Modules
-
 mod error;
 pub use self::error::{Error, Result};
 
 use time::format_description::well_known::Rfc3339;
 use time::{Duration, OffsetDateTime};
-
 // endregion: --- Modules
 
 // region:    --- Time

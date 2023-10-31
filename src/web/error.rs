@@ -2,42 +2,44 @@ use crate::{crypt, model, web};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
+use thiserror::Error;
 use utoipa::ToSchema;
+
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug, Serialize, strum_macros::AsRefStr)]
+#[derive(Debug, Error, Serialize, strum_macros::AsRefStr)]
 #[serde(tag = "type", content = "data")]
 pub enum Error {
     // -- RPC
+    #[error("Rpc unknown methode : `{0}`")]
     RpcMethodUnknown(String),
+    #[error("Rpc missing params : {rpc_method:?}")]
     RpcMissingParams { rpc_method: String },
+    #[error("Rpc fail json params : {rpc_method:?}")]
     RpcFailJsonParams { rpc_method: String },
 
     // -- Login
+    #[error("Username not found : {username:?}")]
     LoginFailUsernameNotFound { username: String },
+    #[error("Hash no password : {user_id:?}")]
     LoginFailUserHasNoPwd { user_id: i64 },
+    #[error("Password not matching : {user_id:?}")]
     LoginFailPwdNotMatching { user_id: i64 },
 
     // -- Ctx Error
+    #[error("Can't create the context")]
     CtxExt(web::mw_auth::CtxExtError),
 
     // -- Modules
-    Model(model::Error),
-    Crypt(crypt::Error),
+    #[error("Model layer error")]
+    Model(#[from] model::Error),
+    #[error("Crypt layer error")]
+    Crypt(#[from] crypt::Error),
 
     // -- External Modules
+    #[error("Serde json error : `{0}`")]
     SerdeJson(String),
 }
-
-// region:    --- Error Boilerplate
-impl core::fmt::Display for Error {
-    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
-        write!(fmt, "{self:?}")
-    }
-}
-
-impl std::error::Error for Error {}
-// endregion: --- Error Boilerplate
 
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
@@ -50,26 +52,6 @@ impl IntoResponse for Error {
         response
     }
 }
-
-// region:    --- Froms
-impl From<model::Error> for Error {
-    fn from(val: model::Error) -> Self {
-        Self::Model(val)
-    }
-}
-
-impl From<crypt::Error> for Error {
-    fn from(val: crypt::Error) -> Self {
-        Self::Crypt(val)
-    }
-}
-
-impl From<serde_json::Error> for Error {
-    fn from(val: serde_json::Error) -> Self {
-        Self::SerdeJson(val.to_string())
-    }
-}
-// endregion: --- Froms
 
 /// From the root error to the http status code and ClientError
 impl Error {
@@ -106,10 +88,6 @@ impl Error {
 pub enum ClientError {
     LOGIN_FAIL,
     NO_AUTH,
-    #[schema(example = 34)]
-    ENTITY_NOT_FOUND {
-        entity: &'static str,
-        id: i64,
-    },
+    ENTITY_NOT_FOUND { entity: &'static str, id: i64 },
     SERVICE_ERROR,
 }

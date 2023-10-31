@@ -5,10 +5,10 @@ receivers:
   prometheus:
     config:
       scrape_configs:
-      - job_name: axum-demo
-        scrape_interval: 15s
-        static_configs:
-        - targets: ['web:8080']
+        - job_name: axum-demo
+          scrape_interval: 15s
+          static_configs:
+            - targets: ["web:8080"]
 
 processors:
   batch:
@@ -22,7 +22,7 @@ processors:
       include:
         match_type: strict
         services:
-        - axum-otpl
+          - axum-otpl
 
 exporters:
   logging:
@@ -32,7 +32,7 @@ exporters:
     tls:
       insecure: true
   prometheus:
-    endpoint: prometheus:9090
+    endpoint: prometheus:1234
 
 extensions:
   health_check:
@@ -44,10 +44,10 @@ extensions:
 service:
   extensions: [health_check]
   pipelines:
-    metrics:
-      receivers: [prometheus]
-      processors: []
-      exporters: [logging]
+    # metrics:
+    #   receivers: [prometheus]
+    #   processors: []
+    #   exporters: [prometheus]
     traces:
       receivers: [otlp]
       processors: [filter/allowlist, resourcedetection, batch]

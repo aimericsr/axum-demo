@@ -2,49 +2,51 @@ use crate::{crypt, model::store};
 use serde::Serialize;
 use serde_with::{serde_as, DisplayFromStr};
 use sqlx::migrate::MigrateError;
+use thiserror::Error;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
 #[serde_as] // implmente trait Serialize for sqlx::Error
-#[derive(Debug, Serialize)]
+#[derive(Debug, Error, Serialize)]
 pub enum Error {
+    #[error("The entity {entity:?} with the id {id:?} has not been found")]
     EntityNotFound { entity: &'static str, id: i64 },
 
     // -- Modules
-    Store(store::Error),
-    Crypt(crypt::Error),
+    #[error("Error at the store level")]
+    Store(#[from] store::Error),
+    #[error("Error at the crypt level")]
+    Crypt(#[from] crypt::Error),
 
     // - Externals
-    Sqlx(#[serde_as(as = "DisplayFromStr")] sqlx::Error),
-    MigrateError(#[serde_as(as = "DisplayFromStr")] MigrateError),
+    #[error("Error at the sqlx level")]
+    Sqlx(
+        #[from]
+        #[serde_as(as = "DisplayFromStr")]
+        sqlx::Error,
+    ),
+    #[error("Error at the migration level")]
+    MigrateError(
+        #[from]
+        #[serde_as(as = "DisplayFromStr")]
+        MigrateError,
+    ),
 }
 
-// region:    --- Error Boilerplate
-impl core::fmt::Display for Error {
-    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
-        write!(fmt, "{self:?}")
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_entity_not_found_error() {
+        let error = Error::EntityNotFound {
+            entity: "User",
+            id: 123,
+        };
+
+        assert_eq!(
+            "EntityNotFound { entity: \"User\", id: 123 }",
+            format!("{error:?}")
+        );
     }
 }
-
-impl std::error::Error for Error {}
-// endregion: --- Error Boilerplate
-
-// region:    --- Froms
-impl From<store::Error> for Error {
-    fn from(val: store::Error) -> Self {
-        Self::Store(val)
-    }
-}
-
-impl From<crypt::Error> for Error {
-    fn from(val: crypt::Error) -> Self {
-        Self::Crypt(val)
-    }
-}
-
-impl From<sqlx::Error> for Error {
-    fn from(val: sqlx::Error) -> Self {
-        Self::Sqlx(val)
-    }
-}
-// endregion: --- Froms

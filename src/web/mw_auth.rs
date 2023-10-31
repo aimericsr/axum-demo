@@ -11,6 +11,7 @@ use axum::http::Request;
 use axum::middleware::Next;
 use axum::response::Response;
 use serde::Serialize;
+use thiserror::Error;
 use tower_cookies::{Cookie, Cookies};
 use tracing::debug;
 
@@ -98,14 +99,22 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctx {
 
 type CtxExtResult = core::result::Result<Ctx, CtxExtError>;
 
-#[derive(Clone, Serialize, Debug)]
+#[derive(Clone, Error, Serialize, Debug)]
 pub enum CtxExtError {
+    #[error("Token not found in cookie")]
     TokenNotInCookie,
+    #[error("Context not found in request extension")]
     CtxNotInRequestExt,
+    #[error("Failed to create context: {0}")]
     CtxCreateFail(String),
+    #[error("Failed to set token cookie")]
     CannotSetTokenCookie,
+    #[error("Validation failed")]
     FailValidate,
+    #[error("User not found")]
     UserNotFound,
+    #[error("Token has the wrong format")]
     TokenWrongFormat,
+    #[error("Model access error: {0}")]
     ModelAccessError(String),
 }

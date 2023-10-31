@@ -1,31 +1,17 @@
 use crate::model;
+use thiserror::Error;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum Error {
     // -- Config
+    #[error("Failed to load the environnement variable file, not found : `{0}`")]
     ConfigMissingEnv(&'static str),
+    #[error("Failed to load the environnement variable file, wrong format : `{0}`")]
     ConfigWrongFormat(&'static str),
 
     // -- Modules
-    Model(model::Error),
+    #[error("Model layer error")]
+    Model(#[from] model::Error),
 }
-
-// region:    --- Froms
-impl From<model::Error> for Error {
-    fn from(val: model::Error) -> Self {
-        Self::Model(val)
-    }
-}
-// endregion: --- Froms
-
-// region:    --- Error Boilerplate
-impl core::fmt::Display for Error {
-    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
-        write!(fmt, "{self:?}")
-    }
-}
-
-impl std::error::Error for Error {}
-// endregion: --- Error Boilerplate

@@ -1,3 +1,4 @@
+use crate::config::{config, Otel};
 use core::time::Duration;
 use opentelemetry::sdk::trace::{self, Sampler};
 use opentelemetry::trace::TraceError;
@@ -14,8 +15,6 @@ use tracing::subscriber::set_global_default;
 use tracing::Subscriber;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::{layer::SubscriberExt, Registry};
-
-use crate::config::{config, Otel};
 
 /// Init tracing for the lifetime of the application
 
@@ -68,6 +67,7 @@ fn init_otlp_traces(otel: &Otel) -> Result<sdktrace::Tracer, TraceError> {
                 .tonic()
                 .with_endpoint(otel.endpoint.clone())
                 .with_timeout(Duration::from_secs(3)),
+            //.with_compression(Compression::Gzip),
         )
         .with_trace_config(
             trace::config()

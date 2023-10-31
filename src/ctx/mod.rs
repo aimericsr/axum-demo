@@ -1,5 +1,4 @@
 use self::error::{Error, Result};
-
 mod error;
 
 #[derive(Clone, Debug)]
