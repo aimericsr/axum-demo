@@ -1,29 +1,17 @@
 use axum_demo::config::Postgres as PostgresConfig;
-use axum_demo::crypt::pwd::encrypt_pwd;
-use axum_demo::crypt::EncryptContent;
-use axum_demo::observability::metrics::create_prometheus_recorder;
 use axum_demo::{
     config::{get_configuration, Otel},
     observability::tracing::init_subscriber,
     startup::Application,
 };
-use metrics_exporter_prometheus::PrometheusHandle;
-use rand::RngCore;
 use secrecy::ExposeSecret;
 use sqlx::{postgres::PgConnectOptions, Connection, Executor, PgConnection, PgPool};
-use sqlx::{query, Statement};
 use std::sync::OnceLock;
 use uuid::Uuid;
 pub fn tracing(otel: &Otel) -> &'static () {
     static INSTANCE: OnceLock<()> = OnceLock::new();
 
     INSTANCE.get_or_init(|| init_subscriber(otel))
-}
-
-pub fn metrics() -> &'static PrometheusHandle {
-    static INSTANCE: OnceLock<PrometheusHandle> = OnceLock::new();
-
-    INSTANCE.get_or_init(|| create_prometheus_recorder())
 }
 
 pub struct TestApp {
@@ -34,7 +22,7 @@ pub struct TestApp {
 impl TestApp {
     pub async fn seed_user(&self) -> String {
         let username = String::from("demo2");
-        let password_clear = String::from("demo2");
+        let _ = String::from("demo2");
 
         self.db_pool
             .execute(format!(r#"INSERT INTO "user" (username) VALUES ('{}');"#, username).as_str())
@@ -91,13 +79,11 @@ pub async fn spawn_app() -> TestApp {
 
     tracing(&configuration.otel);
 
-    let prom = metrics();
-
     //Create and migrate the database
     let db_pool = configure_database(&configuration.postgres).await;
     // Launch the application as a background task
 
-    let application = Application::build(configuration, prom.clone())
+    let application = Application::build(configuration)
         .await
         .expect("Failed to build the app");
     let address = format!("http://127.0.0.1:{}", application.port());

@@ -1,10 +1,10 @@
-use crate::config::{config, Otel};
+use crate::config::Otel;
 use core::time::Duration;
 use opentelemetry::sdk::trace::{self, Sampler};
 use opentelemetry::trace::TraceError;
 use opentelemetry::KeyValue;
 use opentelemetry::{global, runtime::Tokio, sdk::propagation::TraceContextPropagator};
-use opentelemetry_otlp::{Compression, WithExportConfig};
+use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::trace::{BatchConfig, RandomIdGenerator};
 use opentelemetry_sdk::{trace as sdktrace, Resource};
 use opentelemetry_semantic_conventions::resource::{

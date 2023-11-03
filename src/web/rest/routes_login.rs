@@ -1,20 +1,15 @@
 use crate::crypt::{pwd, EncryptContent};
 use crate::ctx::Ctx;
 use crate::model::user::{UserBmc, UserForLogin};
-use crate::model::ModelManager;
 use crate::startup::SharedState;
 use crate::web::{self, remove_token_cookie, Error, Result};
 use axum::extract::State;
-use axum::routing::{get, post};
+use axum::routing::post;
 use axum::{Json, Router};
-use hmac::digest::typenum::Mod;
-use hyper::Body;
-use opentelemetry::KeyValue;
 use serde::{Deserialize, Serialize};
 use tower_cookies::Cookies;
 use tracing::debug;
 use utoipa::{IntoParams, ToSchema};
-use validator::{Validate, ValidationError};
 
 pub fn routes() -> Router<SharedState> {
     Router::new().nest("/api", sub_routes())
@@ -24,10 +19,6 @@ fn sub_routes() -> Router<SharedState> {
     Router::new()
         .route("/login", post(api_login))
         .route("/logoff", post(api_logoff_handler))
-}
-
-async fn check() -> &'static str {
-    "check"
 }
 
 // region:    --- Structs

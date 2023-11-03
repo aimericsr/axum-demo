@@ -1,10 +1,8 @@
 pub mod task;
 pub mod user;
-use axum_macros::FromRef;
-use sqlx::{Connection, Executor, PgConnection};
-
 pub use self::error::{Error, Result};
 use self::store::{new_db_pool, Db};
+use axum_macros::FromRef;
 
 mod base;
 mod error;

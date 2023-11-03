@@ -15,7 +15,6 @@ and how to lunch it.
 Build the app and lunch it
 ```rust,no_run
 use axum_demo::config::get_configuration;
-use axum_demo::observability::metrics::create_prometheus_recorder;
 use axum_demo::observability::tracing::init_subscriber;
 use axum_demo::startup::Application;
 
@@ -24,12 +23,11 @@ async fn main() -> std::io::Result<()> {
     // Retreive the configuration
     let config = get_configuration().expect("Failed to read configuration.");
 
-    // Init the tracing and metrics collection
+    // Init the tracing
     init_subscriber(&config.otel);
-    let prom = create_prometheus_recorder();
 
     // Build the app
-    let application = Application::build(config, prom)
+    let application = Application::build(config)
         .await
         .expect("Failed to build the app");
 
