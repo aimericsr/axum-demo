@@ -116,7 +116,7 @@ With that, we can correlate application traces with prometeuses metrics from kub
 docker compose --profile app up -d
 ```
 
-## Runt Uni Test / Integration Test and Doc Test
+## Run Uni Test / Integration Test and Doc Test
 
 ```sh
 cargo test -- --nocapture
