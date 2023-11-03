@@ -10,14 +10,6 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[derive(Debug, Error, Serialize, strum_macros::AsRefStr)]
 #[serde(tag = "type", content = "data")]
 pub enum Error {
-    // -- RPC
-    #[error("Rpc unknown methode : `{0}`")]
-    RpcMethodUnknown(String),
-    #[error("Rpc missing params : {rpc_method:?}")]
-    RpcMissingParams { rpc_method: String },
-    #[error("Rpc fail json params : {rpc_method:?}")]
-    RpcFailJsonParams { rpc_method: String },
-
     // -- Login
     #[error("Username not found : {username:?}")]
     LoginFailUsernameNotFound { username: String },

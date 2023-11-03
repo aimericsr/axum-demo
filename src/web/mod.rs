@@ -3,7 +3,6 @@ pub mod mw_auth;
 pub mod mw_res_map;
 pub mod rest;
 pub mod routes_docs;
-pub mod rpc;
 
 pub use self::error::ClientError;
 pub use self::error::{Error, Result};

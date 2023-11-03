@@ -10,7 +10,6 @@ use crate::web::rest::routes_hello::routes as routes_hello;
 use crate::web::rest::routes_login::routes as routes_login;
 use crate::web::rest::routes_static::routes as routes_static;
 use crate::web::routes_docs::routes as routes_docs;
-use crate::web::rpc;
 use axum::http::HeaderValue;
 use axum::http::Method;
 use axum::middleware;
@@ -132,8 +131,6 @@ fn routes(mm: ModelManager, prom: PrometheusHandle) -> Router {
         foobar: global::meter("axum-app").u64_counter("foobar").init(),
         mm,
     };
-
-    //let routes_rpc = rpc::routes(mm.clone()).route_layer(from_fn(mw_ctx_require));
 
     let routes_all = Router::new()
         .merge(routes_health().with_state(state.clone()))
