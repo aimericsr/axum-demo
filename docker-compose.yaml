@@ -1,6 +1,9 @@
 version: "3.8"
 
 services:
+
+  # Core Service
+
   web:
     profiles: ["app"]
     #image: aimeric/axum-demo:latest
@@ -21,6 +24,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  # Dependent Service
+
   db:
     profiles: ["app"]
     image: postgres:15
@@ -34,6 +40,22 @@ services:
     environment:
       POSTGRES_PASSWORD: "welcome"
       POSTGRES_DB: "app_db"
+
+  # Telemetry Components
+      
+  otel-collector:
+    profiles: ["app"]
+    image: otel/opentelemetry-collector-contrib:0.86.0
+    # healthcheck:
+    #   test: wget --no-verbose --tries=1 --spider http://localhost:13133 || exit 1
+    volumes:
+      - ./infrastructure/docker-compose/otel/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+    ports:
+      - 13133:13133 # health_check extension
+      - 8888:8888 # Prometheus metrics exposed by the collector
+      - 8889:8889  # Prometheus exporter metrics
+      - 4317:4317 # OTLP gRPC receiver
+
   prometheus:
     profiles: ["app"]
     image: prom/prometheus:v2.47.0
@@ -43,19 +65,11 @@ services:
     command:
       - --web.enable-remote-write-receiver
       - --enable-feature=native-histograms
+      #- --enable-feature=otlp-write-receiver
       - --config.file=/etc/prometheus/prometheus.yml
     volumes:
       - ./infrastructure/docker-compose/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-  otel-collector:
-    profiles: ["app"]
-    image: otel/opentelemetry-collector-contrib:0.86.0
-    volumes:
-      - ./infrastructure/docker-compose/otel/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
-    ports:
-      - 8888:8888
-      - 8889:8889
-      - 13133:13133
-      - 4317:4317 # Listen for incoming data
+
   jaeger:
     profiles: ["app"]
     image: jaegertracing/all-in-one:1.49
@@ -75,6 +89,8 @@ services:
       GF_AUTH_BASIC_ENABLED: "false"
     volumes:
       - ./infrastructure/docker-compose/grafana:/etc/grafana/provisioning
+
+  # Tests
 
   k6:
     profiles: ["load-test"]

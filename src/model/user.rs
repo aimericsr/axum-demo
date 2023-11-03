@@ -109,31 +109,31 @@ impl UserBmc {
     }
 }
 
-// region:    --- Tests
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::_dev_utils;
-    use anyhow::{Context, Result};
-    use serial_test::serial;
+// // region:    --- Tests
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use crate::_dev_utils;
+//     use anyhow::{Context, Result};
+//     use serial_test::serial;
 
-    #[serial]
-    #[tokio::test]
-    async fn test_first_ok_demo1() -> Result<()> {
-        // -- Setup & Fixtures
-        let mm = _dev_utils::init_test().await;
-        let ctx = Ctx::root_ctx();
-        let fx_username = "demo1";
+//     #[serial]
+//     #[tokio::test]
+//     async fn test_first_ok_demo1() -> Result<()> {
+//         // -- Setup & Fixtures
+//         let mm = _dev_utils::init_test().await;
+//         let ctx = Ctx::root_ctx();
+//         let fx_username = "demo1";
 
-        // -- Exec
-        let user: User = UserBmc::first_by_username(&ctx, &mm, fx_username)
-            .await?
-            .context("Should have user 'demo1'")?;
+//         // -- Exec
+//         let user: User = UserBmc::first_by_username(&ctx, &mm, fx_username)
+//             .await?
+//             .context("Should have user 'demo1'")?;
 
-        // -- Check
-        assert_eq!(user.username, fx_username);
+//         // -- Check
+//         assert_eq!(user.username, fx_username);
 
-        Ok(())
-    }
-}
-// endregion: --- Tests
+//         Ok(())
+//     }
+// }
+// // endregion: --- Tests

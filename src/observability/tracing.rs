@@ -16,14 +16,6 @@ use tracing::Subscriber;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::{layer::SubscriberExt, Registry};
 
-/// Init tracing for the lifetime of the application
-
-///  # Overview
-///
-/// ```
-/// init_subscriber();
-/// ```
-
 /// Set the subscriber as the default for the lifetime of the applications.
 pub fn init_subscriber(otel: &Otel) {
     let subscriber = get_subscriber(otel);

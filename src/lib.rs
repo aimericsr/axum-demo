@@ -29,10 +29,13 @@ async fn main() -> std::io::Result<()> {
     let application = Application::build(config, prom)
         .await
         .expect("Failed to build the app");
-    application
-        .run_until_stopped()
-        .await
-        .expect("Failed to lunch the app");
+
+    // Lunch the application to start listening to requests
+
+    // application
+    //     .run_until_stopped()
+    //     .await
+    //     .expect("Failed to lunch the app");
     Ok(())
 }
 ```
