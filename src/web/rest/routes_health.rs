@@ -1,11 +1,14 @@
-use axum::{routing::get, Json, Router};
+use axum::{extract::State, routing::get, Json, Router};
 use hyper::{header, HeaderMap};
+use opentelemetry::KeyValue;
 
-pub fn routes() -> Router {
+use crate::startup::SharedState;
+
+pub fn routes() -> Router<SharedState> {
     Router::new().nest("/health", sub_routes())
 }
 
-fn sub_routes() -> Router {
+fn sub_routes() -> Router<SharedState> {
     Router::new()
         .route("/", get(health))
         .route("/ready", get(health_ready))
@@ -36,7 +39,9 @@ async fn health() -> HeaderMap {
         (status = 200, description = "Ready health check"),
     )
 )]
-async fn health_ready() -> Json<Vec<String>> {
+async fn health_ready(State(state): State<SharedState>) -> Json<Vec<String>> {
+    state.foobar.add(1, &[KeyValue::new("test", "value")]);
+    state.foobar.add(5, &[KeyValue::new("test2", "value2")]);
     Json(vec!["ready".to_owned(), "true".to_owned()])
 }
 

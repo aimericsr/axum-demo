@@ -1,5 +1,6 @@
 pub mod task;
 pub mod user;
+use axum_macros::FromRef;
 use sqlx::{Connection, Executor, PgConnection};
 
 pub use self::error::{Error, Result};
@@ -9,7 +10,7 @@ mod base;
 mod error;
 mod store;
 
-#[derive(Clone)]
+#[derive(Clone, FromRef)]
 pub struct ModelManager {
     db: Db,
 }

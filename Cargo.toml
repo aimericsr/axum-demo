@@ -14,6 +14,7 @@ repository = "https://github.com/aimericsr/axum-demo"
 
 [lib]
 path = "src/lib.rs"
+#doctest = false
 
 [[bin]]
 path = "src/main.rs"
@@ -60,7 +61,7 @@ opentelemetry_sdk ={ version = "0.20.0", features = ["rt-tokio", "metrics"] }
 opentelemetry-otlp = { version = "0.13.0", features = ["trace", "http-proto", "metrics", "gzip-tonic", "grpc-tonic", "tonic"] }
 tracing-opentelemetry = "0.21.0"
 opentelemetry-semantic-conventions = "0.12.0"
-axum-tracing-opentelemetry = "0.14.1"
+axum-tracing-opentelemetry = "0.13.1"
 tracing-opentelemetry-instrumentation-sdk = "0.14.1"
 # -- Utils
 async-trait = "0.1.73"
@@ -72,6 +73,8 @@ validator = "0.16.1"
 validator_derive = "0.16.0"
 thiserror = "1.0.50"
 backoff = "0.4.0"
+axum-otel-metrics = "0.7.0"
+axum-macros = "0.3.8"
 
 [dev-dependencies]
 anyhow = "1.0.75"

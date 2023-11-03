@@ -2,25 +2,32 @@ use crate::crypt::{pwd, EncryptContent};
 use crate::ctx::Ctx;
 use crate::model::user::{UserBmc, UserForLogin};
 use crate::model::ModelManager;
+use crate::startup::SharedState;
 use crate::web::{self, remove_token_cookie, Error, Result};
 use axum::extract::State;
-use axum::routing::post;
+use axum::routing::{get, post};
 use axum::{Json, Router};
+use hmac::digest::typenum::Mod;
+use hyper::Body;
+use opentelemetry::KeyValue;
 use serde::{Deserialize, Serialize};
 use tower_cookies::Cookies;
 use tracing::debug;
 use utoipa::{IntoParams, ToSchema};
 use validator::{Validate, ValidationError};
 
-pub fn routes(mm: ModelManager) -> Router {
-    Router::new().nest("/api", sub_routes(mm))
+pub fn routes() -> Router<SharedState> {
+    Router::new().nest("/api", sub_routes())
 }
 
-fn sub_routes(mm: ModelManager) -> Router {
+fn sub_routes() -> Router<SharedState> {
     Router::new()
         .route("/login", post(api_login))
         .route("/logoff", post(api_logoff_handler))
-        .with_state(mm)
+}
+
+async fn check() -> &'static str {
+    "check"
 }
 
 // region:    --- Structs
@@ -60,7 +67,7 @@ pub struct LoginPayload {
     )
 )]
 async fn api_login(
-    State(mm): State<ModelManager>,
+    State(state): State<SharedState>,
     cookies: Cookies,
     Json(payload): Json<LoginPayload>,
 ) -> Result<Json<LoginResponse>> {
@@ -73,7 +80,7 @@ async fn api_login(
     let root_ctx = Ctx::root_ctx();
 
     // -- Get the user.
-    let user: UserForLogin = UserBmc::first_by_username(&root_ctx, &mm, &username)
+    let user: UserForLogin = UserBmc::first_by_username(&root_ctx, &state.mm, &username)
         .await?
         .ok_or(Error::LoginFailUsernameNotFound { username })?;
     let user_id = user.id;

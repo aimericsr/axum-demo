@@ -19,9 +19,13 @@ use axum::routing::get;
 use axum::BoxError;
 use axum::Router;
 use axum::{error_handling::HandleErrorLayer, http::StatusCode};
+use axum_otel_metrics::HttpMetricsLayerBuilder;
 use axum_tracing_opentelemetry::middleware::OtelAxumLayer;
 use axum_tracing_opentelemetry::middleware::OtelInResponseLayer;
 use metrics_exporter_prometheus::PrometheusHandle;
+use opentelemetry::global;
+use opentelemetry::metrics::Counter;
+use opentelemetry::KeyValue;
 use std::future::ready;
 use std::future::Future;
 use std::net::SocketAddr;
@@ -89,6 +93,13 @@ async fn setup_db_migrations() -> ModelManager {
     mm
 }
 
+#[derive(Clone)]
+pub struct SharedState {
+    pub root_dir: String,
+    pub foobar: Counter<u64>,
+    pub mm: ModelManager,
+}
+
 fn routes(mm: ModelManager, prom: PrometheusHandle) -> Router {
     let governor_conf = Box::new(
         GovernorConfigBuilder::default()
@@ -110,25 +121,40 @@ fn routes(mm: ModelManager, prom: PrometheusHandle) -> Router {
         .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
         .allow_methods([Method::GET]);
 
-    let routes_prom: Router = Router::new().route("/metrics", get(move || ready(prom.render())));
+    //let routes_prom: Router = Router::new().route("/metrics", get(move || ready(prom.render())));
+    let metrics = HttpMetricsLayerBuilder::new()
+        .with_service_name("axum-demo".to_string())
+        .with_service_version("0.0.1".to_string())
+        .build();
+
+    let state = SharedState {
+        root_dir: String::from("/tmp"),
+        foobar: global::meter("axum-app").u64_counter("foobar").init(),
+        mm,
+    };
 
     //let routes_rpc = rpc::routes(mm.clone()).route_layer(from_fn(mw_ctx_require));
 
     let routes_all = Router::new()
-        .merge(routes_health())
-        .merge(routes_prom)
+        .merge(routes_health().with_state(state.clone()))
+        .merge(metrics.routes::<SharedState>().with_state(state.clone()))
+        //.merge(routes_prom)
         .merge(routes_hello())
-        .merge(routes_login(mm.clone()))
+        .merge(routes_login().with_state(state.clone()))
         //.nest("/api", routes_rpc)
         .layer(map_response(mw_res_map))
         .merge(routes_static())
-        .layer(from_fn_with_state(mm.clone(), web::mw_auth::mw_ctx_resolve))
+        .layer(from_fn_with_state(
+            state.mm.clone(),
+            web::mw_auth::mw_ctx_resolve,
+        ))
         .layer(CookieManagerLayer::new())
-        .layer(middleware::from_fn(track_metrics))
+        //.layer(middleware::from_fn(track_metrics))
         .merge(routes_docs())
         .layer(cors_layer)
         .layer(rate_limit_layer)
         .layer(TimeoutLayer::new(Duration::from_secs(5)))
+        .layer(metrics)
         // include trace context as header into the response
         .layer(OtelInResponseLayer::default())
         //create a span with the http context using the OpenTelemetry naming convention on incoming request
