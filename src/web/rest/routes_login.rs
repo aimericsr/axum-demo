@@ -2,23 +2,25 @@ use crate::crypt::{pwd, EncryptContent};
 use crate::ctx::Ctx;
 use crate::model::user::{UserBmc, UserForLogin};
 use crate::startup::SharedState;
+use crate::web::mw_validate_json::ValidatedJson;
 use crate::web::{self, remove_token_cookie, Error, Result};
 use axum::extract::State;
 use axum::routing::post;
 use axum::{Json, Router};
 use serde::{Deserialize, Serialize};
 use tower_cookies::Cookies;
-use tracing::debug;
+use tracing::{debug, instrument};
 use utoipa::{IntoParams, ToSchema};
+use validator_derive::Validate;
 
 pub fn routes() -> Router<SharedState> {
-    Router::new().nest("/api", sub_routes())
+    Router::new().nest("/account", sub_routes())
 }
 
 fn sub_routes() -> Router<SharedState> {
     Router::new()
-        .route("/login", post(api_login))
-        .route("/logoff", post(api_logoff_handler))
+        .route("/login", post(login))
+        .route("/logoff", post(logoff))
 }
 
 // region:    --- Structs
@@ -34,33 +36,44 @@ pub struct LoginResponseResult {
 // endregion: --- Structs
 
 // region:    --- Login
-#[derive(Debug, Serialize, Deserialize, ToSchema)]
+// TODO find a way to store the password with the type Seceret<String> because it need to impl HasLen
+// this is not possible to implemente myself because the type Secret is of an external crate
+#[derive(Debug, Serialize, Deserialize, Validate, ToSchema)]
 pub struct LoginPayload {
-    //#[validate(length(min = 1, message = "Can not be empty"))]
+    #[validate(length(min = 1, message = "Can not be empty"))]
     pub username: String,
-    //#[validate]
+    #[validate(length(min = 1, message = "Can not be empty"))]
     pub pwd: String,
 }
 
+// struct MyType(Secret<String>);
+
+// impl HasLen for MyType {
+//     fn length(&self) -> u64 {
+//         self.0.expose_secret().length()
+//     }
+// }
+
 #[utoipa::path(
     post,
-    context_path = "/api",
+    context_path = "/account",
     path = "/login",
-    tag = "account",
+    tag = "Account",
     request_body = LoginPayload,
     responses(
         (status = 200, description = "Login successfully", body = LoginResponse),
-        (status = 403, description = "Login Fail"),
-        (status = 500, description = "Internal Server Error")
+        (status = 403, description = "Login Fail", body = HttpApiProblemCustom),
+        (status = 500, description = "Internal Server Error", body = HttpApiProblemCustom)
     ),
     security(
         ("api_key" = ["aaa","bb"])
     )
 )]
-async fn api_login(
+#[instrument]
+async fn login(
     State(state): State<SharedState>,
     cookies: Cookies,
-    Json(payload): Json<LoginPayload>,
+    ValidatedJson(payload): ValidatedJson<LoginPayload>,
 ) -> Result<Json<LoginResponse>> {
     debug!("{:<12} - api_login", "HANDLER");
 
@@ -110,9 +123,9 @@ pub struct LogoffPayload {
 
 #[utoipa::path(
     post,
-    context_path = "/api",
+    context_path = "/account",
     path = "/logoff",
-    tag = "account",
+    tag = "Account",
     params(
         LogoffPayload
     ),
@@ -121,7 +134,7 @@ pub struct LogoffPayload {
         (status = 500, description = "Internal Server Error")
     )
 )]
-async fn api_logoff_handler(
+async fn logoff(
     cookies: Cookies,
     Json(payload): Json<LogoffPayload>,
 ) -> Result<Json<LoginResponse>> {

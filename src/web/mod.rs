@@ -1,6 +1,7 @@
 mod error;
 pub mod mw_auth;
 pub mod mw_res_map;
+pub mod mw_validate_json;
 pub mod rest;
 pub mod routes_docs;
 

@@ -8,12 +8,14 @@ use crate::web::rest::routes_hello::routes as routes_hello;
 use crate::web::rest::routes_login::routes as routes_login;
 use crate::web::rest::routes_static::routes as routes_static;
 use crate::web::routes_docs::routes as routes_docs;
+use crate::web::Error as ErrorWeb;
 use axum::http::HeaderValue;
 use axum::http::Method;
 use axum::middleware::{from_fn_with_state, map_response};
 use axum::BoxError;
 use axum::Router;
-use axum::{error_handling::HandleErrorLayer, http::StatusCode};
+
+use axum::error_handling::HandleErrorLayer;
 use axum_otel_metrics::HttpMetricsLayerBuilder;
 use axum_tracing_opentelemetry::middleware::OtelAxumLayer;
 use axum_tracing_opentelemetry::middleware::OtelInResponseLayer;
@@ -29,7 +31,6 @@ use tower::ServiceBuilder;
 use tower_cookies::CookieManagerLayer;
 use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 use tower_http::cors::CorsLayer;
-use tower_http::timeout::TimeoutLayer;
 use tracing::info;
 use tracing::instrument;
 
@@ -85,14 +86,19 @@ async fn setup_db_migrations() -> ModelManager {
     mm
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SharedState {
-    pub root_dir: String,
-    pub foobar: Counter<u64>,
+    pub custom_prometheus_metrics: CustomPrometheusMetrics,
     pub mm: ModelManager,
 }
 
+#[derive(Clone, Debug)]
+pub struct CustomPrometheusMetrics {
+    pub ready_endpoint: Counter<u64>,
+}
+
 fn routes(mm: ModelManager) -> Router {
+    // Build services for Rate Limit and Timeout
     let governor_conf = Box::new(
         GovernorConfigBuilder::default()
             .per_second(1)
@@ -104,12 +110,19 @@ fn routes(mm: ModelManager) -> Router {
 
     let rate_limit_layer = ServiceBuilder::new()
         .layer(HandleErrorLayer::new(|_: BoxError| async move {
-            StatusCode::TOO_MANY_REQUESTS
+            ErrorWeb::RateLimitExceeded
         }))
         .layer(GovernorLayer {
             config: Box::leak(governor_conf),
         });
 
+    let timeout_layer = ServiceBuilder::new()
+        .layer(HandleErrorLayer::new(|_: BoxError| async {
+            ErrorWeb::Timeout
+        }))
+        .timeout(Duration::from_secs(1));
+
+    // Set CORS
     let cors_layer = CorsLayer::new()
         .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
         .allow_methods([Method::GET]);
@@ -119,18 +132,20 @@ fn routes(mm: ModelManager) -> Router {
         .with_service_version("0.0.1".to_string())
         .build();
 
+    let prom = CustomPrometheusMetrics {
+        ready_endpoint: global::meter("axum-app").u64_counter("foobar").init(),
+    };
     let state = SharedState {
-        root_dir: String::from("/tmp"),
-        foobar: global::meter("axum-app").u64_counter("foobar").init(),
+        custom_prometheus_metrics: prom,
         mm,
     };
 
+    // Build the main Router
     let routes_all = Router::new()
         .merge(routes_health().with_state(state.clone()))
         .merge(metrics.routes::<SharedState>().with_state(state.clone()))
         .merge(routes_hello())
         .merge(routes_login().with_state(state.clone()))
-        .layer(map_response(mw_res_map))
         .merge(routes_static())
         .layer(from_fn_with_state(
             state.mm.clone(),
@@ -138,10 +153,13 @@ fn routes(mm: ModelManager) -> Router {
         ))
         .layer(CookieManagerLayer::new())
         .merge(routes_docs())
+        .fallback(|| async { ErrorWeb::FallBack })
         .layer(cors_layer)
         .layer(rate_limit_layer)
-        .layer(TimeoutLayer::new(Duration::from_secs(5)))
+        .layer(timeout_layer)
+        .layer(map_response(mw_res_map))
         .layer(metrics)
+        // TODO fix trace
         // include trace context as header into the response
         .layer(OtelInResponseLayer::default())
         //create a span with the http context using the OpenTelemetry naming convention on incoming request
@@ -150,7 +168,7 @@ fn routes(mm: ModelManager) -> Router {
 }
 
 /// Confirm to the otlp backend that the programm has been shutdown sucessfuly
-#[instrument(skip_all)]
+#[instrument]
 pub fn graceful_shutdown() {
     info!("signal received, starting graceful shutdown");
 }

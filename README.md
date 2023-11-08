@@ -1,3 +1,5 @@
+[![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
+
 # Web API to demonstrate axum capabilities
 
 [Axum](https://github.com/tokio-rs/axum) is a web framework that is supported by the tokio team. It integrate natively with the tower and tower-http ecosystem, so we can use middleware, services, and utilities with axum. Moreover, we can also use this with other framework that work with tower like hyper for http and tonic for grpc.
@@ -75,7 +77,7 @@ With that, we can correlate application traces with prometeuses metrics from kub
 
 ## Features
 
-- [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807) compliant for error message
+- [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807) compliant for all error message
 - [OpenAPI](https://www.openapis.org) docs
 - Traces export to an otel backend in the [otlp](https://opentelemetry.io) format
 - Graceful Shutdown for sending last traces before the application stop
@@ -90,15 +92,14 @@ With that, we can correlate application traces with prometeuses metrics from kub
 
 ## To Do
 
-- add more filter to tracing
-- better handling of the errors
-- load env variable only at the beginning
+- fix db related test
+- load env variable only at the beginning ?
 - version the api (path or url ?)
 - handle db connection retry system
-- handle request body validation
+- handle request body validation with custom messages
+- Infra : Deployments strategies and upgrade helm charts ?
 - Grpc routes
 - GraphQL routes
-- Infra : Deployments strategies and upgrade helm charts ?
 
 ## Prerequesite
 

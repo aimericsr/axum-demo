@@ -40,12 +40,6 @@ serde_with = "3.4.0"
 # -- Db
 sqlx = { version = "0.7.2", features = [ "runtime-tokio-rustls", "postgres", "uuid", "time" ] }
 sqlb = "0.4.0"
-# -- Crypt & Encoding
-rand = "0.8.5"
-hmac = "0.12.1"
-sha2 = "0.10.8"
-base64-url = "2.0.0"
-time = "0.3.29"
 # -- Docs
 utoipa = { version= "4.0.0", features = ["axum_extras"] }
 utoipa-swagger-ui = { version= "4.0.0", features = ["axum"] }
@@ -64,6 +58,12 @@ tracing-opentelemetry = "0.21.0"
 opentelemetry-semantic-conventions = "0.12.0"
 axum-tracing-opentelemetry = "0.13.1"
 tracing-opentelemetry-instrumentation-sdk = "0.14.1"
+# -- Crypt & Encoding
+rand = "0.8.5"
+hmac = "0.12.1"
+sha2 = "0.10.8"
+base64-url = "2.0.0"
+time = "0.3.29"
 # -- Utils
 async-trait = "0.1.73"
 strum_macros = "0.25.2"
@@ -72,6 +72,7 @@ secrecy = "0.8.0"
 dotenv = "0.15.0"
 validator = "0.16.1"
 validator_derive = "0.16.0"
+regex = "1.10.2"
 
 [dev-dependencies]
 anyhow = "1.0.75"

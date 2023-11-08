@@ -13,19 +13,19 @@ pub fn routes() -> Router {
 
 fn sub_routes() -> Router {
     Router::new()
-        .route("/", get(handler_hello))
-        .route("/:name", get(handler_hello_greeting))
+        .route("/", get(hello))
+        .route("/:name", get(hello_name))
 }
 
 #[utoipa::path(
     get,
     path = "/hello",
-    tag = "hello",
+    tag = "Hello",
     responses(
         (status = 200, description = "Greetings with the name provided or default to World", example = "Hello <strong>World</strong>"),
     )
 )]
-async fn handler_hello(Query(params): Query<HelloParams>) -> impl IntoResponse {
+async fn hello(Query(params): Query<HelloParams>) -> impl IntoResponse {
     let name = params.name.as_deref().unwrap_or("World");
     Html(format!("Hello <strong>{name}</strong>"))
 }
@@ -38,7 +38,7 @@ pub struct HelloParams {
 #[utoipa::path(
     get,
     path = "/hello/{name}",
-    tag = "hello",
+    tag = "Hello",
     params(
         ("name" = String, Path, description = "Name to greet")
     ),
@@ -46,7 +46,7 @@ pub struct HelloParams {
         (status = 200, description = "Greetings with the name provided ", example = "Hello <strong>World</strong>")
     )
 )]
-async fn handler_hello_greeting(Path(name): Path<String>) -> impl IntoResponse {
+async fn hello_name(Path(name): Path<String>) -> impl IntoResponse {
     debug!("{:<12} - handler_hello2 - {name:?}", "HANDLER");
 
     Html(format!("Hello2 <strong>{name}</strong>"))

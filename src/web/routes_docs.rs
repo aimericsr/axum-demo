@@ -6,25 +6,26 @@ use utoipa_swagger_ui::SwaggerUi;
 
 #[derive(OpenApi)]
 #[openapi(
-    info(description = "My Api description"),
+    info(description = "Simple API to demonstrate axum framework capabilites"),
     paths(
         // Hello
-        crate::web::rest::routes_hello::handler_hello,
-        crate::web::rest::routes_hello::handler_hello_greeting,
+        crate::web::rest::routes_hello::hello,
+        crate::web::rest::routes_hello::hello_name,
 
         // Login
-        crate::web::rest::routes_login::api_login,
-        crate::web::rest::routes_login::api_logoff_handler,
+        crate::web::rest::routes_login::login,
+        crate::web::rest::routes_login::logoff,
 
-         // Health Check
-         crate::web::rest::routes_health::health,
-         crate::web::rest::routes_health::health_ready,
-         crate::web::rest::routes_health::health_live,
+        // Health Check
+        crate::web::rest::routes_health::health,
+        crate::web::rest::routes_health::health_ready,
+        crate::web::rest::routes_health::health_live,
     ),
     components(
         schemas(
             // Error 
             crate::web::ClientError, 
+            crate::web::mw_res_map::HttpApiProblemCustom,
 
             // Login
             crate::web::rest::routes_login::LoginResponse, 
@@ -33,7 +34,9 @@ use utoipa_swagger_ui::SwaggerUi;
             crate::web::rest::routes_login::LoginPayload)
     ),
     tags(
-        (name = "test", description = "Test")
+        (name = "Account", description = "All related user endpoints"),
+        (name = "Health", description = "Retreive the current status of the service"),
+        (name = "Hello", description = "Basic routes for testing"),
     )
 )]
 struct ApiDoc;

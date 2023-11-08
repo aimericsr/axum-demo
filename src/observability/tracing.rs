@@ -1,11 +1,12 @@
 use crate::config::Otel;
 use core::time::Duration;
-use opentelemetry::sdk::trace::{self, Sampler};
+use opentelemetry::global;
 use opentelemetry::trace::TraceError;
 use opentelemetry::KeyValue;
-use opentelemetry::{global, runtime::Tokio, sdk::propagation::TraceContextPropagator};
 use opentelemetry_otlp::WithExportConfig;
-use opentelemetry_sdk::trace::{BatchConfig, RandomIdGenerator};
+use opentelemetry_sdk::propagation::TraceContextPropagator;
+use opentelemetry_sdk::trace::config;
+use opentelemetry_sdk::trace::{BatchConfig, RandomIdGenerator, Sampler};
 use opentelemetry_sdk::{trace as sdktrace, Resource};
 use opentelemetry_semantic_conventions::resource::{
     SERVICE_NAME, SERVICE_NAMESPACE, SERVICE_VERSION,
@@ -62,7 +63,7 @@ fn init_otlp_traces(otel: &Otel) -> Result<sdktrace::Tracer, TraceError> {
             //.with_compression(Compression::Gzip),
         )
         .with_trace_config(
-            trace::config()
+            config()
                 .with_id_generator(RandomIdGenerator::default())
                 .with_max_attributes_per_event(128)
                 .with_max_attributes_per_link(128)
@@ -75,5 +76,5 @@ fn init_otlp_traces(otel: &Otel) -> Result<sdktrace::Tracer, TraceError> {
                 .with_sampler(Sampler::AlwaysOn),
         )
         .with_batch_config(BatchConfig::default())
-        .install_batch(Tokio)
+        .install_batch(opentelemetry_sdk::runtime::Tokio)
 }

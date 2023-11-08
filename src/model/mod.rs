@@ -8,7 +8,7 @@ mod base;
 mod error;
 mod store;
 
-#[derive(Clone, FromRef)]
+#[derive(Debug, Clone, FromRef)]
 pub struct ModelManager {
     db: Db,
 }

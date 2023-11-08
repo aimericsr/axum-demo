@@ -40,7 +40,7 @@ async fn main() -> std::io::Result<()> {
 }
 ```
 */
-
+#![forbid(unsafe_code)]
 /// For dev only, shoud be remove in a future release
 mod _dev_utils;
 /// Load the config for the app, can come from differents locations
