@@ -14,7 +14,6 @@ use axum::http::Method;
 use axum::middleware::{from_fn_with_state, map_response};
 use axum::BoxError;
 use axum::Router;
-
 use axum::error_handling::HandleErrorLayer;
 use axum_otel_metrics::HttpMetricsLayerBuilder;
 use axum_tracing_opentelemetry::middleware::OtelAxumLayer;

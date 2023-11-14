@@ -57,7 +57,7 @@ opentelemetry-otlp = { version = "0.13.0", features = ["trace", "http-proto", "m
 tracing-opentelemetry = "0.21.0"
 opentelemetry-semantic-conventions = "0.12.0"
 axum-tracing-opentelemetry = "0.13.1"
-tracing-opentelemetry-instrumentation-sdk = "0.14.1"
+tracing-opentelemetry-instrumentation-sdk = "0.13.1"
 # -- Crypt & Encoding
 rand = "0.8.5"
 hmac = "0.12.1"
