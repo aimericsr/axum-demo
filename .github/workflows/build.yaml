@@ -4,13 +4,13 @@ on:
   push:
     branches: [develop]
     paths:
-      - "src/**/*"
-      - "tests/**/*"
+      - src/**
+      - tests/**
   pull_request:
     branches: [main]
     paths:
-      - "src/**/*"
-      - "tests/**/*"
+      - src/**
+      - tests/**
 
 env:
   RUST_VERSION: 1.73
