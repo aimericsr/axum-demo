@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - develop
+      - ft/**
     paths:
       - src/**
       - tests/**
