@@ -92,6 +92,7 @@ With that, we can correlate application traces with prometeuses metrics from kub
 
 ## To Do
 
+- All the list of TODO can be found [here](https://github.com/users/aimericsr/projects/1)
 - fix db related test
 - load env variable only at the beginning ?
 - version the api (path or url ?)
