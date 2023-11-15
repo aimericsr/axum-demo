@@ -31,7 +31,6 @@ use tower_cookies::CookieManagerLayer;
 use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 use tower_http::cors::CorsLayer;
 use tracing::info;
-
 use tracing::instrument;
 
 /// Type to hold the newly built server and his port
