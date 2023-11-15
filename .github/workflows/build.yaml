@@ -3,7 +3,7 @@ name: Test Code and Push Image
 on:
   push:
     branches: ["develop", "ft/**"]
-    paths: ["src/**"]
+    paths: ["src/**", "tests/**"]
   pull_request:
     branches: ["main"]
 
