@@ -90,7 +90,7 @@ With that, we can correlate application traces with prometeuses metrics from kub
 - Rest Routes
 - Auth with cookies and jwt
 
-## To Dod
+## To Do
 
 - All the list of TODO can be found [here](https://github.com/users/aimericsr/projects/1)
 - fix db related tests
