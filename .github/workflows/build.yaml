@@ -2,11 +2,18 @@ name: Test Code and Push Image
 
 on:
   push:
-    branches: ["develop", "ft/**"]
-    paths: ["src/**", "tests/**"]
+    branches:
+      - "develop"
+      - "ft/**"
+    paths:
+      - "src/**"
+      - "tests/**"
   pull_request:
-    branches: ["main"]
-    paths: ["src/**", "tests/**"]
+    branches:
+      - "main"
+    paths:
+      - "src/**"
+      - "tests/**"
 
 env:
   RUST_VERSION: 1.73
