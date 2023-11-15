@@ -39,7 +39,7 @@ jobs:
       #   run:  cargo install cargo-audit && cargo audit
 
       - name: Cache dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cargo
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
