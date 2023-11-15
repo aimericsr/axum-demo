@@ -75,11 +75,8 @@ jobs:
     needs: [test, fmt, clippy]
     if: github.ref == 'refs/heads/master'
     env:
-      ARTIFACT_REGISTRY: "us-central1-docker.pkg.dev"
-      REPO_NAME: "green-harvest"
-      IMAGE_NAME: "web-api"
-      OTEL_COLLECTOR_IMAGE_NAME: "otel-collector"
-      CLOUD_RUN_ID: "green-harvest-web-api"
+      HUB_NAME: "aimeric"
+      IMAGE_NAME: "axum-demo"
 
     steps:
       - uses: actions/checkout@v4
@@ -90,34 +87,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Artifact Registry
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          # username: ${{ secrets.DOCKERHUB_USERNAME }}
-          # password: ${{ secrets.DOCKERHUB_PASSWORD }}
-          registry: ${{ env.ARTIFACT_REGISTRY }}
-          username: _json_key
-          password: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
-
-      - name: Build and Push otel docker image
-        uses: docker/build-push-action@v4
-        env:
-          IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.OTEL_COLLECTOR_IMAGE_NAME }}
-        with:
-          context: infrastructure/cloud-run/otel-collector
-          push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          platforms: |
-            linux/amd64
-            linux/arm64
-          tags: |
-            ${{ env.IMAGE_URL }}:latest
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Build and Push app docker image
         uses: docker/build-push-action@v4
         env:
-          IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}
+          IMAGE_URL: ${{ env.HUB_NAME }}/${{ env.IMAGE_NAME }}
         with:
           context: .
           push: true
@@ -128,24 +107,3 @@ jobs:
             linux/arm64
           tags: |
             ${{ env.IMAGE_URL }}:latest
-
-      - id: "auth"
-        name: "Authenticate to Google Cloud"
-        uses: "google-github-actions/auth@v1"
-        with:
-          credentials_json: "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}"
-
-      - name: Set variable into the yaml file for deployment
-        env:
-          IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}
-          OTEL_IMAGE_URL: ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.OTEL_COLLECTOR_IMAGE_NAME }}
-        run: |
-          cd infrastructure/cloud-run
-          sed -i s@%APP_IMAGE%@${IMAGE_URL}:latest@g run-service.yaml
-          sed -i s@%OTELCOL_IMAGE%@${OTEL_IMAGE_URL}:latest@g run-service.yaml
-
-      - name: Deploy To Cloud Run
-        run: |
-          cd infrastructure/cloud-run
-          gcloud run services replace --region=europe-west9 run-service.yaml
-          gcloud run services set-iam-policy --region=europe-west9 $CLOUD_RUN_ID policy.yaml
