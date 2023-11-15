@@ -10,7 +10,7 @@ on:
       - "**/Cargo.lock"
 
 jobs:
-  build:
+  security-check:
     runs-on: ubuntu-latest
 
     steps:
