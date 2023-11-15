@@ -55,6 +55,7 @@ mod error;
 mod model;
 /// Centralize the observability capabilities of the application : tracing and metrics
 pub mod observability;
+
 /// All of the functions needed to start the application
 pub mod startup;
 /// All the routing and controllers logic
