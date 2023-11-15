@@ -2,12 +2,14 @@ name: Test Code and Push Image
 
 on:
   push:
-    branches: [develop]
+    branches:
+      - develop
     paths:
       - src/**
       - tests/**
   pull_request:
-    branches: [main]
+    branches:
+      - main
     paths:
       - src/**
       - tests/**
