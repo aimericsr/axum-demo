@@ -1,4 +1,4 @@
-name: Test and By
+name: Test Code and Push Image
 
 on:
   push:
@@ -13,6 +13,7 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+
     services:
       postgres:
         image: postgres:16.0-alpine
@@ -58,7 +59,8 @@ jobs:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Check out the repo
+        uses: actions/checkout@v4
 
       - name: Install rust toolchain
         uses: actions-rs/toolchain@v1
@@ -79,7 +81,8 @@ jobs:
       IMAGE_NAME: "axum-demo"
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out the repo
+        uses: actions/checkout@v4
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
