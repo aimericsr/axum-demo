@@ -1,5 +1,5 @@
 use crate::error::{Error, Result};
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use secrecy::Secret;
 use std::env;
 use std::str::FromStr;

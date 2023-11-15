@@ -1,4 +1,4 @@
-name: Security audit
+name: Security audit for dependencies
 
 on:
   schedule:
@@ -10,12 +10,12 @@ on:
       - "**/Cargo.lock"
 
 jobs:
-  build:
+  security-check:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
@@ -23,23 +23,23 @@ jobs:
           profile: minimal
           toolchain: nightly
 
-      - name: Install and run deny check
+      - name: Check dependencies licences
         run: cargo install --locked cargo-deny  && cargo deny check
 
-      - name: Install and run outdated
+      - name: Check outdated dependencies
         run: cargo install --locked cargo-outdated && cargo outdated
 
-      - name: Install and run udeps
-        run: cargo install cargo-udeps --locked && cargo +nightly udeps
+      - name: Check unused dependencies
+        run: cargo install cargo-udeps --locked && cargo +nightly udeps --all-targets
 
-      - name: Install and run pants
+      - name: Check known security vulerability in dependencies
         run: cargo install cargo-pants && cargo pants
 
       # - name: Install and run audit
       #   run:  cargo install cargo-audit && cargo audit
 
       - name: Cache dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cargo
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
