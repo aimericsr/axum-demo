@@ -1,10 +1,10 @@
-name: Push docker image to GCP
+name: Test Code and Push Image to Docker Hub
 
 on:
   push:
-    branches: [main, develop]
+    branches: [develop]
   pull_request:
-    branches: [main, develop]
+    branches: [main]
 
 env:
   RUST_VERSION: 1.73
