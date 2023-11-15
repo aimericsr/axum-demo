@@ -3,8 +3,6 @@ Thank you for your Pull Request. Please provide a description above and review
 the requirements below.
 
 Bug fixes and new features should include tests.
-
-Contributors guide: https://github.com/tokio-rs/axum/blob/master/CONTRIBUTING.md
 -->
 
 ## Motivation
