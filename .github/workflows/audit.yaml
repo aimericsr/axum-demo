@@ -23,7 +23,7 @@ jobs:
           profile: minimal
           toolchain: nightly
 
-      - name: Check dependencies licences, mantained status
+      - name: Check dependencies licences
         run: cargo install --locked cargo-deny  && cargo deny check
 
       - name: Check outdated dependencies
