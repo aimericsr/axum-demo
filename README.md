@@ -97,9 +97,7 @@ With that, we can correlate application traces with prometeuses metrics from kub
 - load env variable only at the beginning ?
 - version the api (path or url ?)
 - handle db connection retry system
-- handle request body validation with custom messages
 - Infra : Deployments strategies and upgrade helm charts ?
-- GraphQL routes
 
 ## Prerequesite
 
