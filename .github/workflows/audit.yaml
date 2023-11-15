@@ -1,14 +1,13 @@
 name: Security audit
 
 on:
+  schedule:
+    - cron: "0 0 * * *"
   push:
     branches: [main, develop]
-  schedule:
-    - cron: '0 0 * * *'
-  push:
     paths:
-      - '**/Cargo.toml'
-      - '**/Cargo.lock'
+      - "**/Cargo.toml"
+      - "**/Cargo.lock"
 
 jobs:
   build:
