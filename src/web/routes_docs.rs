@@ -24,13 +24,13 @@ use utoipa_swagger_ui::SwaggerUi;
     components(
         schemas(
             // Error 
-            crate::web::ClientError, 
+            crate::web::ClientError,
             crate::web::mw_res_map::HttpApiProblemCustom,
 
             // Login
-            crate::web::rest::routes_login::LoginResponse, 
-            crate::web::rest::routes_login::LoginResponseResult, 
-            crate::web::rest::routes_login::LogoffPayload, 
+            crate::web::rest::routes_login::LoginResponse,
+            crate::web::rest::routes_login::LoginResponseResult,
+            crate::web::rest::routes_login::LogoffPayload,
             crate::web::rest::routes_login::LoginPayload)
     ),
     tags(
