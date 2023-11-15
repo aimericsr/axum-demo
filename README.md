@@ -101,6 +101,8 @@ With that, we can correlate application traces with prometeuses metrics from kub
 
 ## Prerequesite
 
+d
+
 - [Rust](https://www.rust-lang.org/tools/install)
 - [Docker](https://docs.docker.com/engine/install/)(also install Docker compose)
 - [Minikube](https://minikube.sigs.k8s.io/docs/start/) (also install kubectl)
