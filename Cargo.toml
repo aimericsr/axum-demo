@@ -51,7 +51,7 @@ axum-otel-metrics = "0.7.0"
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["std", "env-filter", "json", "fmt", "tracing-log"] }
 # -- OpenTelemetry
-opentelemetry = { version = "0.20.0", features = ["rt-tokio", "metrics"] }
+opentelemetry = { version = "0.20.0", features = ["metrics"] }
 opentelemetry_sdk ={ version = "0.20.0", features = ["rt-tokio", "metrics"] }
 opentelemetry-otlp = { version = "0.13.0", features = ["trace", "http-proto", "metrics", "gzip-tonic", "grpc-tonic", "tonic"] }
 tracing-opentelemetry = "0.21.0"
@@ -69,10 +69,11 @@ async-trait = "0.1.73"
 strum_macros = "0.25.2"
 uuid = { version = "1.4.1", features = ["v4", "fast-rng"] }
 secrecy = "0.8.0" 
-dotenv = "0.15.0"
 validator = "0.16.1"
 validator_derive = "0.16.0"
 regex = "1.10.2"
+dotenvy = "0.15.7"
+dotenv = "0.15.0"
 
 [dev-dependencies]
 anyhow = "1.0.75"
