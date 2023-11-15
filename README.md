@@ -99,7 +99,6 @@ With that, we can correlate application traces with prometeuses metrics from kub
 - handle db connection retry system
 - handle request body validation with custom messages
 - Infra : Deployments strategies and upgrade helm charts ?
-- Grpc routes
 - GraphQL routes
 
 ## Prerequesite
