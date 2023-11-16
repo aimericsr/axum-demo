@@ -50,7 +50,7 @@ pub struct LoginPayload {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct StringWrapper(Secret<String>);
+pub struct StringWrapper(pub Secret<String>);
 
 impl HasLen for &StringWrapper {
     fn length(&self) -> u64 {
