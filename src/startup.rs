@@ -158,7 +158,7 @@ fn routes(mm: ModelManager) -> Router {
         .layer(timeout_layer)
         .layer(map_response(mw_res_map))
         .layer(metrics)
-        // TODO fix trace
+        // TODO fix trace header(tracestate)
         // include trace context as header into the response
         .layer(OtelInResponseLayer::default())
         //create a span with the http context using the OpenTelemetry naming convention on incoming request
