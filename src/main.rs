@@ -4,7 +4,7 @@ use axum_demo::startup::Application;
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
-    let config = get_configuration().expect("Failed to read configuration.");
+    let config = get_configuration().expect("Failed to read configuration");
 
     init_subscriber(&config.otel);
 
