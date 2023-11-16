@@ -31,7 +31,7 @@ async fn login_fails() {
     // Arrange
     let app = spawn_app().await;
     let body = LoginPayload {
-        username: "test".to_string(),
+        username: "test1".to_string(),
         pwd: StringWrapper(Secret::from("test")),
     };
     let json = to_value(body).expect("Failed to serialize body");
