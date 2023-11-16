@@ -41,7 +41,7 @@ pub struct LoginResponseResult {
 // region:    --- Login
 // TODO find a way to store the password with the type Seceret<String> because it need to impl HasLen
 // this is not possible to implemente myself because the type Secret is of an external crate
-#[derive(Debug, Deserialize, Validate, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, Validate, ToSchema)]
 pub struct LoginPayload {
     #[validate(length(min = 1, message = "Can not be empty"))]
     pub username: String,
