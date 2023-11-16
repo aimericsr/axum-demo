@@ -22,7 +22,7 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    #environment: development
+    environment: development
 
     services:
       postgres:
@@ -49,7 +49,7 @@ jobs:
       - name: Run test
         run: cargo test --test api
 
-  fmt:
+  format:
     name: Fmt
     runs-on: ubuntu-latest
     environment: development
@@ -89,7 +89,7 @@ jobs:
     name: Build and push image to Docker Hub
     runs-on: ubuntu-latest
     environment: development
-    needs: [test, fmt, clippy]
+    needs: [test, format, lint]
     if: github.ref == 'refs/heads/master'
     env:
       HUB_NAME: "aimeric"
