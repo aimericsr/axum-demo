@@ -73,6 +73,7 @@ validator = "0.16.1"
 validator_derive = "0.16.0"
 regex = "1.10.2"
 dotenvy = "0.15.7"
+redact = { version = "0.1.7", features = ["serde"] }
 
 [dev-dependencies]
 anyhow = "1.0.75"

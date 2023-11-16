@@ -7,10 +7,13 @@ use crate::web::{self, remove_token_cookie, Error, Result};
 use axum::extract::State;
 use axum::routing::post;
 use axum::{Json, Router};
+use redact::Secret;
 use serde::{Deserialize, Serialize};
+use std::result::Result as Resultstd;
 use tower_cookies::Cookies;
 use tracing::{debug, instrument};
 use utoipa::{IntoParams, ToSchema};
+use validator::{HasLen, ValidationError};
 use validator_derive::Validate;
 
 pub fn routes() -> Router<SharedState> {
@@ -38,17 +41,36 @@ pub struct LoginResponseResult {
 // region:    --- Login
 // TODO find a way to store the password with the type Seceret<String> because it need to impl HasLen
 // this is not possible to implemente myself because the type Secret is of an external crate
-#[derive(Debug, Serialize, Deserialize, Validate, ToSchema)]
+#[derive(Debug, Deserialize, Validate, ToSchema)]
 pub struct LoginPayload {
     #[validate(length(min = 1, message = "Can not be empty"))]
     pub username: String,
-    #[validate(length(min = 1, message = "Can not be empty"))]
-    pub pwd: String,
+    #[validate(length(min = 1, message = "Can not be empty",))]
+    pub pwd: StringWrapper,
 }
 
-// struct MyType(Secret<String>);
+#[derive(Debug, Deserialize)]
+pub struct StringWrapper(Secret<String>);
 
-// impl HasLen for MyType {
+impl HasLen for &StringWrapper {
+    fn length(&self) -> u64 {
+        self.0.expose_secret().length()
+    }
+}
+
+impl Serialize for StringWrapper {
+    fn serialize<S>(&self, serializer: S) -> Resultstd<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.0.expose_secret().serialize(serializer)
+    }
+}
+
+// #[derive(Debug, Deserialize)]
+// struct SecretValidate(Secret<String>);
+
+// impl HasLen for SecretValidate {
 //     fn length(&self) -> u64 {
 //         self.0.expose_secret().length()
 //     }
@@ -76,6 +98,7 @@ async fn login(
     ValidatedJson(payload): ValidatedJson<LoginPayload>,
 ) -> Result<Json<LoginResponse>> {
     debug!("{:<12} - api_login", "HANDLER");
+    dbg!(&payload);
 
     let LoginPayload {
         username,
@@ -97,7 +120,7 @@ async fn login(
     pwd::validate_pwd(
         &EncryptContent {
             salt: user.pwd_salt.to_string(),
-            content: pwd_clear.clone(),
+            content: pwd_clear.0.expose_secret().clone(),
         },
         &pwd,
     )
