@@ -46,11 +46,14 @@ jobs:
       - name: Config env variables
         run: export SERVICE_DB_HOST=postgres
 
+      - name: Compile program
+        run: cargo test —no-run --test api
+
       - name: Run test
         run: cargo test --test api
 
   format:
-    name: Fmt
+    name: Format
     runs-on: ubuntu-latest
     environment: development
 
@@ -68,7 +71,7 @@ jobs:
         run: cargo fmt --all -- --check
 
   lint:
-    name: Clippy
+    name: Lint
     runs-on: ubuntu-latest
     environment: development
 
