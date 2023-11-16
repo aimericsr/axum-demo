@@ -22,6 +22,7 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    environment: development
 
     services:
       postgres:
@@ -51,6 +52,8 @@ jobs:
   fmt:
     name: Fmt
     runs-on: ubuntu-latest
+    environment: development
+
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
@@ -64,9 +67,11 @@ jobs:
       - name: Run fmt
         run: cargo fmt --all -- --check
 
-  clippy:
+  lint:
     name: Clippy
     runs-on: ubuntu-latest
+    environment: development
+
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
@@ -83,6 +88,7 @@ jobs:
   build-and-push-image:
     name: Build and push image to Docker Hub
     runs-on: ubuntu-latest
+    environment: development
     needs: [test, fmt, clippy]
     if: github.ref == 'refs/heads/master'
     env:
@@ -108,7 +114,7 @@ jobs:
       - name: Build and Push app docker image
         uses: docker/build-push-action@v4
         env:
-          IMAGE_URL: ${{ env.HUB_NAME }}/${{ env.IMAGE_NAME }}
+          IMAGE_URL: ${{ vars.HUB_NAME }}/${{ vars.IMAGE_NAME }}
         with:
           context: .
           push: true
