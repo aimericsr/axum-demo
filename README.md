@@ -6,7 +6,7 @@
 
 The internal logic is intentionally keep simple. This allow to focus on the overwall logic of the Axum framework, it's observability and the deployment part. As this app is a demo, the goal is to be compliant against the most web API standards.
 
-The infrastructure folder contain code to be able to run the applications in differentes environnements : [Docker Compose](https://docs.docker.com/compose/), [Cloud Run](https://cloud.google.com/run) et [Kubernetes](https://kubernetes.io).
+The infrastructure folder contain code to be able to run the applications in differentes environnements : [Docker Compose](https://docs.docker.com/compose/), [Cloud Run](https://cloud.google.com/run) and [Kubernetes](https://kubernetes.io).
 
 ## Kubernetes Architecture
 
@@ -100,8 +100,6 @@ With that, we can correlate application traces with prometeuses metrics from kub
 - Infra : Deployments strategies and upgrade helm charts ?
 
 ## Prerequesite
-
-d
 
 - [Rust](https://www.rust-lang.org/tools/install)
 - [Docker](https://docs.docker.com/engine/install/)(also install Docker compose)

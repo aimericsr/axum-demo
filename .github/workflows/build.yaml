@@ -22,7 +22,7 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    environment: development
+    #environment: development
 
     services:
       postgres:
