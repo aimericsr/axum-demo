@@ -150,7 +150,7 @@ pub enum ClientError {
     TIMEOUT,
     #[error("ROUTE_NOT_FOUND")]
     ROUTE_NOT_FOUND,
-    #[error("JSON_VALDIDATIONdmokfjsfjk")]
+    #[error("JSON_VALDIDATION")]
     JSON_VALDIDATION { errors: validator::ValidationErrors },
     #[error("JSON_SCHEMA")]
     JSON_SCHEMA,
