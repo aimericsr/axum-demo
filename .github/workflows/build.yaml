@@ -100,7 +100,7 @@ jobs:
         components: clippy
 
     - name: Run clippy
-      run: cargo clippy
+      run: cargo clippy -- -D warnings
 
   build-and-push-image:
     name: Build and push image to Docker Hub
