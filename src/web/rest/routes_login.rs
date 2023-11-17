@@ -13,7 +13,7 @@ use std::result::Result as Resultstd;
 use tower_cookies::Cookies;
 use tracing::{debug, instrument};
 use utoipa::{IntoParams, ToSchema};
-use validator::{HasLen, ValidationError};
+use validator::HasLen;
 use validator_derive::Validate;
 
 pub fn routes() -> Router<SharedState> {

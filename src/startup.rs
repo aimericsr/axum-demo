@@ -140,7 +140,7 @@ fn routes(mm: ModelManager) -> Router {
     };
 
     // Build the main Router
-    let routes_all = Router::new()
+    Router::new()
         .merge(routes_health().with_state(state.clone()))
         .merge(metrics.routes::<SharedState>().with_state(state.clone()))
         .merge(routes_hello())
@@ -160,10 +160,9 @@ fn routes(mm: ModelManager) -> Router {
         .layer(metrics)
         // TODO fix trace header(tracestate)
         // include trace context as header into the response
-        .layer(OtelInResponseLayer::default())
+        .layer(OtelInResponseLayer)
         //create a span with the http context using the OpenTelemetry naming convention on incoming request
-        .layer(OtelAxumLayer::default());
-    routes_all
+        .layer(OtelAxumLayer::default())
 }
 
 /// Confirm to the otlp backend that the programm has been shutdown sucessfuly

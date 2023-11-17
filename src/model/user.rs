@@ -63,7 +63,7 @@ impl DbBmc for UserBmc {
 }
 
 impl UserBmc {
-    pub async fn get<E>(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<E>
+    pub async fn _get<E>(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<E>
     where
         E: UserBy,
     {
@@ -89,10 +89,10 @@ impl UserBmc {
         Ok(user)
     }
 
-    pub async fn update_pwd(ctx: &Ctx, mm: &ModelManager, id: i64, pwd_clear: &str) -> Result<()> {
+    pub async fn _update_pwd(ctx: &Ctx, mm: &ModelManager, id: i64, pwd_clear: &str) -> Result<()> {
         let db = mm.db();
 
-        let user: UserForLogin = Self::get(ctx, mm, id).await?;
+        let user: UserForLogin = Self::_get(ctx, mm, id).await?;
         let pwd = pwd::encrypt_pwd(&EncryptContent {
             content: pwd_clear.to_string(),
             salt: user.pwd_salt.to_string(),

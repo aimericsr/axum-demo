@@ -130,6 +130,7 @@ cargo doc --document-private-items --open
 
 ```sh
 rustup help toolchain
+rustup toolchain list
 rustup install nightly
 rustup default nightly-aarch64-apple-darwin
 rustup update

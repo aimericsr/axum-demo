@@ -10,8 +10,9 @@ use utoipa::ToSchema;
 pub type Result<T> = core::result::Result<T, Error>;
 
 /// Error type that can be return from handlers, services or custom extractors. See this impl IntoResponse for this type
-#[derive(Debug, Error, Serialize, strum_macros::AsRefStr)]
-#[serde(tag = "type", content = "data")]
+#[derive(Debug, Error, strum_macros::AsRefStr)]
+//#[serde(tag = "type", content = "data")]
+// need Serialize Trait ?
 pub enum Error {
     // -- Login
     #[error("Username not found : {username:?}")]
@@ -20,6 +21,14 @@ pub enum Error {
     LoginFailUserHasNoPwd { user_id: i64 },
     #[error("Password not matching : {user_id:?}")]
     LoginFailPwdNotMatching { user_id: i64 },
+
+    // -- RPC
+    #[error("RpcMethodUnknown")]
+    RpcMethodUnknown(String),
+    #[error("RpcMissingParams")]
+    RpcMissingParams { rpc_method: String },
+    #[error("RpcFailJsonParams")]
+    RpcFailJsonParams { rpc_method: String },
 
     // -- Json
     #[error("Wrong json schema provided")]
@@ -50,9 +59,17 @@ pub enum Error {
     Crypt(#[from] crypt::Error),
 
     // -- External Modules
-    #[error("Serde json error : `{0}`")]
-    SerdeJson(String),
+    // #[error("SerdeJsonError")]
+    // SerdeJson(String),
+    #[error("SerdeJsonError")]
+    SerdeJson(#[from] serde_json::Error),
 }
+
+// impl From<serde_json::Error> for Error {
+//     fn from(value: serde_json::Error) -> Self {
+//         Self::SerdeJson(value.to_string())
+//     }
+// }
 
 /// This implementations give us the ability to return this error directly from handlers, services or custom extractors.
 /// When the response will be build, this function will be called and web::Error will be added to the extensions of the request via this method.

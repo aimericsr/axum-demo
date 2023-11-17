@@ -1,2 +1,0 @@
-avoid-breaking-exported-api = false
-disallowed-names = ["toto", "tata", "titi"]

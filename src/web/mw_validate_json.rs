@@ -20,7 +20,7 @@ where
             .extract::<Json<J>, _>()
             .await
             .map_err(|_| Error::JsonSchema)?;
-        data.validate().map_err(|err| Error::JsonValidation(err))?;
+        data.validate().map_err(Error::JsonValidation)?;
         Ok(Self(data))
     }
 }

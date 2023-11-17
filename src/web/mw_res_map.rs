@@ -57,24 +57,23 @@ pub async fn mw_res_map(host: Host, uri: Uri, res: Response) -> impl IntoRespons
                 );
             }
 
-            let http_client_error = match client_error {
+            match client_error {
                 web::ClientError::JSON_VALDIDATION { errors } => HttpApiProblem::new(status_code)
                     .title(client_error_message)
                     .detail(client_error_detail)
                     .type_url(type_url)
-                    .instance(&uri.to_string())
+                    .instance(uri.to_string())
                     .value("trace_id", &trace_id)
-                    .value("detail_validation", errors)
+                    .value("detail_validation", &errors)
                     .to_axum_response(),
                 _ => HttpApiProblem::new(status_code)
                     .title(client_error_message)
                     .detail(client_error_detail)
                     .type_url(type_url)
-                    .instance(&uri.to_string())
+                    .instance(uri.to_string())
                     .value("trace_id", &trace_id)
                     .to_axum_response(),
-            };
-            http_client_error
+            }
         });
 
     error_response.unwrap_or(res)
@@ -122,8 +121,7 @@ fn to_open_api_deeplink(input: &str) -> String {
     let tag = &first_word[1];
     let tag = &capitalize_first(tag);
     transformed_string.insert_str(0, tag);
-    transformed_string.insert_str(0, "/");
-
+    transformed_string.insert(0, '/');
     transformed_string
 }
 
