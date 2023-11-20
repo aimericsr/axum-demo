@@ -5,7 +5,8 @@
 [target.x86_64-unknown-linux-musl]
 linker = "x86_64-linux-gnu-gcc"
 
-
-
+# Parallel front-end(only available in nightly)
+# [build]
+# rustflags = ["-Z", "threads=8"]
 
 

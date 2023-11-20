@@ -20,6 +20,9 @@ path = "src/lib.rs"
 path = "src/main.rs"
 name = "axum-demo"
 
+# [profile.release]
+# strip = "symbols"
+
 [dependencies]
 # -- Http api
 tokio = { version = "1.33.0", features = ["signal", "rt-multi-thread"] }

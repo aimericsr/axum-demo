@@ -127,17 +127,6 @@ cargo test -- --nocapture
 cargo doc --document-private-items --open
 ```
 
-## Manage Different Rust Versions
-
-```sh
-rustup help toolchain
-rustup toolchain list
-rustup install nightly
-rustup default nightly-aarch64-apple-darwin
-rustup update
-rustc --version
-```
-
 ## Project Conventions
 
 function test name : test*[function_name]*[ok/err]\_[case_tested]

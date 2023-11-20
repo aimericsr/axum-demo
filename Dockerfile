@@ -32,7 +32,8 @@ COPY . .
 RUN cargo build --release --bin axum-demo
 RUN ls /app/target
 
-FROM debian
+FROM debian:stable-20231030-slim
+#FROM gcr.io/distroless/cc-debian11
 #RUN addgroup -S myuser && adduser -S myuser -G myuser
 COPY --from=builder /app/target/release/axum-demo /
 COPY .env /
