@@ -9,10 +9,15 @@ use crate::web::rest::routes_login::routes as routes_login;
 use crate::web::rest::routes_static::routes as routes_static;
 use crate::web::routes_docs::routes as routes_docs;
 use crate::web::Error as ErrorWeb;
+use axum::body::Body;
 use axum::error_handling::HandleErrorLayer;
+use axum::extract::connect_info::IntoMakeServiceWithConnectInfo;
+use axum::extract::ConnectInfo;
 use axum::http::HeaderValue;
 use axum::http::Method;
+use axum::middleware::AddExtension;
 use axum::middleware::{from_fn_with_state, map_response};
+use axum::serve::Serve;
 use axum::BoxError;
 use axum::Router;
 use axum_otel_metrics::HttpMetricsLayerBuilder;
@@ -36,7 +41,11 @@ use tracing::instrument;
 /// Type to hold the newly built server and his port
 pub struct Application {
     port: u16,
-    server: Pin<Box<dyn Future<Output = hyper::Result<()>> + Send>>,
+    //server: Pin<Box<dyn Future<Output = hyper::Result<()>> + Send>>,
+    server: Serve<
+        IntoMakeServiceWithConnectInfo<Router, SocketAddr>,
+        AddExtension<Router, ConnectInfo<SocketAddr>>,
+    >,
 }
 
 impl Application {
@@ -45,23 +54,34 @@ impl Application {
     pub async fn build(config: Config) -> Result<Self> {
         let mm = setup_db_migrations().await;
 
-        let routes_all = routes(mm);
+        let routes = routes(mm);
 
-        let addr = SocketAddr::from(([0, 0, 0, 0], config.application.port));
+        //let addr = SocketAddr::from(([0, 0, 0, 0], config.application.port));
+        let addr = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.application.port))
+            .await
+            .unwrap();
 
-        let server = axum::Server::bind(&addr)
-            .serve(routes_all.into_make_service_with_connect_info::<SocketAddr>());
-        let port = server.local_addr().port();
-        let server = server.with_graceful_shutdown(shutdown_signal());
+        // let server = axum::Server::bind(&addr)
+        //     .serve(routes_all.into_make_service_with_connect_info::<SocketAddr>());
+
+        let server = axum::serve(
+            addr,
+            routes.into_make_service_with_connect_info::<SocketAddr>(),
+        );
+
+        let port = config.application.port;
+        // TODO add graceful shutdown
+        //let server = server.with_graceful_shutdown(shutdown_signal());
         info!("Listening on {port:?}");
         Ok(Self {
             port,
-            server: Box::pin(server),
+            //server: Box::pin(server),
+            server: server,
         })
     }
 
     /// Lunch the already build server to start listening to requests
-    pub async fn run_until_stopped(self) -> ResultIO<(), hyper::Error> {
+    pub async fn run_until_stopped(self) -> ResultIO<(), std::io::Error> {
         self.server.await
     }
 
@@ -107,13 +127,13 @@ fn routes(mm: ModelManager) -> Router {
             .unwrap(),
     );
 
-    let rate_limit_layer = ServiceBuilder::new()
-        .layer(HandleErrorLayer::new(|_: BoxError| async move {
-            ErrorWeb::RateLimitExceeded
-        }))
-        .layer(GovernorLayer {
-            config: Box::leak(governor_conf),
-        });
+    // let rate_limit_layer = ServiceBuilder::new()
+    //     .layer(HandleErrorLayer::new(|_: BoxError| async move {
+    //         ErrorWeb::RateLimitExceeded
+    //     }))
+    //     .layer(GovernorLayer {
+    //         config: Box::leak(governor_conf),
+    //     });
 
     let timeout_layer = ServiceBuilder::new()
         .layer(HandleErrorLayer::new(|_: BoxError| async {
@@ -154,15 +174,15 @@ fn routes(mm: ModelManager) -> Router {
         .merge(routes_docs())
         .fallback(|| async { ErrorWeb::FallBack })
         .layer(cors_layer)
-        .layer(rate_limit_layer)
+        //.layer(rate_limit_layer)
         .layer(timeout_layer)
         .layer(map_response(mw_res_map))
         .layer(metrics)
-        // TODO fix trace header(tracestate)
-        // include trace context as header into the response
-        .layer(OtelInResponseLayer)
-        //create a span with the http context using the OpenTelemetry naming convention on incoming request
-        .layer(OtelAxumLayer::default())
+    // TODO fix trace header(tracestate)
+    // include trace context as header into the response
+    //.layer(OtelInResponseLayer)
+    //create a span with the http context using the OpenTelemetry naming convention on incoming request
+    //.layer(OtelAxumLayer::default())
 }
 
 /// Confirm to the otlp backend that the programm has been shutdown sucessfuly

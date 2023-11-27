@@ -23,16 +23,17 @@ name = "axum-demo"
 # [profile.release]
 # strip = "symbols"
 
+
 [dependencies]
 # -- Http api
 tokio = { version = "1.33.0", features = ["signal", "rt-multi-thread"] }
-axum = { version = "0.6.20", features = ["tokio"] }
-axum-macros = "0.3.8"
-tower-http = { version = "0.4.4", features = ["fs", "timeout", "cors", "trace"] }
+axum = { version = "0.7.1", features = ["tokio"] }
+axum-macros = "0.4.0"
+tower-http = { version = "0.5.0", features = ["fs", "timeout", "cors", "trace"] }
 tower = { version = "0.4.13", features = ["limit"]} 
-tower-cookies = "0.9.0"
+tower-cookies = "0.10.0"
 tower_governor = "0.1.0"
-hyper = { version = "0.14.27", features = ["tcp"]}
+hyper = { version = "1.0.1", features = ["full"]}
 # -- Error
 thiserror = "1.0.50"
 http-api-problem = { version="0.57.0", features = ["axum"]}
@@ -49,7 +50,7 @@ utoipa-swagger-ui = { version= "4.0.0", features = ["axum"] }
 utoipa-redoc = { version= "1.0.0", features = ["axum"] }
 utoipa-rapidoc = { version= "1.0.0", features = ["axum"] }
 # -- Metrics
-axum-otel-metrics = "0.7.0"
+axum-otel-metrics = "0.8.0"
 # -- Tracing
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["std", "env-filter", "json", "fmt", "tracing-log"] }

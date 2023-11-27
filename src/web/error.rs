@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{crypt, model, web};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
@@ -79,7 +81,7 @@ pub enum Error {
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
         let mut response = StatusCode::INTERNAL_SERVER_ERROR.into_response();
-        response.extensions_mut().insert(self);
+        response.extensions_mut().insert(Arc::new(self));
         response
     }
 }

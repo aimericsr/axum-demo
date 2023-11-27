@@ -1,8 +1,10 @@
 use crate::web;
+use axum::body::Body;
 use axum::extract::Host;
 use axum::http::Uri;
 use axum::response::{IntoResponse, Response};
 use http_api_problem::HttpApiProblem;
+use hyper::StatusCode;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use tracing::{error, info};
@@ -11,7 +13,7 @@ use utoipa::ToSchema;
 use web::Error;
 
 /// Map all web:Error to web:ClientError
-pub async fn mw_res_map(host: Host, uri: Uri, res: Response) -> impl IntoResponse {
+pub async fn mw_res_map(host: Host, uri: Uri, res: Response<Body>) -> impl IntoResponse {
     // Get the eventual response error.
     // TODO: handle if the value is None
     let web_error = res.extensions().get::<Error>();
@@ -57,23 +59,24 @@ pub async fn mw_res_map(host: Host, uri: Uri, res: Response) -> impl IntoRespons
                 );
             }
 
-            match client_error {
-                web::ClientError::JSON_VALDIDATION { errors } => HttpApiProblem::new(status_code)
-                    .title(client_error_message)
-                    .detail(client_error_detail)
-                    .type_url(type_url)
-                    .instance(uri.to_string())
-                    .value("trace_id", &trace_id)
-                    .value("detail_validation", &errors)
-                    .to_axum_response(),
-                _ => HttpApiProblem::new(status_code)
-                    .title(client_error_message)
-                    .detail(client_error_detail)
-                    .type_url(type_url)
-                    .instance(uri.to_string())
-                    .value("trace_id", &trace_id)
-                    .to_axum_response(),
-            }
+            // match client_error {
+            //     web::ClientError::JSON_VALDIDATION { errors } => HttpApiProblem::new(status_code)
+            //         .title(client_error_message)
+            //         .detail(client_error_detail)
+            //         .type_url(type_url)
+            //         .instance(uri.to_string())
+            //         .value("trace_id", &trace_id)
+            //         .value("detail_validation", &errors)
+            //         .to_axum_response(),
+            //     _ => HttpApiProblem::new(status_code)
+            //         .title(client_error_message)
+            //         .detail(client_error_detail)
+            //         .type_url(type_url)
+            //         .instance(uri.to_string())
+            //         .value("trace_id", &trace_id)
+            //         .to_axum_response(),
+            // }
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
         });
 
     error_response.unwrap_or(res)

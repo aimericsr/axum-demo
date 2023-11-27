@@ -1,21 +1,20 @@
 use crate::web::Error;
+use axum::extract::Request;
 use axum::{async_trait, extract::FromRequest, Json, RequestExt};
-use hyper::Request;
 use validator::Validate;
 
 pub struct ValidatedJson<J>(pub J);
 
 #[async_trait]
-impl<S, B, J> FromRequest<S, B> for ValidatedJson<J>
+impl<S, J> FromRequest<S> for ValidatedJson<J>
 where
-    B: Send + 'static,
     S: Send + Sync,
     J: Validate + 'static,
-    Json<J>: FromRequest<(), B>,
+    Json<J>: FromRequest<()>,
 {
     type Rejection = Error;
 
-    async fn from_request(req: Request<B>, _state: &S) -> Result<Self, Self::Rejection> {
+    async fn from_request(req: Request, _state: &S) -> Result<Self, Self::Rejection> {
         let Json(data) = req
             .extract::<Json<J>, _>()
             .await

@@ -43,7 +43,7 @@ struct ApiDoc;
 
 pub fn routes() -> Router {
     Router::new()
-        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
-        .merge(Redoc::with_url("/redoc", ApiDoc::openapi()))
-        .merge(RapiDoc::new("/api-docs/openapi.json").path("/rapidoc"))
+    // .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
+    // .merge(Redoc::with_url("/redoc", ApiDoc::openapi()))
+    // .merge(RapiDoc::new("/api-docs/openapi.json").path("/rapidoc"))
 }

@@ -9,11 +9,11 @@ graph TD
   subgraph frontend
   lexing[Lexing] -->|create token: if,else, variable name ...| parsing
   parsing[Parsing] --> |create an Abstract Syntax Three to represent the relation between all the parts of the code| hir_lowering
-  hir_lowering[HIR Lowering] --> |desugaring| mir_lowering
+  hir_lowering[High-Level Intermediate Representation Lowering : HIR] --> |desugaring : for loop, async fn ...<br> type inference, trait solving and type checking| mir_lowering
   end
   subgraph backend[backend : LLVM]
-  mir_lowering[MIR Lowering] --> |borrow checker, build .ll files| llvm_ir
-  llvm_ir[LLVM IR : standart representation that is platform agnoastic] --> |build object files| code_gen_unit
+  mir_lowering[Mid-Level Intermediate Representation Lowering : MIR] --> |borrow checker, monomorphized <br>build .ll files| llvm_ir
+  llvm_ir[LLVM IR : standart representation that is platform agnoastic] --> |build .o files| code_gen_unit
   code_gen_unit[Code Gen Unit] --> |combine object files into one executable for a specific platform| final_executable[Final Executable]
   end
   end
