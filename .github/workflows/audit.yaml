@@ -2,46 +2,49 @@ name: Security audit for dependencies
 
 on:
   schedule:
-    - cron: "0 0 * * *"
+  - cron: "0 0 * * *"
   push:
     branches: [main, develop]
     paths:
-      - "**/Cargo.toml"
-      - "**/Cargo.lock"
+    - "**/Cargo.toml"
+    - "**/Cargo.lock"
 
 jobs:
   security-check:
+    name: Security Check
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Check dependencies licences
-        run: cargo install --locked cargo-deny  && cargo deny check
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: nightly
 
-      - name: Check outdated dependencies
-        run: cargo install --locked cargo-outdated && cargo outdated
+    - name: Check dependencies licences
+      run: cargo install --locked cargo-deny  && cargo deny check
 
-      - name: Check unused dependencies
-        run: cargo install cargo-udeps --locked && cargo +nightly udeps --all-targets
+    - name: Check outdated dependencies
+      run: cargo install --locked cargo-outdated && cargo outdated
 
-      - name: Check known security vulerability in dependencies
-        run: cargo install cargo-pants && cargo pants
+    - name: Check unused dependencies
+      run: cargo install cargo-udeps --locked && cargo +nightly udeps --all-targets
+
+    - name: Check known security vulerability in dependencies
+      run: cargo install cargo-pants && cargo pants
 
       # - name: Install and run audit
       #   run:  cargo install cargo-audit && cargo audit
-
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cargo
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-

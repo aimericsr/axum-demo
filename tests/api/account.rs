@@ -1,6 +1,8 @@
 use crate::helpers::spawn_app;
 use axum_demo::web::rest::routes_login::LoginPayload;
 use axum_demo::web::rest::routes_login::LogoffPayload;
+use axum_demo::web::rest::routes_login::StringWrapper;
+use redact::Secret;
 use serde_json::to_value;
 
 // Models
@@ -13,7 +15,7 @@ async fn login_works() {
     dbg!(app.db_pool.clone());
     let body = LoginPayload {
         username: username,
-        pwd: "test".to_string(),
+        pwd: StringWrapper(Secret::from("test")),
     };
     let json = to_value(body).expect("Failed to serialize body");
 
@@ -30,7 +32,7 @@ async fn login_fails() {
     let app = spawn_app().await;
     let body = LoginPayload {
         username: "test".to_string(),
-        pwd: "test".to_string(),
+        pwd: StringWrapper(Secret::from("test")),
     };
     let json = to_value(body).expect("Failed to serialize body");
 

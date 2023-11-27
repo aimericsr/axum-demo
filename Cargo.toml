@@ -20,6 +20,9 @@ path = "src/lib.rs"
 path = "src/main.rs"
 name = "axum-demo"
 
+# [profile.release]
+# strip = "symbols"
+
 [dependencies]
 # -- Http api
 tokio = { version = "1.33.0", features = ["signal", "rt-multi-thread"] }
@@ -34,7 +37,7 @@ hyper = { version = "0.14.27", features = ["tcp"]}
 thiserror = "1.0.50"
 http-api-problem = { version="0.57.0", features = ["axum"]}
 # -- Serde
-serde = { version = "1.0.188", features = ["derive"] }
+serde = { version = "1.0.187", features = ["derive"] }
 serde_json = "1.0.108"
 serde_with = "3.4.0"
 # -- Db
@@ -51,13 +54,13 @@ axum-otel-metrics = "0.7.0"
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["std", "env-filter", "json", "fmt", "tracing-log"] }
 # -- OpenTelemetry
-opentelemetry = { version = "0.20.0", features = ["metrics"] }
-opentelemetry_sdk ={ version = "0.20.0", features = ["rt-tokio", "metrics"] }
-opentelemetry-otlp = { version = "0.13.0", features = ["trace", "http-proto", "metrics", "gzip-tonic", "grpc-tonic", "tonic"] }
-tracing-opentelemetry = "0.21.0"
-opentelemetry-semantic-conventions = "0.12.0"
-axum-tracing-opentelemetry = "0.13.1"
-tracing-opentelemetry-instrumentation-sdk = "0.14.1"
+opentelemetry = { version = "0.21.0", features = ["metrics"] }
+opentelemetry_sdk ={ version = "0.21.1", features = ["rt-tokio", "metrics"] }
+opentelemetry-otlp = { version = "0.14.0", features = ["trace", "http-proto", "metrics", "gzip-tonic", "grpc-tonic", "tonic"] }
+tracing-opentelemetry = "0.22.0"
+opentelemetry-semantic-conventions = "0.13.0"
+axum-tracing-opentelemetry = "0.15.0"
+tracing-opentelemetry-instrumentation-sdk = "0.15.0"
 # -- Crypt & Encoding
 rand = "0.8.5"
 hmac = "0.12.1"
@@ -73,6 +76,7 @@ validator = "0.16.1"
 validator_derive = "0.16.0"
 regex = "1.10.2"
 dotenvy = "0.15.7"
+redact = { version = "0.1.7", features = ["serde"] }
 
 [dev-dependencies]
 anyhow = "1.0.75"

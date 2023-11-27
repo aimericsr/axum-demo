@@ -88,6 +88,7 @@ With that, we can correlate application traces with prometeuses metrics from kub
 - Serve static file
 - Helth check routes
 - Rest Routes
+- RPC routes
 - Auth with cookies and jwt
 
 ## To Do
@@ -124,16 +125,6 @@ cargo test -- --nocapture
 
 ```sh
 cargo doc --document-private-items --open
-```
-
-## Manage Different Rust Versions
-
-```sh
-rustup help toolchain
-rustup install nightly
-rustup default nightly-aarch64-apple-darwin
-rustup update
-rustc --version
 ```
 
 ## Project Conventions
