@@ -54,13 +54,13 @@ axum-otel-metrics = "0.7.0"
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["std", "env-filter", "json", "fmt", "tracing-log"] }
 # -- OpenTelemetry
-opentelemetry = { version = "0.20.0", features = ["metrics"] }
-opentelemetry_sdk ={ version = "0.20.0", features = ["rt-tokio", "metrics"] }
-opentelemetry-otlp = { version = "0.13.0", features = ["trace", "http-proto", "metrics", "gzip-tonic", "grpc-tonic", "tonic"] }
-tracing-opentelemetry = "0.21.0"
-opentelemetry-semantic-conventions = "0.12.0"
-axum-tracing-opentelemetry = "0.13.1"
-tracing-opentelemetry-instrumentation-sdk = "0.14.1"
+opentelemetry = { version = "0.21.0", features = ["metrics"] }
+opentelemetry_sdk ={ version = "0.21.1", features = ["rt-tokio", "metrics"] }
+opentelemetry-otlp = { version = "0.14.0", features = ["trace", "http-proto", "metrics", "gzip-tonic", "grpc-tonic", "tonic"] }
+tracing-opentelemetry = "0.22.0"
+opentelemetry-semantic-conventions = "0.13.0"
+axum-tracing-opentelemetry = "0.15.0"
+tracing-opentelemetry-instrumentation-sdk = "0.15.0"
 # -- Crypt & Encoding
 rand = "0.8.5"
 hmac = "0.12.1"
