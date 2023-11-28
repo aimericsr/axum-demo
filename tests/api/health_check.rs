@@ -1,3 +1,5 @@
+use hyper::header::{CACHE_CONTROL, ACCESS_CONTROL_ALLOW_ORIGIN};
+
 use crate::helpers::spawn_app;
 
 #[tokio::test]
@@ -14,8 +16,17 @@ async fn health_check_general_works() {
         .expect("Failed to execute request.");
 
     // Assert
+    let headers = response.headers();
+    let rate_limit_range = 0..11;
+    dbg!(response.headers());
+    //dbg!(headers.get("traceparent").unwrap().to_str().unwrap().len());
     assert!(response.status().is_success());
     assert_eq!(Some(0), response.content_length());
+    assert_eq!("no-cache", headers.get(CACHE_CONTROL).unwrap().to_str().unwrap());
+    assert_eq!("http://localhost:3000", headers.get(ACCESS_CONTROL_ALLOW_ORIGIN).unwrap().to_str().unwrap());
+    assert!(rate_limit_range.contains(&headers.get("x-ratelimit-limit").unwrap().to_str().unwrap().parse::<u8>().unwrap()));
+    assert!(rate_limit_range.contains(&headers.get("x-ratelimit-remaining").unwrap().to_str().unwrap().parse::<u8>().unwrap()));
+    assert_eq!(55 , headers.get("traceparent").unwrap().to_str().unwrap().len());
 }
 
 // #[tokio::test]

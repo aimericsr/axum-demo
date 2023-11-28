@@ -23,6 +23,19 @@ name = "axum-demo"
 # [profile.release]
 # strip = "symbols"
 
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+cast_lossless = "deny"
+cast_possible_truncation = "deny"
+cast_possible_wrap = "deny"
+cast_ptr_alignment = "deny"
+cast_sign_loss = "deny"
+char_lit_as_u8 = "deny"
+checked_conversions = "deny"
+unnecessary_cast = "deny"
+
 [dependencies]
 # -- Http api
 tokio = { version = "1.33.0", features = ["signal", "rt-multi-thread"] }

@@ -72,7 +72,7 @@ pub async fn spawn_app() -> TestApp {
         let mut c = get_configuration().expect("Failed to read configuration");
         c.postgres.db_name = Uuid::new_v4().to_string().into();
         c.application.port = 0;
-        c.otel.enabled = false;
+        c.otel.enabled = true;
         c.otel.stdout_enabled = false;
         c
     };
