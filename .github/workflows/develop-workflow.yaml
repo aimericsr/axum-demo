@@ -6,5 +6,6 @@ on:
       - develop
 
 jobs:
-  call-test-lint-workflow-in-local-rep:
+  check:
+    name: Test and Lint
     uses: ./.github/workflows/test-lint-workflow.yaml

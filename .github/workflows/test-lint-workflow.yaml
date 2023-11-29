@@ -6,7 +6,7 @@ env:
 
 jobs:
   test:
-    name: Unit, Integration and Doc Test
+    name: Test
     runs-on: ubuntu-latest
 
     services:
