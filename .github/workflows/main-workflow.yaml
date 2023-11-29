@@ -16,7 +16,6 @@ jobs:
     name: Build and push image to Docker Hub
     runs-on: ubuntu-latest
     environment: development
-    needs: [test, format, lint]
 
     env:
       HUB_NAME: "aimeric"
