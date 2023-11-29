@@ -1,9 +1,15 @@
 # Cargo config file. 
 # See: https://doc.rust-lang.org/cargo/reference/config.html
 
-# target
+# target prod
 [target.x86_64-unknown-linux-musl]
 linker = "x86_64-linux-gnu-gcc"
+
+# target dev
+# [target.aarch64-apple-darwin]
+# linker = "ld"
+#rustflags = ["-C", "link-arg=-fuse-ld=/opt/homebrew/bin/mold"]
+#rustflags = ["-C", "link-arg=-fuse-ld=lld"]
 
 # Parallel front-end(only available in nightly)
 # [build]
