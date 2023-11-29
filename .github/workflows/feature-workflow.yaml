@@ -1,0 +1,96 @@
+name: Feature Workflow
+
+on:
+  push:
+    branches:
+      - feature/**
+
+env:
+  RUST_VERSION: 1.73
+
+jobs:
+  test:
+    name: Unit, Integration and Doc Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16.0-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: welcome
+          POSTGRES_DB: app_db
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+
+      - name: Config env variables
+        run: export SERVICE_DB_HOST=postgres
+
+      - name: Compile program
+        run: cargo test —no-run --test api
+
+      - name: Run test
+        run: cargo test --test api
+
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Install rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: rustfmt
+
+      - name: Run fmt
+        run: cargo fmt --all -- --check
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: clippy
+
+      - name: Run clippy
+        run: cargo clippy -- -D warnings

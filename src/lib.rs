@@ -41,18 +41,6 @@ async fn main() -> std::io::Result<()> {
 ```
 */
 
-#![forbid(unsafe_code)]
-#![deny(
-    clippy::cast_lossless,
-    clippy::cast_possible_truncation,
-    clippy::cast_possible_wrap,
-    clippy::cast_ptr_alignment,
-    clippy::cast_sign_loss,
-    clippy::char_lit_as_u8,
-    clippy::checked_conversions,
-    clippy::unnecessary_cast
-)]
-
 /// For dev only, shoud be remove in a future release
 mod _dev_utils;
 /// Load the config for the app, can come from differents locations

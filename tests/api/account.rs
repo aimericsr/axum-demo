@@ -12,7 +12,6 @@ async fn login_works() {
     // Arrange
     let app = spawn_app().await;
     let username = app.seed_user().await;
-    dbg!(app.db_pool.clone());
     let body = LoginPayload {
         username: username,
         pwd: StringWrapper(Secret::from("test")),

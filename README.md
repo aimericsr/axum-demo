@@ -69,7 +69,7 @@ All of the traces are then exported to a backend : jaeger. All the traces will b
 
 ## Exemple of a trace view in jaeger UI :
 
-![screenshot of jaeger](assets/trace_exemple.png)
+![screenshot of jaeger](.github/assets/trace_exemple.png)
 
 We have the information from the application like the http route, thread.
 And the infrastructure information added by the otel collector like the kubernetes namespace, pod name, pod creation.
