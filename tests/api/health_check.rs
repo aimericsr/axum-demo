@@ -1,4 +1,4 @@
-use hyper::header::{CACHE_CONTROL, ACCESS_CONTROL_ALLOW_ORIGIN};
+use hyper::header::{ACCESS_CONTROL_ALLOW_ORIGIN, CACHE_CONTROL};
 
 use crate::helpers::spawn_app;
 
@@ -22,11 +22,40 @@ async fn health_check_general_works() {
     //dbg!(headers.get("traceparent").unwrap().to_str().unwrap().len());
     assert!(response.status().is_success());
     assert_eq!(Some(0), response.content_length());
-    assert_eq!("no-cache", headers.get(CACHE_CONTROL).unwrap().to_str().unwrap());
-    assert_eq!("http://localhost:3000", headers.get(ACCESS_CONTROL_ALLOW_ORIGIN).unwrap().to_str().unwrap());
-    assert!(rate_limit_range.contains(&headers.get("x-ratelimit-limit").unwrap().to_str().unwrap().parse::<u8>().unwrap()));
-    assert!(rate_limit_range.contains(&headers.get("x-ratelimit-remaining").unwrap().to_str().unwrap().parse::<u8>().unwrap()));
-    assert_eq!(55 , headers.get("traceparent").unwrap().to_str().unwrap().len());
+    assert_eq!(
+        "no-cache",
+        headers.get(CACHE_CONTROL).unwrap().to_str().unwrap()
+    );
+    assert_eq!(
+        "http://localhost:3000",
+        headers
+            .get(ACCESS_CONTROL_ALLOW_ORIGIN)
+            .unwrap()
+            .to_str()
+            .unwrap()
+    );
+    assert!(rate_limit_range.contains(
+        &headers
+            .get("x-ratelimit-limit")
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .parse::<u8>()
+            .unwrap()
+    ));
+    assert!(rate_limit_range.contains(
+        &headers
+            .get("x-ratelimit-remaining")
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .parse::<u8>()
+            .unwrap()
+    ));
+    assert_eq!(
+        55,
+        headers.get("traceparent").unwrap().to_str().unwrap().len()
+    );
 }
 
 // #[tokio::test]
