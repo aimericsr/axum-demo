@@ -139,25 +139,24 @@ impl Error {
 /// Error type that will be sent to the client.
 /// Used to hide some informations that we don't want our client to have.
 #[derive(Debug, Serialize, Error, strum_macros::AsRefStr, ToSchema)]
-#[serde(tag = "message", content = "detail")]
 #[allow(non_camel_case_types)]
 pub enum ClientError {
-    #[error("LOGIN_FAIL")]
+    #[error("The login failed")]
     LOGIN_FAIL,
-    #[error("NO_AUTH")]
+    #[error("The authentication failed")]
     NO_AUTH,
-    #[error("RATE_LIMIT_EXCEEDED")]
+    #[error("The rate limit has been reached")]
     RATE_LIMIT_EXCEEDED,
-    #[error("TIMEOUT")]
+    #[error("The request took too long to complete")]
     TIMEOUT,
-    #[error("ROUTE_NOT_FOUND")]
+    #[error("The route does not exist")]
     ROUTE_NOT_FOUND,
-    #[error("JSON_VALDIDATION")]
+    #[error("The json is not valid, please make sure that the json is valid")]
     JSON_VALDIDATION { errors: validator::ValidationErrors },
-    #[error("JSON_SCHEMA")]
+    #[error("The json schema is not valid, please make sure to use the right schema")]
     JSON_SCHEMA,
-    #[error("ENTITY_NOT_FOUND")]
+    #[error("The entity {entity} with id {id} does not exist")]
     ENTITY_NOT_FOUND { entity: &'static str, id: i64 },
-    #[error("SERVICE_ERROR")]
+    #[error("Service error, please contact the administrator")]
     SERVICE_ERROR,
 }

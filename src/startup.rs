@@ -25,9 +25,7 @@ use axum_tracing_opentelemetry::middleware::OtelAxumLayer;
 use axum_tracing_opentelemetry::middleware::OtelInResponseLayer;
 use opentelemetry::global;
 use opentelemetry::metrics::Counter;
-use std::future::Future;
 use std::net::SocketAddr;
-use std::pin::Pin;
 use std::result::Result as ResultIO;
 use std::time::Duration;
 use tokio::signal;
@@ -61,16 +59,14 @@ impl Application {
             .await
             .unwrap();
 
-        // let server = axum::Server::bind(&addr)
-        //     .serve(routes_all.into_make_service_with_connect_info::<SocketAddr>());
-
+        // TODO add graceful shutdown
         let server = axum::serve(
             addr,
             routes.into_make_service_with_connect_info::<SocketAddr>(),
         );
 
         let port = config.application.port;
-        // TODO add graceful shutdown
+
         //let server = server.with_graceful_shutdown(shutdown_signal());
         info!("Listening on {port:?}");
         Ok(Self {
@@ -127,13 +123,13 @@ fn routes(mm: ModelManager) -> Router {
             .unwrap(),
     );
 
-    // let rate_limit_layer = ServiceBuilder::new()
-    //     .layer(HandleErrorLayer::new(|_: BoxError| async move {
-    //         ErrorWeb::RateLimitExceeded
-    //     }))
-    //     .layer(GovernorLayer {
-    //         config: Box::leak(governor_conf),
-    //     });
+    let rate_limit_layer = ServiceBuilder::new()
+        .layer(HandleErrorLayer::new(|_: BoxError| async move {
+            ErrorWeb::RateLimitExceeded
+        }))
+        .layer(GovernorLayer {
+            config: Box::leak(governor_conf),
+        });
 
     let timeout_layer = ServiceBuilder::new()
         .layer(HandleErrorLayer::new(|_: BoxError| async {
@@ -171,16 +167,16 @@ fn routes(mm: ModelManager) -> Router {
             web::mw_auth::mw_ctx_resolve,
         ))
         .layer(CookieManagerLayer::new())
-        .merge(routes_docs())
         .fallback(|| async { ErrorWeb::FallBack })
         .layer(cors_layer)
-        //.layer(rate_limit_layer)
+        .layer(rate_limit_layer)
+        .merge(routes_docs())
         .layer(timeout_layer)
         .layer(map_response(mw_res_map))
         .layer(metrics)
     // TODO fix trace header(tracestate)
     // include trace context as header into the response
-    //.layer(OtelInResponseLayer)
+    //.layer(OtelInResponseLayer::default())
     //create a span with the http context using the OpenTelemetry naming convention on incoming request
     //.layer(OtelAxumLayer::default())
 }

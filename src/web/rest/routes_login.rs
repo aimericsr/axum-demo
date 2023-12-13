@@ -98,7 +98,6 @@ async fn login(
     ValidatedJson(payload): ValidatedJson<LoginPayload>,
 ) -> Result<Json<LoginResponse>> {
     debug!("{:<12} - api_login", "HANDLER");
-    dbg!(&payload);
 
     let LoginPayload {
         username,
