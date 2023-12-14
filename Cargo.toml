@@ -2,7 +2,7 @@
 name = "axum-demo"
 version = "1.0.1"
 edition = "2021"
-rust-version = "1.72"
+rust-version = "1.74"
 authors = ["Aimeric Sorin <aimeric.sorin@gmail.com>"]
 license = "Apache-2.0"
 description = "Simple rust web api to demonstrate axum framework capabilities. Based on https://github.com/rust10x/rust-web-app"
@@ -17,8 +17,8 @@ path = "src/lib.rs"
 #doctest = false
 
 [[bin]]
-path = "src/main.rs"
 name = "axum-demo"
+path = "src/main.rs"
 
 # [profile.release]
 # strip = "symbols"
