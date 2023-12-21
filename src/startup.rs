@@ -9,7 +9,6 @@ use crate::web::rest::routes_login::routes as routes_login;
 use crate::web::rest::routes_static::routes as routes_static;
 use crate::web::routes_docs::routes as routes_docs;
 use crate::web::Error as ErrorWeb;
-use axum::body::Body;
 use axum::error_handling::HandleErrorLayer;
 use axum::extract::connect_info::IntoMakeServiceWithConnectInfo;
 use axum::extract::ConnectInfo;

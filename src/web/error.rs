@@ -11,7 +11,7 @@ use utoipa::ToSchema;
 /// Result type to not have to specified the web::Error type each time for other modules
 pub type Result<T> = core::result::Result<T, Error>;
 
-/// Error type that can be return from handlers, services or custom extractors. See this impl IntoResponse for this type
+/// Error type that can be return from handlers, services or custom extractors. See the IntoResponse impl for this type
 #[derive(Debug, Error, strum_macros::AsRefStr)]
 //#[serde(tag = "type", content = "data")]
 // need Serialize Trait ?
@@ -61,20 +61,13 @@ pub enum Error {
     Crypt(#[from] crypt::Error),
 
     // -- External Modules
-    // #[error("SerdeJsonError")]
-    // SerdeJson(String),
     #[error("SerdeJsonError")]
     SerdeJson(#[from] serde_json::Error),
 }
 
-// impl From<serde_json::Error> for Error {
-//     fn from(value: serde_json::Error) -> Self {
-//         Self::SerdeJson(value.to_string())
-//     }
-// }
-
 /// This implementations give us the ability to return this error directly from handlers, services or custom extractors.
-/// When the response will be build, this function will be called and web::Error will be added to the extensions of the request via this method.
+/// When this type will be return from handlers, the response will be build and this function will be called,
+/// web::Error will be added to the extensions of the request via this method.
 /// Then all responses will pass through the mw_res_map function to be converted to web::ClientError before sending it to the clients.
 /// This architecture centralize the error handling of all the errors and limit the potential leak of sensitive data
 /// because there is a final type([ClientError]) to hide some informations to the client.
@@ -124,10 +117,10 @@ impl Error {
             // -- Timeout
             Timeout => (StatusCode::REQUEST_TIMEOUT, ClientError::TIMEOUT),
 
-            // -- FallBack
+            // -- FallBack Routing
             FallBack => (StatusCode::NOT_FOUND, ClientError::ROUTE_NOT_FOUND),
 
-            // -- Fallback.
+            // -- Other Errors
             _ => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 ClientError::SERVICE_ERROR,
