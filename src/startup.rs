@@ -17,6 +17,7 @@ use axum::http::Method;
 use axum::middleware::AddExtension;
 use axum::middleware::{from_fn_with_state, map_response};
 use axum::serve::Serve;
+use axum::serve::WithGracefulShutdown;
 use axum::BoxError;
 use axum::Router;
 use axum_otel_metrics::HttpMetricsLayerBuilder;
@@ -24,7 +25,11 @@ use axum_tracing_opentelemetry::middleware::OtelAxumLayer;
 use axum_tracing_opentelemetry::middleware::OtelInResponseLayer;
 use opentelemetry::global;
 use opentelemetry::metrics::Counter;
+use std::future::pending;
+use std::future::Future;
+use std::future::Pending;
 use std::net::SocketAddr;
+use std::pin::Pin;
 use std::result::Result as ResultIO;
 use std::time::Duration;
 use tokio::signal;
@@ -34,15 +39,25 @@ use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 use tower_http::cors::CorsLayer;
 use tracing::info;
 use tracing::instrument;
-
 /// Type to hold the newly built server and his port
-pub struct Application {
+pub struct Application
+// <T>
+// where
+//     T: Future<Output = ()>,
+{
     port: u16,
-    //server: Pin<Box<dyn Future<Output = hyper::Result<()>> + Send>>,
     server: Serve<
-        IntoMakeServiceWithConnectInfo<Router, SocketAddr>,
-        AddExtension<Router, ConnectInfo<SocketAddr>>,
+        IntoMakeServiceWithConnectInfo<Router, std::net::SocketAddr>,
+        AddExtension<Router, ConnectInfo<std::net::SocketAddr>>,
     >,
+    // server: WithGracefulShutdown<
+    //     IntoMakeServiceWithConnectInfo<Router, std::net::SocketAddr>,
+    //     AddExtension<Router, ConnectInfo<std::net::SocketAddr>>,
+    //     //T,
+    //     Pending<()>,
+    //     //Pin<Box<dyn Future<Output = ()>>>,
+    //     //impl Future<Output = ()>,
+    // >,
 }
 
 impl Application {
@@ -53,25 +68,25 @@ impl Application {
 
         let routes = routes(mm);
 
-        //let addr = SocketAddr::from(([0, 0, 0, 0], config.application.port));
         let addr = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.application.port))
             .await
             .unwrap();
 
-        // TODO add graceful shutdown
         let server = axum::serve(
             addr,
             routes.into_make_service_with_connect_info::<SocketAddr>(),
         );
+        //.with_graceful_shutdown(shutdown_signal());
 
         let port = config.application.port;
 
         //let server = server.with_graceful_shutdown(shutdown_signal());
         info!("Listening on {port:?}");
+
         Ok(Self {
             port,
-            //server: Box::pin(server),
             server: server,
+            //server: Box::pin(server),
         })
     }
 
@@ -173,11 +188,11 @@ fn routes(mm: ModelManager) -> Router {
         .layer(timeout_layer)
         .layer(map_response(mw_res_map))
         .layer(metrics)
-    // TODO fix trace header(tracestate)
-    // include trace context as header into the response
-    //.layer(OtelInResponseLayer::default())
-    //create a span with the http context using the OpenTelemetry naming convention on incoming request
-    //.layer(OtelAxumLayer::default())
+        // TODO fix trace header(tracestate)
+        // include trace context as header into the response
+        .layer(OtelInResponseLayer::default())
+        //create a span with the http context using the OpenTelemetry naming convention on incoming request
+        .layer(OtelAxumLayer::default())
 }
 
 /// Confirm to the otlp backend that the programm has been shutdown sucessfuly

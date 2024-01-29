@@ -27,13 +27,13 @@ path = "src/main.rs"
 [dependencies]
 # -- Http api
 tokio = { version = "1.35.0", features = ["signal", "rt-multi-thread"] }
-axum = { version = "0.7.2", features = ["tokio"] }
+axum = { version = "0.7.3", features = ["tokio"] }
 axum-macros = "0.4.0"
 tower-http = { version = "0.5.0", features = ["fs", "timeout", "cors", "trace"] }
 tower = { version = "0.4.13", features = ["limit"]} 
 tower-cookies = "0.10.0"
 tower_governor = "0.2.0"
-hyper = { version = "1.0.1", features = ["full"]}
+hyper = { version = "1.1.0", features = ["full"]}
 # -- Error
 thiserror = "1.0.50"
 problemdetails = { version = "0.3.0", features = ["axum"] }
@@ -46,9 +46,9 @@ sqlx = { version = "0.7.3", features = [ "runtime-tokio-rustls", "postgres", "uu
 sqlb = "0.4.0"
 # -- Docs
 utoipa = { version= "4.1.0", features = ["axum_extras"] }
-utoipa-swagger-ui = { version= "5.0.0", features = ["axum"] }
-utoipa-redoc = { version= "2.0.0", features = ["axum"] }
-utoipa-rapidoc = { version= "2.0.0", features = ["axum"] }
+utoipa-swagger-ui = { version= "6.0.0", features = ["axum"] }
+utoipa-redoc = { version= "3.0.0", features = ["axum"] }
+utoipa-rapidoc = { version= "3.0.0", features = ["axum"] }
 # -- Metrics
 axum-otel-metrics = "0.8.0"
 # -- Tracing
@@ -60,8 +60,8 @@ opentelemetry_sdk ={ version = "0.21.1", features = ["rt-tokio", "metrics"] }
 opentelemetry-otlp = { version = "0.14.0", features = ["trace", "http-proto", "metrics", "gzip-tonic", "grpc-tonic", "tonic"] }
 tracing-opentelemetry = "0.22.0"
 opentelemetry-semantic-conventions = "0.13.0"
-axum-tracing-opentelemetry = "0.15.0"
-tracing-opentelemetry-instrumentation-sdk = "0.15.0"
+axum-tracing-opentelemetry = "0.16.0"
+tracing-opentelemetry-instrumentation-sdk = "0.16.0"
 # -- Crypt & Encoding
 rand = "0.8.5"
 hmac = "0.12.1"
