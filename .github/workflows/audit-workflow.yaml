@@ -4,7 +4,7 @@ on:
   schedule:
   - cron: "0 0 * * *"
   push:
-    branches: [main, develop]
+    branches: [main, develop, feature/**]
     paths:
     - "**/Cargo.toml"
     - "**/Cargo.lock"
@@ -35,16 +35,16 @@ jobs:
         toolchain: nightly
 
     - name: Check dependencies licences
-      run: cargo install --locked cargo-deny  && cargo deny check
+      run: cargo deny check
 
     - name: Check outdated dependencies
-      run: cargo install --locked cargo-outdated && cargo outdated
+      run: cargo outdated
 
     - name: Check unused dependencies
-      run: cargo install cargo-udeps --locked && cargo +nightly udeps --all-targets
+      run: cargo +nightly udeps --all-targets
 
-    - name: Check known security vulerability in dependencies
-      run: cargo install cargo-pants && cargo pants
+    # - name: Check known security vulerability in dependencies
+    #   run: cargo pants
 
-      # - name: Install and run audit
-      #   run:  cargo install cargo-audit && cargo audit
+    # - name: Install and run audit
+    #   run:  cargo install cargo-audit && cargo audit

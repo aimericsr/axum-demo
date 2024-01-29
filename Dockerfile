@@ -1,5 +1,5 @@
 # Install cargo-chef
-FROM clux/muslrust:1.73.0 AS chef
+FROM clux/muslrust:1.74.0 AS chef
 USER root
 RUN cargo install cargo-chef
 WORKDIR /app

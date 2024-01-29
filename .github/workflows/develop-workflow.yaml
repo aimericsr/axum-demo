@@ -1,0 +1,11 @@
+name: Develop Workflow
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  check:
+    name: Test and Lint
+    uses: ./.github/workflows/test-lint-workflow.yaml

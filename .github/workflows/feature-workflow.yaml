@@ -1,0 +1,11 @@
+name: Feature Workflow
+
+on:
+  push:
+    branches:
+      - feature/**
+
+jobs:
+  check:
+    name: Check
+    uses: ./.github/workflows/test-lint-workflow.yaml
