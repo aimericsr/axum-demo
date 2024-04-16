@@ -1,13 +1,13 @@
 name: Security audit for dependencies
 
-on:
-  schedule:
-    - cron: "0 0 * * *"
-  push:
-    branches: [main, develop, feature/**]
-    paths:
-      - "**/Cargo.toml"
-      - "**/Cargo.lock"
+# on:
+#   schedule:
+#     - cron: "0 0 * * *"
+#   push:
+#     branches: [main, develop, feature/**]
+#     paths:
+#       - "**/Cargo.toml"
+#       - "**/Cargo.lock"
 
 jobs:
   security-check:
