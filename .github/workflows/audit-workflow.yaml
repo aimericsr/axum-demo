@@ -28,9 +28,7 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - uses: dtolnay/rust-toolchain
-        with:
-          toolchain: nightly
+      - uses: dtolnay/rust-toolchain@stable
 
       - name: Check dependencies licences
         run: cargo deny check
