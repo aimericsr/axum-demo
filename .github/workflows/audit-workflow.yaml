@@ -28,8 +28,7 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain
+      - uses: dtolnay/rust-toolchain
         with:
           toolchain: nightly
 
