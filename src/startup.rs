@@ -47,8 +47,12 @@ pub struct Application
 {
     port: u16,
     server: Serve<
-        IntoMakeServiceWithConnectInfo<Router, std::net::SocketAddr>,
-        AddExtension<Router, ConnectInfo<std::net::SocketAddr>>,
+        IntoMakeServiceWithConnectInfo<Router, SocketAddr>,
+        AddExtension<Router, ConnectInfo<SocketAddr>>,
+        // server: WithGracefulShutdown<
+        //     IntoMakeServiceWithConnectInfo<Router, std::net::SocketAddr>,
+        //     AddExtension<Router, ConnectInfo<std::net::SocketAddr>>,
+        //     impl std::future::Future<Output = ()>,
     >,
     // server: WithGracefulShutdown<
     //     IntoMakeServiceWithConnectInfo<Router, std::net::SocketAddr>,
@@ -59,6 +63,17 @@ pub struct Application
     //     //impl Future<Output = ()>,
     // >,
 }
+
+//server: Pin<Box<dyn Future<Output = hyper::Result<()>> + Send>>,
+// server: Serve<
+//     IntoMakeServiceWithConnectInfo<Router, SocketAddr>,
+//     AddExtension<Router, ConnectInfo<SocketAddr>>,
+// >,
+// server: WithGracefulShutdown<
+//     IntoMakeServiceWithConnectInfo<Router, std::net::SocketAddr>,
+//     AddExtension<Router, ConnectInfo<std::net::SocketAddr>>,
+//     Box<dyn std::future::Future<Output = ()> + Send>,
+// >,
 
 impl Application {
     /// build the axum server with the provided configuration without lunch it
@@ -85,8 +100,8 @@ impl Application {
 
         Ok(Self {
             port,
-            server: server,
             //server: Box::pin(server),
+            server,
         })
     }
 
@@ -188,7 +203,6 @@ fn routes(mm: ModelManager) -> Router {
         .layer(timeout_layer)
         .layer(map_response(mw_res_map))
         .layer(metrics)
-        // TODO fix trace header(tracestate)
         // include trace context as header into the response
         .layer(OtelInResponseLayer::default())
         //create a span with the http context using the OpenTelemetry naming convention on incoming request
@@ -225,7 +239,54 @@ async fn shutdown_signal() {
         _ = terminate => {},
     }
 
-    graceful_shutdown();
+    info!("signal received, graceful shutdown finished successfully");
 
     opentelemetry::global::shutdown_tracer_provider();
 }
+
+// I want to store an instance of an Axum app in a struct to be able to do tests after. I can when I am note using the graceful shutdown, the type is Serve<IntoMakeServiceWithConnectInfo<Router, SocketAddr>, AddExtension<Router, ConnectInfo<SocketAddr>>> which can be used but when I add the graceful shutdown the type is WithGracefulShutdown<IntoMakeServiceWithConnectInfo<Router, SocketAddr>, AddExtension<Router, ConnectInfo<SocketAddr>>, impl Future<Output = ()>> . But as my error says, it's not possible to use impl in fields types. Here is my code.
+
+// ```
+//  let server = axum::serve(
+//             addr,
+//             routes.into_make_service_with_connect_info::<SocketAddr>(),
+//         )
+//         .with_graceful_shutdown(shutdown_signal());
+
+// async fn shutdown_signal() {
+//     let ctrl_c = async {
+//         signal::ctrl_c()
+//             .await
+//             .expect("failed to install Ctrl+C handler");
+//     };
+
+//     #[cfg(unix)]
+//     let terminate = async {
+//         signal::unix::signal(signal::unix::SignalKind::terminate())
+//             .expect("failed to install signal handler")
+//             .recv()
+//             .await;
+//     };
+
+//     #[cfg(not(unix))]
+//     let terminate = std::future::pending::<()>();
+
+//     tokio::select! {
+//         _ = ctrl_c => {},
+//         _ = terminate => {},
+//     }
+
+//     info!("signal received, graceful shutdown finished successfully");
+
+//     opentelemetry::global::shutdown_tracer_provider();
+// }
+
+// pub struct Application {
+//     port: u16,
+//     server: WithGracefulShutdown<
+//         IntoMakeServiceWithConnectInfo<Router, std::net::SocketAddr>,
+//         AddExtension<Router, ConnectInfo<std::net::SocketAddr>>,
+//         impl std::future::Future<Output = ()>,
+//     >,
+// }
+// ```

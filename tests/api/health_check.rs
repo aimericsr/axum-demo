@@ -1,4 +1,4 @@
-use hyper::header::{ACCESS_CONTROL_ALLOW_ORIGIN, CACHE_CONTROL};
+use reqwest::header::{ACCESS_CONTROL_ALLOW_ORIGIN, CACHE_CONTROL};
 
 use crate::helpers::spawn_app;
 
