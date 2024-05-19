@@ -18,18 +18,22 @@ COPY . .
 RUN cargo build --release --target x86_64-unknown-linux-musl --bin axum-demo
 
 # Alpine 
-# FROM alpine:3.18.4 AS runtime
-# RUN addgroup -S myuser && adduser -S myuser -G myuser
-# COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/axum-demo /usr/local/bin/
-# COPY .env /usr/local/bin/
-# USER myuser
-# WORKDIR "/usr/local/bin/"
-# CMD ["./axum-demo"]
-
-# Scratch
-FROM scratch AS runtime
-COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/axum-demo /usr/local/bin/
+FROM alpine:3.18.4 AS runtime
 WORKDIR "/usr/local/bin/"
+#RUN apk add --no-cache tzdata
+#ENV TZ=Europe/Paris
+RUN addgroup -S myuser && adduser -S myuser -G myuser
+COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/axum-demo .
+COPY .env .
+USER myuser
 CMD ["./axum-demo"]
+
+# # Scratch
+# FROM scratch AS runtime
+# WORKDIR "/usr/local/bin/"
+# COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/axum-demo .
+# COPY .env .
+# ENV TZ=Europe/Paris
+# CMD ["./axum-demo"]
 
 

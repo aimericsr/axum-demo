@@ -46,9 +46,9 @@ sqlx = { version = "0.7.4", features = [ "runtime-tokio-rustls", "postgres", "uu
 sqlb = "0.4.0"
 # -- Docs
 utoipa = { version= "4.2.0", features = ["axum_extras"] }
-utoipa-swagger-ui = { version= "6.0.0", features = ["axum"] }
-utoipa-redoc = { version= "3.0.0", features = ["axum"] }
-utoipa-rapidoc = { version= "3.0.0", features = ["axum"] }
+utoipa-swagger-ui = { version= "7.0.1", features = ["axum"] }
+utoipa-redoc = { version= "4.0.0", features = ["axum"] }
+utoipa-rapidoc = { version= "4.0.0", features = ["axum"] }
 # -- Metrics
 axum-otel-metrics = "0.8.1"
 # -- Tracing
@@ -59,14 +59,14 @@ opentelemetry = { version = "0.22.0", features = ["metrics"] }
 opentelemetry_sdk ={ version = "0.22.1", features = ["rt-tokio", "metrics"] }
 opentelemetry-otlp = { version = "0.15.0", features = ["trace", "http-proto", "metrics", "gzip-tonic", "grpc-tonic", "tonic"] }
 tracing-opentelemetry = "0.23.0"
-opentelemetry-semantic-conventions = "0.14.0"
+opentelemetry-semantic-conventions = "0.15.0"
 axum-tracing-opentelemetry = "0.18.1"
 tracing-opentelemetry-instrumentation-sdk = "0.18.1"
 # -- Crypt & Encoding
 rand = "0.8.5"
 hmac = "0.12.1"
 sha2 = "0.10.8"
-base64-url = "2.0.2"
+base64-url = "3.0.0"
 time = "0.3.36"
 # -- Utils
 async-trait = "0.1.80"
@@ -77,7 +77,7 @@ validator = "0.16.1"
 validator_derive = "0.16.0"
 regex = "1.10.4"
 dotenvy = "0.15.7"
-redact = { version = "0.1.9", features = ["serde"] }
+redact = { version = "0.1.10", features = ["serde"] }
 
 [dev-dependencies]
 anyhow = "1.0.82"
