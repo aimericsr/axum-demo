@@ -2,7 +2,7 @@ on:
   workflow_call:
 
 env:
-  RUST_VERSION: 1.77.2
+  RUST_VERSION: 1.78
 
 jobs:
   test:
