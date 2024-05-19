@@ -24,6 +24,7 @@ pub struct UserForCreate {
 }
 
 #[derive(Fields)]
+#[allow(dead_code)]
 struct UserForInsert {
     username: String,
 }
