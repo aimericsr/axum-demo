@@ -26,7 +26,7 @@ pub enum Error {
         sqlx::Error,
     ),
     #[error("Error at the migration level")]
-    MigrateError(
+    Migrate(
         #[from]
         #[serde_as(as = "DisplayFromStr")]
         MigrateError,

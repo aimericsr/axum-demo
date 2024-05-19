@@ -81,14 +81,13 @@ impl Application {
         let addr = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.application.port))
             .await
             .unwrap();
+        let port = addr.local_addr().unwrap().port();
 
         let server = axum::serve(
             addr,
             routes.into_make_service_with_connect_info::<SocketAddr>(),
         );
         //.with_graceful_shutdown(shutdown_signal());
-
-        let port = config.application.port;
 
         //let server = server.with_graceful_shutdown(shutdown_signal());
         info!("Listening on {port:?}");
@@ -199,7 +198,7 @@ fn routes(mm: ModelManager) -> Router {
         .layer(map_response(mw_res_map))
         .layer(metrics)
         // include trace context as header into the response
-        .layer(OtelInResponseLayer::default())
+        .layer(OtelInResponseLayer)
         //create a span with the http context using the OpenTelemetry naming convention on incoming request
         .layer(OtelAxumLayer::default())
 }
@@ -211,6 +210,7 @@ pub fn graceful_shutdown() {
 }
 
 /// Graceful shutdown to be able to send the last logs to the otlp backend before stopping the application
+#[allow(dead_code)]
 async fn shutdown_signal() {
     let ctrl_c = async {
         signal::ctrl_c()
