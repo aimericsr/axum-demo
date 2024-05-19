@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{crypt, model, web};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
@@ -9,7 +11,7 @@ use utoipa::ToSchema;
 /// Result type to not have to specified the web::Error type each time for other modules
 pub type Result<T> = core::result::Result<T, Error>;
 
-/// Error type that can be return from handlers, services or custom extractors. See this impl IntoResponse for this type
+/// Error type that can be return from handlers, services or custom extractors. See the IntoResponse impl for this type
 #[derive(Debug, Error, strum_macros::AsRefStr)]
 //#[serde(tag = "type", content = "data")]
 // need Serialize Trait ?
@@ -59,27 +61,20 @@ pub enum Error {
     Crypt(#[from] crypt::Error),
 
     // -- External Modules
-    // #[error("SerdeJsonError")]
-    // SerdeJson(String),
     #[error("SerdeJsonError")]
     SerdeJson(#[from] serde_json::Error),
 }
 
-// impl From<serde_json::Error> for Error {
-//     fn from(value: serde_json::Error) -> Self {
-//         Self::SerdeJson(value.to_string())
-//     }
-// }
-
 /// This implementations give us the ability to return this error directly from handlers, services or custom extractors.
-/// When the response will be build, this function will be called and web::Error will be added to the extensions of the request via this method.
+/// When this type will be return from handlers, the response will be build and this function will be called,
+/// web::Error will be added to the extensions of the request via this method.
 /// Then all responses will pass through the mw_res_map function to be converted to web::ClientError before sending it to the clients.
 /// This architecture centralize the error handling of all the errors and limit the potential leak of sensitive data
 /// because there is a final type([ClientError]) to hide some informations to the client.
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
         let mut response = StatusCode::INTERNAL_SERVER_ERROR.into_response();
-        response.extensions_mut().insert(self);
+        response.extensions_mut().insert(Arc::new(self));
         response
     }
 }
@@ -122,10 +117,10 @@ impl Error {
             // -- Timeout
             Timeout => (StatusCode::REQUEST_TIMEOUT, ClientError::TIMEOUT),
 
-            // -- FallBack
+            // -- FallBack Routing
             FallBack => (StatusCode::NOT_FOUND, ClientError::ROUTE_NOT_FOUND),
 
-            // -- Fallback.
+            // -- Other Errors
             _ => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 ClientError::SERVICE_ERROR,
@@ -137,25 +132,24 @@ impl Error {
 /// Error type that will be sent to the client.
 /// Used to hide some informations that we don't want our client to have.
 #[derive(Debug, Serialize, Error, strum_macros::AsRefStr, ToSchema)]
-#[serde(tag = "message", content = "detail")]
 #[allow(non_camel_case_types)]
 pub enum ClientError {
-    #[error("LOGIN_FAIL")]
+    #[error("The login failed")]
     LOGIN_FAIL,
-    #[error("NO_AUTH")]
+    #[error("The authentication failed")]
     NO_AUTH,
-    #[error("RATE_LIMIT_EXCEEDED")]
+    #[error("The rate limit has been reached")]
     RATE_LIMIT_EXCEEDED,
-    #[error("TIMEOUT")]
+    #[error("The request took too long to complete")]
     TIMEOUT,
-    #[error("ROUTE_NOT_FOUND")]
+    #[error("The route does not exist")]
     ROUTE_NOT_FOUND,
-    #[error("JSON_VALDIDATION")]
+    #[error("The json is not valid, please make sure that the json is valid")]
     JSON_VALDIDATION { errors: validator::ValidationErrors },
-    #[error("JSON_SCHEMA")]
+    #[error("The json schema is not valid, please make sure to use the right schema")]
     JSON_SCHEMA,
-    #[error("ENTITY_NOT_FOUND")]
+    #[error("The entity {entity} with id {id} does not exist")]
     ENTITY_NOT_FOUND { entity: &'static str, id: i64 },
-    #[error("SERVICE_ERROR")]
+    #[error("Service error, please contact the administrator")]
     SERVICE_ERROR,
 }

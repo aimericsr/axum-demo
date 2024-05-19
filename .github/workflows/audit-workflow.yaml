@@ -35,13 +35,13 @@ jobs:
         toolchain: nightly
 
     - name: Check dependencies licences
-      run: cargo deny check
+      run: cargo install --locked cargo-deny && cargo deny init && cargo deny check
 
     - name: Check outdated dependencies
-      run: cargo outdated
+      run: cargo install --locked outdated && cargo outdated
 
     - name: Check unused dependencies
-      run: cargo +nightly udeps --all-targets
+      run: cargo install --locked udeps && cargo +nightly udeps --all-targets
 
     # - name: Check known security vulerability in dependencies
     #   run: cargo pants
