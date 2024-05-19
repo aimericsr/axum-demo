@@ -1,6 +1,6 @@
 /*!
   An application to start a web server in rust using the axum framework. It is fully observable
-  via the exposition of the /metrics endpoint and the export of all the traces to a otel-collector
+  via the exposition of the /metrics endpoint and the export of all the traces to an otel collector.
 
 # Overview
 

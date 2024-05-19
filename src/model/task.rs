@@ -5,6 +5,7 @@ use crate::model::Result;
 use serde::{Deserialize, Serialize};
 use sqlb::Fields;
 use sqlx::FromRow;
+use tracing::instrument;
 
 // region:    --- Task Types
 #[derive(Debug, Clone, Fields, FromRow, Serialize)]
@@ -18,12 +19,12 @@ pub struct Task {
 }
 
 // Struct are views of the sql tables
-#[derive(Deserialize, Fields)]
+#[derive(Deserialize, Fields, Debug)]
 pub struct TaskForCreate {
     pub title: String,
 }
 
-#[derive(Deserialize, Fields)]
+#[derive(Deserialize, Fields, Debug)]
 pub struct TaskForUpdate {
     pub title: Option<String>,
 }
@@ -37,18 +38,22 @@ impl DbBmc for TaskBmc {
 pub struct TaskBmc;
 
 impl TaskBmc {
+    #[instrument]
     pub async fn create(ctx: &Ctx, mm: &ModelManager, task_c: TaskForCreate) -> Result<i64> {
         base::create::<Self, _>(ctx, mm, task_c).await
     }
 
+    #[instrument]
     pub async fn get(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<Task> {
         base::get::<Self, _>(ctx, mm, id).await
     }
 
+    #[instrument]
     pub async fn list(ctx: &Ctx, mm: &ModelManager) -> Result<Vec<Task>> {
         base::list::<Self, _>(ctx, mm).await
     }
 
+    #[instrument]
     pub async fn update(
         ctx: &Ctx,
         mm: &ModelManager,
@@ -58,6 +63,7 @@ impl TaskBmc {
         base::update::<Self, _>(ctx, mm, id, task_u).await
     }
 
+    #[instrument]
     pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
         base::delete::<Self>(ctx, mm, id).await
     }

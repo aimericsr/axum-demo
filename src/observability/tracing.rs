@@ -69,9 +69,9 @@ fn init_otlp_traces(otel: &Otel) -> Result<sdktrace::Tracer, TraceError> {
                 .with_max_attributes_per_link(128)
                 .with_resource(Resource::new(vec![
                     KeyValue::new("service.schema.url", SCHEMA_URL),
-                    SERVICE_NAME.string(otel.service_name.clone()),
-                    SERVICE_VERSION.string(otel.service_version.clone()),
-                    SERVICE_NAMESPACE.string(otel.service_namespace.clone()),
+                    KeyValue::new(SERVICE_NAME, otel.service_name.clone()),
+                    KeyValue::new(SERVICE_VERSION, otel.service_version.clone()),
+                    KeyValue::new(SERVICE_NAMESPACE, otel.service_namespace.clone()),
                 ]))
                 .with_sampler(Sampler::AlwaysOn),
         )

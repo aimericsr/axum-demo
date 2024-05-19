@@ -5,6 +5,7 @@ use crate::model::ModelManager;
 use crate::web::AUTH_TOKEN;
 use crate::web::{Error, Result};
 use async_trait::async_trait;
+use axum::body::Body;
 use axum::extract::{FromRequestParts, State};
 use axum::http::request::Parts;
 use axum::http::Request;
@@ -20,8 +21,8 @@ use super::set_token_cookie;
 #[allow(dead_code)]
 pub async fn mw_ctx_require<B>(
     ctx: Result<Ctx>,
-    req: Request<B>,
-    next: Next<B>,
+    req: Request<Body>,
+    next: Next,
 ) -> Result<Response> {
     debug!("{:<12} - mw_ctx_require - {ctx:?}", "MIDDLEWARE");
 
@@ -31,11 +32,11 @@ pub async fn mw_ctx_require<B>(
 }
 
 // Save info in the request extensions
-pub async fn mw_ctx_resolve<B>(
+pub async fn mw_ctx_resolve(
     mm: State<ModelManager>,
     cookies: Cookies,
-    mut req: Request<B>,
-    next: Next<B>,
+    mut req: Request<Body>,
+    next: Next,
 ) -> Result<Response> {
     debug!("{:<12} - mw_ctx_resolve", "MIDDLEWARE");
 
@@ -43,7 +44,7 @@ pub async fn mw_ctx_resolve<B>(
 
     // Remove the cookie if something went wrong other than NoAuthTokenCookie.
     if ctx_ext_result.is_err() && !matches!(ctx_ext_result, Err(CtxExtError::TokenNotInCookie)) {
-        cookies.remove(Cookie::named(AUTH_TOKEN))
+        cookies.remove(Cookie::from(AUTH_TOKEN))
     }
 
     // Store the ctx_result in the request extension.

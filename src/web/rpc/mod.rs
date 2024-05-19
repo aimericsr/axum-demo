@@ -69,7 +69,7 @@ async fn rpc_handler(
 }
 
 /// RPC basic information holding the id and method for further logging.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RpcInfo {
     pub id: Option<Value>,
     pub method: String,

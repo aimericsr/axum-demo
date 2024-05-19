@@ -48,7 +48,7 @@ impl ModelManager {
         sqlx::migrate!("./migrations")
             .run(&self.db)
             .await
-            .map_err(Error::MigrateError)
+            .map_err(Error::Migrate)
     }
 
     /// Returns the sqlx db pool reference.
