@@ -41,7 +41,7 @@ jobs:
       run: cargo install --locked outdated && cargo outdated
 
     - name: Check unused dependencies
-      run: cargo install --locked udeps && cargo udeps --all-targets
+      run: cargo install --locked udeps && cargo +nightly udeps --all-targets
 
     # - name: Check known security vulerability in dependencies
     #   run: cargo pants
