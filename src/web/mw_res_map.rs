@@ -1,8 +1,10 @@
+use std::sync::Arc;
+
 use crate::web;
+use axum::body::Body;
 use axum::extract::Host;
 use axum::http::Uri;
 use axum::response::{IntoResponse, Response};
-use http_api_problem::HttpApiProblem;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use tracing::{error, info};
@@ -11,10 +13,11 @@ use utoipa::ToSchema;
 use web::Error;
 
 /// Map all web:Error to web:ClientError
-pub async fn mw_res_map(host: Host, uri: Uri, res: Response) -> impl IntoResponse {
+pub async fn mw_res_map(host: Host, uri: Uri, res: Response<Body>) -> impl IntoResponse {
     // Get the eventual response error.
     // TODO: handle if the value is None
-    let web_error = res.extensions().get::<Error>();
+    let web_error = res.extensions().get::<Arc<Error>>().map(|e| e.as_ref());
+
     let client_status_error = web_error.map(|se| se.client_status_and_error());
 
     // TODO: Create a custom error response for 405 Method not allowd instaed of empty body
@@ -58,24 +61,23 @@ pub async fn mw_res_map(host: Host, uri: Uri, res: Response) -> impl IntoRespons
             }
 
             match client_error {
-                web::ClientError::JSON_VALDIDATION { errors } => HttpApiProblem::new(status_code)
-                    .title(client_error_message)
-                    .detail(client_error_detail)
-                    .type_url(type_url)
-                    .instance(uri.to_string())
-                    .value("trace_id", &trace_id)
-                    .value("detail_validation", &errors)
-                    .to_axum_response(),
-                _ => HttpApiProblem::new(status_code)
-                    .title(client_error_message)
-                    .detail(client_error_detail)
-                    .type_url(type_url)
-                    .instance(uri.to_string())
-                    .value("trace_id", &trace_id)
-                    .to_axum_response(),
+                web::ClientError::JSON_VALDIDATION { errors } => problemdetails::new(status_code)
+                    .with_title(client_error_message)
+                    .with_detail(client_error_detail)
+                    .with_type(type_url)
+                    .with_instance(uri.to_string())
+                    .with_value("trace_id", trace_id)
+                    .with_value("detail_validation", errors.to_string())
+                    .into_response(),
+                _ => problemdetails::new(status_code)
+                    .with_title(client_error_message)
+                    .with_detail(client_error_detail)
+                    .with_type(type_url)
+                    .with_instance(uri.to_string())
+                    .with_value("trace_id", trace_id)
+                    .into_response(),
             }
         });
-
     error_response.unwrap_or(res)
 }
 

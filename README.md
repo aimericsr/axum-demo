@@ -115,13 +115,13 @@ With that, we can correlate application traces with prometeuses metrics from kub
 docker compose --profile app up -d
 ```
 
-## Run Uni Test / Integration Test and Doc Test
+## Tests (Unit, Integration, Doc)
 
 ```sh
 cargo test -- --nocapture
 ```
 
-## Opening the docs
+## Docs
 
 ```sh
 cargo doc --document-private-items --open
@@ -130,10 +130,6 @@ cargo doc --document-private-items --open
 ## Project Conventions
 
 function test name : test*[function_name]*[ok/err]\_[case_tested]
-
-## License
-
-This project is licensed under the [Apache License](LICENSE).
 
 ## Rust
 

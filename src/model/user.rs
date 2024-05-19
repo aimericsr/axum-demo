@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use sqlb::{Fields, HasFields};
 use sqlx::postgres::PgRow;
 use sqlx::FromRow;
+use tracing::instrument;
 use uuid::Uuid;
 
 // region:    --- User Types
@@ -23,6 +24,7 @@ pub struct UserForCreate {
 }
 
 #[derive(Fields)]
+#[allow(dead_code)]
 struct UserForInsert {
     username: String,
 }
@@ -63,6 +65,7 @@ impl DbBmc for UserBmc {
 }
 
 impl UserBmc {
+    #[instrument]
     pub async fn _get<E>(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<E>
     where
         E: UserBy,
@@ -70,6 +73,7 @@ impl UserBmc {
         base::get::<Self, _>(ctx, mm, id).await
     }
 
+    #[instrument(name = "DB first_by_username")]
     pub async fn first_by_username<E>(
         _ctx: &Ctx,
         mm: &ModelManager,
@@ -89,6 +93,7 @@ impl UserBmc {
         Ok(user)
     }
 
+    #[instrument]
     pub async fn _update_pwd(ctx: &Ctx, mm: &ModelManager, id: i64, pwd_clear: &str) -> Result<()> {
         let db = mm.db();
 

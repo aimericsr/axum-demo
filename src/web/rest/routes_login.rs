@@ -11,7 +11,7 @@ use redact::Secret;
 use serde::{Deserialize, Serialize};
 use std::result::Result as Resultstd;
 use tower_cookies::Cookies;
-use tracing::{debug, instrument};
+use tracing::debug;
 use utoipa::{IntoParams, ToSchema};
 use validator::HasLen;
 use validator_derive::Validate;
@@ -91,15 +91,12 @@ impl Serialize for StringWrapper {
         ("api_key" = ["aaa","bb"])
     )
 )]
-#[instrument]
+
 async fn login(
     State(state): State<SharedState>,
     cookies: Cookies,
     ValidatedJson(payload): ValidatedJson<LoginPayload>,
 ) -> Result<Json<LoginResponse>> {
-    debug!("{:<12} - api_login", "HANDLER");
-    dbg!(&payload);
-
     let LoginPayload {
         username,
         pwd: pwd_clear,
