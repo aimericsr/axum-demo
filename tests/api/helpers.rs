@@ -20,6 +20,7 @@ pub struct TestApp {
 }
 
 impl TestApp {
+    #[warn(dead_code)]
     pub async fn seed_user(&self) -> String {
         let username = String::from("demo2");
         let _ = String::from("demo2");
