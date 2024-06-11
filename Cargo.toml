@@ -78,6 +78,7 @@ validator_derive = "0.16.0"
 regex = "1.10.4"
 dotenvy = "0.15.7"
 redact = { version = "0.1.10", features = ["serde"] }
+http = "1.1.0"
 
 [dev-dependencies]
 anyhow = "1.0.82"

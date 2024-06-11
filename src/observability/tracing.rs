@@ -3,11 +3,10 @@ use core::time::Duration;
 use opentelemetry::global;
 use opentelemetry::trace::TraceError;
 use opentelemetry::KeyValue;
-use opentelemetry_otlp::{Compression, WithExportConfig};
+use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::propagation::TraceContextPropagator;
 use opentelemetry_sdk::resource::{
-    EnvResourceDetector, OsResourceDetector, ProcessResourceDetector, ResourceDetector,
-    TelemetryResourceDetector,
+    EnvResourceDetector, OsResourceDetector, ProcessResourceDetector, TelemetryResourceDetector,
 };
 use opentelemetry_sdk::trace::config;
 use opentelemetry_sdk::trace::{BatchConfig, RandomIdGenerator, Sampler};
@@ -82,8 +81,8 @@ fn init_otlp_traces(otel: &Otel) -> Result<sdktrace::Tracer, TraceError> {
             opentelemetry_otlp::new_exporter()
                 .tonic()
                 .with_endpoint(otel.endpoint.clone())
-                .with_timeout(Duration::from_secs(3))
-                .with_compression(Compression::Gzip),
+                .with_timeout(Duration::from_secs(3)),
+            //.with_compression(Compression::Gzip),
         )
         .with_trace_config(
             config()
