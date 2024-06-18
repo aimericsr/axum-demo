@@ -24,7 +24,6 @@ use axum_tracing_opentelemetry::middleware::OtelAxumLayer;
 use axum_tracing_opentelemetry::middleware::OtelInResponseLayer;
 use opentelemetry::global;
 use opentelemetry::metrics::Counter;
-use problemdetails::new;
 use std::net::SocketAddr;
 use std::result::Result as ResultIO;
 use std::time::Duration;
@@ -35,6 +34,7 @@ use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 use tower_http::cors::CorsLayer;
 use tracing::info;
 use tracing::instrument;
+
 /// Type to hold the newly built server and his port
 pub struct Application {
     port: u16,
@@ -67,7 +67,7 @@ impl Application {
         Ok(Self { port, server })
     }
 
-    /// Lunch the already build server to start listening to requests
+    /// Lunch the already build server with graceful shutdown and start listening to requests
     pub async fn run_until_stopped(self) -> ResultIO<(), std::io::Error> {
         self.server.with_graceful_shutdown(shutdown_signal()).await
     }
@@ -127,7 +127,7 @@ fn routes(mm: ModelManager) -> Router {
         }))
         .timeout(Duration::from_secs(1));
 
-    let concurrency_limit = ServiceBuilder::new().concurrency_limit(100_000);
+    let concurrency_limit = ServiceBuilder::new().concurrency_limit(1);
 
     // Set CORS
     let cors_layer = CorsLayer::new()
@@ -169,12 +169,6 @@ fn routes(mm: ModelManager) -> Router {
         .layer(OtelInResponseLayer)
         .layer(OtelAxumLayer::default())
         .layer(concurrency_limit)
-}
-
-/// Confirm to the otlp backend that the programm has been shutdown sucessfuly
-#[instrument]
-pub fn graceful_shutdown() {
-    info!("signal received, starting graceful shutdown");
 }
 
 /// Graceful shutdown to be able to send the last logs to the otlp backend before stopping the application
