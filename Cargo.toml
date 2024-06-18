@@ -26,13 +26,13 @@ path = "src/main.rs"
 
 [dependencies]
 # -- Http api
-tokio = { version = "1.37.0", features = ["signal", "rt-multi-thread"] }
+tokio = { version = "1.38.0", features = ["signal", "rt-multi-thread"] }
 axum = { version = "0.7.5", features = ["tokio"] }
 axum-macros = "0.4.1"
 tower-http = { version = "0.5.2", features = ["fs", "timeout", "cors", "trace"] }
 tower = { version = "0.4.13", features = ["limit"]} 
 tower-cookies = "0.10.0"
-tower_governor = { version = "0.2.0", features = []}
+tower_governor = { version = "0.4.2", features = []}
 hyper = { version = "1.3.1", features = ["full"]}
 # -- Error
 thiserror = "1.0.59"
@@ -55,13 +55,12 @@ axum-otel-metrics = "0.8.1"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["std", "env-filter", "json", "fmt", "tracing-log"] }
 # -- OpenTelemetry
-opentelemetry = { version = "0.22.0", features = ["metrics"] }
-opentelemetry_sdk ={ version = "0.22.1", features = ["rt-tokio", "metrics"] }
-opentelemetry-otlp = { version = "0.15.0", features = ["trace", "http-proto", "metrics", "gzip-tonic", "grpc-tonic", "tonic"] }
-tracing-opentelemetry = "0.23.0"
+opentelemetry = { version = "0.23.0", features = ["metrics"] }
+opentelemetry_sdk ={ version = "0.23.0", features = ["rt-tokio", "metrics"] }
+opentelemetry-otlp = { version = "0.16.0", features = ["trace", "http-proto", "metrics", "gzip-tonic", "grpc-tonic", "tonic"] }
+tracing-opentelemetry = "0.24.0"
 opentelemetry-semantic-conventions = "0.15.0"
-axum-tracing-opentelemetry = "0.18.1"
-tracing-opentelemetry-instrumentation-sdk = "0.18.1"
+tower-otel = { path = "../tower-otel" }
 # -- Crypt & Encoding
 rand = "0.8.5"
 hmac = "0.12.1"
@@ -78,6 +77,7 @@ validator_derive = "0.16.0"
 regex = "1.10.4"
 dotenvy = "0.15.7"
 redact = { version = "0.1.10", features = ["serde"] }
+http = "1.1.0"
 
 [dev-dependencies]
 anyhow = "1.0.82"

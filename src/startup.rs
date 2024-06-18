@@ -20,20 +20,21 @@ use axum::serve::Serve;
 use axum::BoxError;
 use axum::Router;
 use axum_otel_metrics::HttpMetricsLayerBuilder;
-use axum_tracing_opentelemetry::middleware::OtelAxumLayer;
-use axum_tracing_opentelemetry::middleware::OtelInResponseLayer;
 use opentelemetry::global;
 use opentelemetry::metrics::Counter;
 use std::net::SocketAddr;
 use std::result::Result as ResultIO;
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::signal;
 use tower::ServiceBuilder;
 use tower_cookies::CookieManagerLayer;
 use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 use tower_http::cors::CorsLayer;
+use tower_otel::traces::grpc::service::OtelLoggerLayer;
 use tracing::info;
 use tracing::instrument;
+use tracing::instrument::WithSubscriber;
 /// Type to hold the newly built server and his port
 pub struct Application
 // <T>
@@ -137,21 +138,20 @@ pub struct CustomPrometheusMetrics {
 
 fn routes(mm: ModelManager) -> Router {
     // Build services for Rate Limit and Timeout
-    let governor_conf = Box::new(
+    let governor_conf = Arc::new(
         GovernorConfigBuilder::default()
-            .per_second(1)
-            .burst_size(10)
+            .per_second(5)
+            .burst_size(2)
             .use_headers()
             .finish()
             .unwrap(),
     );
-
     let rate_limit_layer = ServiceBuilder::new()
-        .layer(HandleErrorLayer::new(|_: BoxError| async move {
-            ErrorWeb::RateLimitExceeded
-        }))
+        // .layer(HandleErrorLayer::new(|_: BoxError| async move {
+        //     ErrorWeb::RateLimitExceeded
+        // }))
         .layer(GovernorLayer {
-            config: Box::leak(governor_conf),
+            config: governor_conf,
         });
 
     let timeout_layer = ServiceBuilder::new()
@@ -193,14 +193,14 @@ fn routes(mm: ModelManager) -> Router {
         .fallback(|| async { ErrorWeb::FallBack })
         .layer(cors_layer)
         .layer(rate_limit_layer)
+        // .layer(GovernorLayer {
+        //     config: governor_conf,
+        // })
         .merge(routes_docs())
         .layer(timeout_layer)
         .layer(map_response(mw_res_map))
+        //.layer(OtelLoggerLayer::default())
         .layer(metrics)
-        // include trace context as header into the response
-        .layer(OtelInResponseLayer)
-        //create a span with the http context using the OpenTelemetry naming convention on incoming request
-        .layer(OtelAxumLayer::default())
 }
 
 /// Confirm to the otlp backend that the programm has been shutdown sucessfuly
@@ -238,50 +238,3 @@ async fn shutdown_signal() {
 
     opentelemetry::global::shutdown_tracer_provider();
 }
-
-// I want to store an instance of an Axum app in a struct to be able to do tests after. I can when I am note using the graceful shutdown, the type is Serve<IntoMakeServiceWithConnectInfo<Router, SocketAddr>, AddExtension<Router, ConnectInfo<SocketAddr>>> which can be used but when I add the graceful shutdown the type is WithGracefulShutdown<IntoMakeServiceWithConnectInfo<Router, SocketAddr>, AddExtension<Router, ConnectInfo<SocketAddr>>, impl Future<Output = ()>> . But as my error says, it's not possible to use impl in fields types. Here is my code.
-
-// ```
-//  let server = axum::serve(
-//             addr,
-//             routes.into_make_service_with_connect_info::<SocketAddr>(),
-//         )
-//         .with_graceful_shutdown(shutdown_signal());
-
-// async fn shutdown_signal() {
-//     let ctrl_c = async {
-//         signal::ctrl_c()
-//             .await
-//             .expect("failed to install Ctrl+C handler");
-//     };
-
-//     #[cfg(unix)]
-//     let terminate = async {
-//         signal::unix::signal(signal::unix::SignalKind::terminate())
-//             .expect("failed to install signal handler")
-//             .recv()
-//             .await;
-//     };
-
-//     #[cfg(not(unix))]
-//     let terminate = std::future::pending::<()>();
-
-//     tokio::select! {
-//         _ = ctrl_c => {},
-//         _ = terminate => {},
-//     }
-
-//     info!("signal received, graceful shutdown finished successfully");
-
-//     opentelemetry::global::shutdown_tracer_provider();
-// }
-
-// pub struct Application {
-//     port: u16,
-//     server: WithGracefulShutdown<
-//         IntoMakeServiceWithConnectInfo<Router, std::net::SocketAddr>,
-//         AddExtension<Router, ConnectInfo<std::net::SocketAddr>>,
-//         impl std::future::Future<Output = ()>,
-//     >,
-// }
-// ```
