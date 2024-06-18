@@ -7,8 +7,8 @@ use axum::http::Uri;
 use axum::response::{IntoResponse, Response};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use tower_otel::traces::helper::get_current_otel_trace_id;
 use tracing::{error, info};
-use tracing_opentelemetry_instrumentation_sdk::find_current_trace_id;
 use utoipa::ToSchema;
 use web::Error;
 
@@ -27,7 +27,7 @@ pub async fn mw_res_map(host: Host, uri: Uri, res: Response<Body>) -> impl IntoR
         .as_ref()
         .map(|(status_code, client_error)| {
             // Retreive the current opentelemetry trace id
-            let trace_id = find_current_trace_id().unwrap_or("unknown".to_string());
+            let trace_id = get_current_otel_trace_id().unwrap_or("unknown".to_string());
 
             // Set the message(enum name) and detail(Display implementation)
             let client_error_message = client_error.as_ref();

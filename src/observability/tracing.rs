@@ -5,9 +5,7 @@ use opentelemetry::trace::TraceError;
 use opentelemetry::KeyValue;
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::propagation::TraceContextPropagator;
-use opentelemetry_sdk::resource::{
-    EnvResourceDetector, OsResourceDetector, ProcessResourceDetector, TelemetryResourceDetector,
-};
+use opentelemetry_sdk::resource::{EnvResourceDetector, TelemetryResourceDetector};
 use opentelemetry_sdk::trace::config;
 use opentelemetry_sdk::trace::{BatchConfig, RandomIdGenerator, Sampler};
 use opentelemetry_sdk::{trace as sdktrace, Resource};
@@ -19,6 +17,7 @@ use tracing::subscriber::set_global_default;
 use tracing::Subscriber;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::{layer::SubscriberExt, Registry};
+//  OsResourceDetector, ProcessResourceDetector,
 
 /// Set the subscriber as the default for the lifetime of the applications.
 pub fn init_subscriber(otel: &Otel) {
@@ -57,11 +56,11 @@ fn init_otlp_traces(otel: &Otel) -> Result<sdktrace::Tracer, TraceError> {
     global::set_text_map_propagator(TraceContextPropagator::new());
 
     let detectors_ressources = Resource::from_detectors(
-        Duration::from_secs(1),
+        Duration::from_millis(100),
         vec![
             Box::new(EnvResourceDetector::default()),
-            Box::new(OsResourceDetector),
-            Box::new(ProcessResourceDetector),
+            // Box::new(OsResourceDetector),
+            // Box::new(ProcessResourceDetector),
             Box::new(TelemetryResourceDetector),
         ],
     );

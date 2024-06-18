@@ -31,7 +31,7 @@ use tower::ServiceBuilder;
 use tower_cookies::CookieManagerLayer;
 use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 use tower_http::cors::CorsLayer;
-use tower_otel::traces::grpc::service::OtelLoggerLayer;
+use tower_otel::traces::http::service::OtelLoggerLayer;
 use tracing::info;
 use tracing::instrument;
 use tracing::instrument::WithSubscriber;
@@ -167,10 +167,9 @@ fn routes(mm: ModelManager) -> Router {
         // .layer(GovernorLayer {
         //     config: governor_conf,
         // })
-        .merge(routes_docs())
         .layer(timeout_layer)
         .layer(map_response(mw_res_map))
-        //.layer(OtelLoggerLayer::default())
+        .layer(OtelLoggerLayer::default())
         .layer(metrics)
 }
 
