@@ -35,41 +35,15 @@ use tower_otel::traces::grpc::service::OtelLoggerLayer;
 use tracing::info;
 use tracing::instrument;
 use tracing::instrument::WithSubscriber;
+
 /// Type to hold the newly built server and his port
-pub struct Application
-// <T>
-// where
-//     T: Future<Output = ()>,
-{
+pub struct Application {
     port: u16,
     server: Serve<
         IntoMakeServiceWithConnectInfo<Router, SocketAddr>,
         AddExtension<Router, ConnectInfo<SocketAddr>>,
-        // server: WithGracefulShutdown<
-        //     IntoMakeServiceWithConnectInfo<Router, std::net::SocketAddr>,
-        //     AddExtension<Router, ConnectInfo<std::net::SocketAddr>>,
-        //     impl std::future::Future<Output = ()>,
     >,
-    // server: WithGracefulShutdown<
-    //     IntoMakeServiceWithConnectInfo<Router, std::net::SocketAddr>,
-    //     AddExtension<Router, ConnectInfo<std::net::SocketAddr>>,
-    //     //T,
-    //     Pending<()>,
-    //     //Pin<Box<dyn Future<Output = ()>>>,
-    //     //impl Future<Output = ()>,
-    // >,
 }
-
-//server: Pin<Box<dyn Future<Output = hyper::Result<()>> + Send>>,
-// server: Serve<
-//     IntoMakeServiceWithConnectInfo<Router, SocketAddr>,
-//     AddExtension<Router, ConnectInfo<SocketAddr>>,
-// >,
-// server: WithGracefulShutdown<
-//     IntoMakeServiceWithConnectInfo<Router, std::net::SocketAddr>,
-//     AddExtension<Router, ConnectInfo<std::net::SocketAddr>>,
-//     Box<dyn std::future::Future<Output = ()> + Send>,
-// >,
 
 impl Application {
     /// build the axum server with the provided configuration without lunch it
@@ -88,21 +62,15 @@ impl Application {
             addr,
             routes.into_make_service_with_connect_info::<SocketAddr>(),
         );
-        //.with_graceful_shutdown(shutdown_signal());
 
-        //let server = server.with_graceful_shutdown(shutdown_signal());
         info!("Listening on {port:?}");
 
-        Ok(Self {
-            port,
-            //server: Box::pin(server),
-            server,
-        })
+        Ok(Self { port, server })
     }
 
-    /// Lunch the already build server to start listening to requests
+    /// Lunch the already build server with graceful shutdown and start listening to requests
     pub async fn run_until_stopped(self) -> ResultIO<(), std::io::Error> {
-        self.server.await
+        self.server.with_graceful_shutdown(shutdown_signal()).await
     }
 
     /// Returns the port on which the application will be listening to
@@ -160,6 +128,8 @@ fn routes(mm: ModelManager) -> Router {
         }))
         .timeout(Duration::from_secs(1));
 
+    let concurrency_limit = ServiceBuilder::new().concurrency_limit(1);
+
     // Set CORS
     let cors_layer = CorsLayer::new()
         .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
@@ -185,6 +155,7 @@ fn routes(mm: ModelManager) -> Router {
         .merge(routes_hello())
         .merge(routes_login().with_state(state.clone()))
         .merge(routes_static())
+        .merge(routes_docs())
         .layer(from_fn_with_state(
             state.mm.clone(),
             web::mw_auth::mw_ctx_resolve,
@@ -203,14 +174,7 @@ fn routes(mm: ModelManager) -> Router {
         .layer(metrics)
 }
 
-/// Confirm to the otlp backend that the programm has been shutdown sucessfuly
-#[instrument]
-pub fn graceful_shutdown() {
-    info!("signal received, starting graceful shutdown");
-}
-
 /// Graceful shutdown to be able to send the last logs to the otlp backend before stopping the application
-#[allow(dead_code)]
 async fn shutdown_signal() {
     let ctrl_c = async {
         signal::ctrl_c()
@@ -234,7 +198,13 @@ async fn shutdown_signal() {
         _ = terminate => {},
     }
 
-    info!("signal received, graceful shutdown finished successfully");
-
-    opentelemetry::global::shutdown_tracer_provider();
+    info!("signal received, graceful shutdown started successfully");
+    tokio::select! {
+        _  = tokio::task::spawn_blocking(opentelemetry::global::shutdown_tracer_provider) => {
+            info!("graceful shutdown has been completed successfully");
+        },
+        _ = tokio::time::sleep(Duration::from_secs(5)) => {
+            info!("Timeout of 5 seconds has been reached without the shutdown to complete, exiting the appliction");
+        },
+    }
 }

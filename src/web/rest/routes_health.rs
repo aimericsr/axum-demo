@@ -3,7 +3,6 @@ use std::time::Duration;
 use axum::{extract::State, routing::get, Json, Router};
 use hyper::{header, HeaderMap};
 use opentelemetry::KeyValue;
-use tokio::time::sleep;
 
 use crate::startup::SharedState;
 
@@ -28,6 +27,7 @@ fn sub_routes() -> Router<SharedState> {
     )
 )]
 async fn health() -> HeaderMap {
+    std::thread::sleep(Duration::from_secs(10));
     let mut headers = HeaderMap::new();
     headers.insert(header::CACHE_CONTROL, "no-cache".parse().unwrap());
     headers
@@ -65,6 +65,5 @@ async fn health_ready(State(state): State<SharedState>) -> Json<Vec<String>> {
     )
 )]
 async fn health_live() -> Json<Vec<String>> {
-    sleep(Duration::from_secs(2)).await;
     Json(vec!["alive".to_owned(), "true".to_owned()])
 }
