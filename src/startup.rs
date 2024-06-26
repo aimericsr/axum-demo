@@ -174,30 +174,33 @@ fn routes(mm: ModelManager) -> Router {
 }
 
 /// Graceful shutdown to be able to send the last logs to the otlp backend before stopping the application
+/// SIGINT and SIGTERM are listen
 async fn shutdown_signal() {
+    #[cfg(unix)]
     let ctrl_c = async {
-        signal::ctrl_c()
-            .await
-            .expect("failed to install Ctrl+C handler");
+        signal::unix::signal(signal::unix::SignalKind::interrupt())
+            .expect("failed to install signal handler for SIGINT")
+            .recv()
+            .await;
     };
 
     #[cfg(unix)]
     let terminate = async {
         signal::unix::signal(signal::unix::SignalKind::terminate())
-            .expect("failed to install signal handler")
+            .expect("failed to install signal handler for SIGTERM")
             .recv()
             .await;
     };
 
-    #[cfg(not(unix))]
-    let terminate = std::future::pending::<()>();
-
     tokio::select! {
-        _ = ctrl_c => {},
-        _ = terminate => {},
+        _ = ctrl_c => {
+            info!("signal SIGINT received, graceful shutdown started successfully");
+        },
+        _ = terminate => {
+            info!("signal SIGTERM received, graceful shutdown started successfully");
+        },
     }
 
-    info!("signal received, graceful shutdown started successfully");
     tokio::select! {
         _  = tokio::task::spawn_blocking(opentelemetry::global::shutdown_tracer_provider) => {
             info!("graceful shutdown has been completed successfully");

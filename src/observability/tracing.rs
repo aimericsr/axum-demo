@@ -4,6 +4,7 @@ use opentelemetry::global;
 use opentelemetry::trace::TraceError;
 use opentelemetry::KeyValue;
 use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_resource_detectors::{OsResourceDetector, ProcessResourceDetector};
 use opentelemetry_sdk::propagation::TraceContextPropagator;
 use opentelemetry_sdk::resource::{EnvResourceDetector, TelemetryResourceDetector};
 use opentelemetry_sdk::trace::config;
@@ -17,7 +18,6 @@ use tracing::subscriber::set_global_default;
 use tracing::Subscriber;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::{layer::SubscriberExt, Registry};
-//  OsResourceDetector, ProcessResourceDetector,
 
 /// Set the subscriber as the default for the lifetime of the applications.
 pub fn init_subscriber(otel: &Otel) {
@@ -55,12 +55,15 @@ fn get_subscriber(otel: &Otel) -> impl Subscriber + Sync + Send {
 fn init_otlp_traces(otel: &Otel) -> Result<sdktrace::Tracer, TraceError> {
     global::set_text_map_propagator(TraceContextPropagator::new());
 
+    //let os_detector = OsResourceDetector;
+    //let resource: Resource = os_detector.detect(Duration::from_secs(0));
+
     let detectors_ressources = Resource::from_detectors(
-        Duration::from_millis(100),
+        Duration::from_millis(10),
         vec![
             Box::new(EnvResourceDetector::default()),
-            // Box::new(OsResourceDetector),
-            // Box::new(ProcessResourceDetector),
+            //Box::new(OsResourceDetector),
+            //Box::new(ProcessResourceDetector),
             Box::new(TelemetryResourceDetector),
         ],
     );
@@ -80,8 +83,8 @@ fn init_otlp_traces(otel: &Otel) -> Result<sdktrace::Tracer, TraceError> {
             opentelemetry_otlp::new_exporter()
                 .tonic()
                 .with_endpoint(otel.endpoint.clone())
-                .with_timeout(Duration::from_secs(3)),
-            //.with_compression(Compression::Gzip),
+                .with_timeout(Duration::from_secs(5)),
+            //.with_compression(opentelemetry_otlp::Compression::Gzip),
         )
         .with_trace_config(
             config()

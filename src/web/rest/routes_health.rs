@@ -27,7 +27,7 @@ fn sub_routes() -> Router<SharedState> {
     )
 )]
 async fn health() -> HeaderMap {
-    std::thread::sleep(Duration::from_secs(10));
+    std::thread::sleep(Duration::from_secs(2));
     let mut headers = HeaderMap::new();
     headers.insert(header::CACHE_CONTROL, "no-cache".parse().unwrap());
     headers
