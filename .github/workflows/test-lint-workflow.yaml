@@ -26,7 +26,6 @@ jobs:
       - name: Install Rust toolchain
         run: |
             rustup update --no-self-update ${{ env.RUST_VERSION }}
-            rustup component add --toolchain ${{ env.RUST_VERSION }} rustfmt rust-src
             rustup default ${{ env.RUST_VERSION }}
 
       - name: Cache Dependencies
@@ -54,7 +53,7 @@ jobs:
       - name: Install Rust toolchain
         run: |
             rustup update --no-self-update ${{ env.RUST_VERSION }}
-            rustup component add --toolchain ${{ env.RUST_VERSION }} rustfmt rust-src
+            rustup component add --toolchain ${{ env.RUST_VERSION }} rustfmt
             rustup default ${{ env.RUST_VERSION }}
 
       - name: Cache Dependencies
@@ -76,7 +75,7 @@ jobs:
       - name: Install Rust toolchain
         run: |
             rustup update --no-self-update ${{ env.RUST_VERSION }}
-            rustup component add --toolchain ${{ env.RUST_VERSION }} rustfmt rust-src
+            rustup component add --toolchain ${{ env.RUST_VERSION }} clippy
             rustup default ${{ env.RUST_VERSION }}
 
       - name: Cache Dependencies
