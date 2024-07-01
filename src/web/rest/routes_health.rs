@@ -3,6 +3,7 @@ use std::time::Duration;
 use axum::{extract::State, routing::get, Json, Router};
 use hyper::{header, HeaderMap};
 use opentelemetry::KeyValue;
+use tracing::instrument;
 
 use crate::startup::SharedState;
 
@@ -26,8 +27,9 @@ fn sub_routes() -> Router<SharedState> {
         (status = 200, description = "General health check"),
     )
 )]
+#[instrument]
 async fn health() -> HeaderMap {
-    std::thread::sleep(Duration::from_secs(2));
+    std::thread::sleep(Duration::from_millis(100));
     let mut headers = HeaderMap::new();
     headers.insert(header::CACHE_CONTROL, "no-cache".parse().unwrap());
     headers

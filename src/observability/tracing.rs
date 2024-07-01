@@ -4,7 +4,9 @@ use opentelemetry::global;
 use opentelemetry::trace::TraceError;
 use opentelemetry::KeyValue;
 use opentelemetry_otlp::WithExportConfig;
-use opentelemetry_resource_detectors::{OsResourceDetector, ProcessResourceDetector};
+use opentelemetry_resource_detectors::{
+    HostResourceDetector, OsResourceDetector, ProcessResourceDetector,
+};
 use opentelemetry_sdk::propagation::TraceContextPropagator;
 use opentelemetry_sdk::resource::{EnvResourceDetector, TelemetryResourceDetector};
 use opentelemetry_sdk::trace::config;
@@ -55,16 +57,14 @@ fn get_subscriber(otel: &Otel) -> impl Subscriber + Sync + Send {
 fn init_otlp_traces(otel: &Otel) -> Result<sdktrace::Tracer, TraceError> {
     global::set_text_map_propagator(TraceContextPropagator::new());
 
-    //let os_detector = OsResourceDetector;
-    //let resource: Resource = os_detector.detect(Duration::from_secs(0));
-
     let detectors_ressources = Resource::from_detectors(
         Duration::from_millis(10),
         vec![
             Box::new(EnvResourceDetector::default()),
-            //Box::new(OsResourceDetector),
-            //Box::new(ProcessResourceDetector),
             Box::new(TelemetryResourceDetector),
+            Box::new(OsResourceDetector),
+            Box::new(ProcessResourceDetector),
+            Box::new(HostResourceDetector::default()),
         ],
     );
 

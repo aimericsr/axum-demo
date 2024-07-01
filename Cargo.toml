@@ -60,8 +60,8 @@ opentelemetry_sdk ={ version = "0.23.0", features = ["rt-tokio", "metrics"] }
 opentelemetry-otlp = { version = "0.16.0", features = ["trace", "http-proto", "metrics", "gzip-tonic", "grpc-tonic", "tonic"] }
 tracing-opentelemetry = "0.24.0"
 opentelemetry-semantic-conventions = "0.15.0"
-opentelemetry-resource-detectors = "0.1.0"
-tower-otel = { path = "../tower-otel" }
+opentelemetry-resource-detectors = "0.2.0"
+#tower-otel = { path = "../tower-otel" }
 # -- Crypt & Encoding
 rand = "0.8.5"
 hmac = "0.12.1"
