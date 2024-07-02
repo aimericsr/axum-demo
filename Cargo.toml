@@ -35,7 +35,7 @@ tower-cookies = "0.10.0"
 tower_governor = { version = "0.4.2", features = []}
 hyper = { version = "1.3.1", features = ["full"]}
 # -- Error
-thiserror = "1.0.59"
+thiserror = "1.0.61"
 problemdetails = { version = "0.4.1", features = ["axum"] }
 # -- Serde
 serde = { version = "1.0.199", features = ["derive"] }
