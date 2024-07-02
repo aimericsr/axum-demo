@@ -34,7 +34,6 @@ use tower_http::cors::CorsLayer;
 //use tower_otel::traces::http::service::OtelLoggerLayer;
 use tracing::info;
 use tracing::instrument;
-use tracing::instrument::WithSubscriber;
 
 /// Type to hold the newly built server and his port
 pub struct Application {
@@ -128,7 +127,7 @@ fn routes(mm: ModelManager) -> Router {
         }))
         .timeout(Duration::from_secs(1));
 
-    let concurrency_limit = ServiceBuilder::new().concurrency_limit(1);
+    let _concurrency_limit = ServiceBuilder::new().concurrency_limit(1);
 
     // Set CORS
     let cors_layer = CorsLayer::new()

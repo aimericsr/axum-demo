@@ -60,11 +60,11 @@ fn init_otlp_traces(otel: &Otel) -> Result<sdktrace::Tracer, TraceError> {
     let detectors_ressources = Resource::from_detectors(
         Duration::from_millis(10),
         vec![
-            Box::new(EnvResourceDetector::default()),
+            Box::<EnvResourceDetector>::default(),
             Box::new(TelemetryResourceDetector),
             Box::new(OsResourceDetector),
             Box::new(ProcessResourceDetector),
-            Box::new(HostResourceDetector::default()),
+            Box::<HostResourceDetector>::default(),
         ],
     );
 
