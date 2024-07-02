@@ -20,55 +20,29 @@ use axum::serve::Serve;
 use axum::BoxError;
 use axum::Router;
 use axum_otel_metrics::HttpMetricsLayerBuilder;
-use axum_tracing_opentelemetry::middleware::OtelAxumLayer;
-use axum_tracing_opentelemetry::middleware::OtelInResponseLayer;
 use opentelemetry::global;
 use opentelemetry::metrics::Counter;
 use std::net::SocketAddr;
 use std::result::Result as ResultIO;
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::signal;
 use tower::ServiceBuilder;
 use tower_cookies::CookieManagerLayer;
 use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 use tower_http::cors::CorsLayer;
+//use tower_otel::traces::http::service::OtelLoggerLayer;
 use tracing::info;
 use tracing::instrument;
+
 /// Type to hold the newly built server and his port
-pub struct Application
-// <T>
-// where
-//     T: Future<Output = ()>,
-{
+pub struct Application {
     port: u16,
     server: Serve<
         IntoMakeServiceWithConnectInfo<Router, SocketAddr>,
         AddExtension<Router, ConnectInfo<SocketAddr>>,
-        // server: WithGracefulShutdown<
-        //     IntoMakeServiceWithConnectInfo<Router, std::net::SocketAddr>,
-        //     AddExtension<Router, ConnectInfo<std::net::SocketAddr>>,
-        //     impl std::future::Future<Output = ()>,
     >,
-    // server: WithGracefulShutdown<
-    //     IntoMakeServiceWithConnectInfo<Router, std::net::SocketAddr>,
-    //     AddExtension<Router, ConnectInfo<std::net::SocketAddr>>,
-    //     //T,
-    //     Pending<()>,
-    //     //Pin<Box<dyn Future<Output = ()>>>,
-    //     //impl Future<Output = ()>,
-    // >,
 }
-
-//server: Pin<Box<dyn Future<Output = hyper::Result<()>> + Send>>,
-// server: Serve<
-//     IntoMakeServiceWithConnectInfo<Router, SocketAddr>,
-//     AddExtension<Router, ConnectInfo<SocketAddr>>,
-// >,
-// server: WithGracefulShutdown<
-//     IntoMakeServiceWithConnectInfo<Router, std::net::SocketAddr>,
-//     AddExtension<Router, ConnectInfo<std::net::SocketAddr>>,
-//     Box<dyn std::future::Future<Output = ()> + Send>,
-// >,
 
 impl Application {
     /// build the axum server with the provided configuration without lunch it
@@ -87,21 +61,15 @@ impl Application {
             addr,
             routes.into_make_service_with_connect_info::<SocketAddr>(),
         );
-        //.with_graceful_shutdown(shutdown_signal());
 
-        //let server = server.with_graceful_shutdown(shutdown_signal());
         info!("Listening on {port:?}");
 
-        Ok(Self {
-            port,
-            //server: Box::pin(server),
-            server,
-        })
+        Ok(Self { port, server })
     }
 
-    /// Lunch the already build server to start listening to requests
+    /// Lunch the already build server with graceful shutdown and start listening to requests
     pub async fn run_until_stopped(self) -> ResultIO<(), std::io::Error> {
-        self.server.await
+        self.server.with_graceful_shutdown(shutdown_signal()).await
     }
 
     /// Returns the port on which the application will be listening to
@@ -137,21 +105,20 @@ pub struct CustomPrometheusMetrics {
 
 fn routes(mm: ModelManager) -> Router {
     // Build services for Rate Limit and Timeout
-    let governor_conf = Box::new(
+    let governor_conf = Arc::new(
         GovernorConfigBuilder::default()
-            .per_second(1)
-            .burst_size(10)
+            .per_second(5)
+            .burst_size(2)
             .use_headers()
             .finish()
             .unwrap(),
     );
-
     let rate_limit_layer = ServiceBuilder::new()
-        .layer(HandleErrorLayer::new(|_: BoxError| async move {
-            ErrorWeb::RateLimitExceeded
-        }))
+        // .layer(HandleErrorLayer::new(|_: BoxError| async move {
+        //     ErrorWeb::RateLimitExceeded
+        // }))
         .layer(GovernorLayer {
-            config: Box::leak(governor_conf),
+            config: governor_conf,
         });
 
     let timeout_layer = ServiceBuilder::new()
@@ -159,6 +126,8 @@ fn routes(mm: ModelManager) -> Router {
             ErrorWeb::Timeout
         }))
         .timeout(Duration::from_secs(1));
+
+    let _concurrency_limit = ServiceBuilder::new().concurrency_limit(1);
 
     // Set CORS
     let cors_layer = CorsLayer::new()
@@ -185,6 +154,7 @@ fn routes(mm: ModelManager) -> Router {
         .merge(routes_hello())
         .merge(routes_login().with_state(state.clone()))
         .merge(routes_static())
+        .merge(routes_docs())
         .layer(from_fn_with_state(
             state.mm.clone(),
             web::mw_auth::mw_ctx_resolve,
@@ -193,95 +163,49 @@ fn routes(mm: ModelManager) -> Router {
         .fallback(|| async { ErrorWeb::FallBack })
         .layer(cors_layer)
         .layer(rate_limit_layer)
-        .merge(routes_docs())
+        // .layer(GovernorLayer {
+        //     config: governor_conf,
+        // })
         .layer(timeout_layer)
         .layer(map_response(mw_res_map))
+        //.layer(OtelLoggerLayer::default())
         .layer(metrics)
-        // include trace context as header into the response
-        .layer(OtelInResponseLayer)
-        //create a span with the http context using the OpenTelemetry naming convention on incoming request
-        .layer(OtelAxumLayer::default())
-}
-
-/// Confirm to the otlp backend that the programm has been shutdown sucessfuly
-#[instrument]
-pub fn graceful_shutdown() {
-    info!("signal received, starting graceful shutdown");
 }
 
 /// Graceful shutdown to be able to send the last logs to the otlp backend before stopping the application
-#[allow(dead_code)]
+/// SIGINT and SIGTERM are listen
 async fn shutdown_signal() {
+    #[cfg(unix)]
     let ctrl_c = async {
-        signal::ctrl_c()
-            .await
-            .expect("failed to install Ctrl+C handler");
+        signal::unix::signal(signal::unix::SignalKind::interrupt())
+            .expect("failed to install signal handler for SIGINT")
+            .recv()
+            .await;
     };
 
     #[cfg(unix)]
     let terminate = async {
         signal::unix::signal(signal::unix::SignalKind::terminate())
-            .expect("failed to install signal handler")
+            .expect("failed to install signal handler for SIGTERM")
             .recv()
             .await;
     };
 
-    #[cfg(not(unix))]
-    let terminate = std::future::pending::<()>();
-
     tokio::select! {
-        _ = ctrl_c => {},
-        _ = terminate => {},
+        _ = ctrl_c => {
+            info!("signal SIGINT received, graceful shutdown started successfully");
+        },
+        _ = terminate => {
+            info!("signal SIGTERM received, graceful shutdown started successfully");
+        },
     }
 
-    info!("signal received, graceful shutdown finished successfully");
-
-    opentelemetry::global::shutdown_tracer_provider();
+    tokio::select! {
+        _  = tokio::task::spawn_blocking(opentelemetry::global::shutdown_tracer_provider) => {
+            info!("graceful shutdown has been completed successfully");
+        },
+        _ = tokio::time::sleep(Duration::from_secs(5)) => {
+            info!("Timeout of 5 seconds has been reached without the shutdown to complete, exiting the appliction");
+        },
+    }
 }
-
-// I want to store an instance of an Axum app in a struct to be able to do tests after. I can when I am note using the graceful shutdown, the type is Serve<IntoMakeServiceWithConnectInfo<Router, SocketAddr>, AddExtension<Router, ConnectInfo<SocketAddr>>> which can be used but when I add the graceful shutdown the type is WithGracefulShutdown<IntoMakeServiceWithConnectInfo<Router, SocketAddr>, AddExtension<Router, ConnectInfo<SocketAddr>>, impl Future<Output = ()>> . But as my error says, it's not possible to use impl in fields types. Here is my code.
-
-// ```
-//  let server = axum::serve(
-//             addr,
-//             routes.into_make_service_with_connect_info::<SocketAddr>(),
-//         )
-//         .with_graceful_shutdown(shutdown_signal());
-
-// async fn shutdown_signal() {
-//     let ctrl_c = async {
-//         signal::ctrl_c()
-//             .await
-//             .expect("failed to install Ctrl+C handler");
-//     };
-
-//     #[cfg(unix)]
-//     let terminate = async {
-//         signal::unix::signal(signal::unix::SignalKind::terminate())
-//             .expect("failed to install signal handler")
-//             .recv()
-//             .await;
-//     };
-
-//     #[cfg(not(unix))]
-//     let terminate = std::future::pending::<()>();
-
-//     tokio::select! {
-//         _ = ctrl_c => {},
-//         _ = terminate => {},
-//     }
-
-//     info!("signal received, graceful shutdown finished successfully");
-
-//     opentelemetry::global::shutdown_tracer_provider();
-// }
-
-// pub struct Application {
-//     port: u16,
-//     server: WithGracefulShutdown<
-//         IntoMakeServiceWithConnectInfo<Router, std::net::SocketAddr>,
-//         AddExtension<Router, ConnectInfo<std::net::SocketAddr>>,
-//         impl std::future::Future<Output = ()>,
-//     >,
-// }
-// ```

@@ -4,7 +4,11 @@ use opentelemetry::global;
 use opentelemetry::trace::TraceError;
 use opentelemetry::KeyValue;
 use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_resource_detectors::{
+    HostResourceDetector, OsResourceDetector, ProcessResourceDetector,
+};
 use opentelemetry_sdk::propagation::TraceContextPropagator;
+use opentelemetry_sdk::resource::{EnvResourceDetector, TelemetryResourceDetector};
 use opentelemetry_sdk::trace::config;
 use opentelemetry_sdk::trace::{BatchConfig, RandomIdGenerator, Sampler};
 use opentelemetry_sdk::{trace as sdktrace, Resource};
@@ -53,26 +57,41 @@ fn get_subscriber(otel: &Otel) -> impl Subscriber + Sync + Send {
 fn init_otlp_traces(otel: &Otel) -> Result<sdktrace::Tracer, TraceError> {
     global::set_text_map_propagator(TraceContextPropagator::new());
 
+    let detectors_ressources = Resource::from_detectors(
+        Duration::from_millis(10),
+        vec![
+            Box::<EnvResourceDetector>::default(),
+            Box::new(TelemetryResourceDetector),
+            Box::new(OsResourceDetector),
+            Box::new(ProcessResourceDetector),
+            Box::<HostResourceDetector>::default(),
+        ],
+    );
+
+    let default_ressources = Resource::new(vec![
+        KeyValue::new("service.schema.url", SCHEMA_URL),
+        KeyValue::new(SERVICE_NAME, otel.service_name.clone()),
+        KeyValue::new(SERVICE_VERSION, otel.service_version.clone()),
+        KeyValue::new(SERVICE_NAMESPACE, otel.service_namespace.clone()),
+    ]);
+
+    let ressources = detectors_ressources.merge(&default_ressources);
+
     opentelemetry_otlp::new_pipeline()
         .tracing()
         .with_exporter(
             opentelemetry_otlp::new_exporter()
                 .tonic()
                 .with_endpoint(otel.endpoint.clone())
-                .with_timeout(Duration::from_secs(3)),
-            //.with_compression(Compression::Gzip),
+                .with_timeout(Duration::from_secs(5)),
+            //.with_compression(opentelemetry_otlp::Compression::Gzip),
         )
         .with_trace_config(
             config()
                 .with_id_generator(RandomIdGenerator::default())
                 .with_max_attributes_per_event(128)
                 .with_max_attributes_per_link(128)
-                .with_resource(Resource::new(vec![
-                    KeyValue::new("service.schema.url", SCHEMA_URL),
-                    KeyValue::new(SERVICE_NAME, otel.service_name.clone()),
-                    KeyValue::new(SERVICE_VERSION, otel.service_version.clone()),
-                    KeyValue::new(SERVICE_NAMESPACE, otel.service_namespace.clone()),
-                ]))
+                .with_resource(ressources)
                 .with_sampler(Sampler::AlwaysOn),
         )
         .with_batch_config(BatchConfig::default())

@@ -1,8 +1,11 @@
 name: Security audit for dependencies
 
+env:
+  RUST_VERSION: 1.78
+
 on:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 0 * * 1"
   push:
     branches: [main, develop, feature/**]
     paths:
@@ -18,29 +21,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - uses: actions/cache@v3
+      - name: Cache Dependencies
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ env.RUST_VERSION }}
 
-      - uses: dtolnay/rust-toolchain@stable
-
-      - name: Check dependencies licences
-        run: cargo install --locked cargo-deny && cargo deny check
+      - name: Install Rust toolchain
+        run: |
+          rustup update --no-self-update ${{ env.RUST_VERSION }}
+          rustup default ${{ env.RUST_VERSION }}
+          rustup update --no-self-update nightly
 
       - name: Check outdated dependencies
-        run: cargo install --locked cargo-outdated && cargo-outdated -v
+        run: cargo install --locked cargo-outdated && cargo outdated
 
       - name: Check unused dependencies
-        run: cargo install --locked udeps && cargo +nightly udeps --all-targets
+        run: cargo install --locked cargo-udeps && cargo +nightly udeps --all-targets
 
-    # - name: Check known security vulerability in dependencies
-    #   run: cargo pants
+      # - name: Check dependencies licences
+      #   run: cargo install --locked cargo-deny && cargo deny check
 
-    # - name: Install and run audit
-    #   run:  cargo install cargo-audit && cargo audit
+      # - name: Check known security vulerability in dependencies
+      #   run: cargo install --locked cargo-pants && cargo pants
+
+      # - name: Check
+      #   run:  cargo install cargo-audit && cargo audit
