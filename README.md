@@ -161,7 +161,7 @@ To use Ingress on local with a host add the following line to your /etc/hosts fi
 ## Start k8s cluster
 
 ```sh
-kubectl apply -f external-services/kubernetes/app/namespaces/dev.yaml
+kubectl apply -f infrastructure/kubernetes/app/namespaces/dev.yaml
 kubectl config set-context minikube --namespace=dev
 
 # Helm : add needed repositories
@@ -171,12 +171,12 @@ helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm
 
 # Install Prometheus to scrape kubernetes engine metrics, install also Grafana with build-in dashboard
 helm install prometheus prometheus-community/kube-prometheus-stack --version "51.2.0" \
-     -f external-services/kubernetes/helm/kube-prometheus-stack/values.yaml \
+     -f infrastructure/kubernetes/helm/kube-prometheus-stack/values.yaml \
      --namespace=dev
 
 # Create postgres exporter to be able to monitor with prometheus
 helm install postgres-exporter prometheus-community/prometheus-postgres-exporter --version "5.1.0" \
-    -f external-services/kubernetes/helm/prometheus-postgres-exporter/values.yaml \
+    -f infrastructure/kubernetes/helm/prometheus-postgres-exporter/values.yaml \
      --namespace=dev
 
 # Install Cert manager
@@ -192,22 +192,22 @@ cmctl check api --wait=2m
 
 # Install the opentelemetry Operator, this automatically generate a self-signed cert and a secret for the webhook
 helm install my-opentelemetry-operator open-telemetry/opentelemetry-operator --version 0.39.1 \
-    -f external-services/kubernetes/helm/opentelemetry-operator/values.yaml
+    -f infrastructure/kubernetes/helm/opentelemetry-operator/values.yaml
 
 # Create custom CRD for otlp collectors
-kubectl apply -f external-services/kubernetes/app/rbac/otel-dev.yaml
-kubectl apply -R -f external-services/kubernetes/app/opentelemetrycollectors
+kubectl apply -f infrastructure/kubernetes/app/rbac/otel-dev.yaml
+kubectl apply -R -f infrastructure/kubernetes/app/opentelemetrycollectors
 
 # Create the ressources for our applications
-kubectl apply -R -f external-services/kubernetes/app/configmaps
-kubectl apply -R -f external-services/kubernetes/app/secrets
-kubectl apply -R -f external-services/kubernetes/app/services
-kubectl apply -R -f external-services/kubernetes/app/statefulsets
-kubectl apply -R -f external-services/kubernetes/app/deployments
-kubectl apply -R -f external-services/kubernetes/app/ingresses
+kubectl apply -R -f infrastructure/kubernetes/app/configmaps
+kubectl apply -R -f infrastructure/kubernetes/app/secrets
+kubectl apply -R -f infrastructure/kubernetes/app/services
+kubectl apply -R -f infrastructure/kubernetes/app/statefulsets
+kubectl apply -R -f infrastructure/kubernetes/app/deployments
+kubectl apply -R -f infrastructure/kubernetes/app/ingresses
 
 # Create Service account
-kubectl apply -f external-services/kubernetes/app/rbac/github-ci.yaml
+kubectl apply -f infrastructure/kubernetes/app/rbac/github-ci.yaml
 kubectl config get-contexts
 kubectl create token github-ci -n development
 kubectl config set-credentials sa-user --token=$TOKEN
