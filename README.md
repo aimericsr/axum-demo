@@ -158,7 +158,7 @@ minikube tunnel
 
 To use Ingress on local with a host add the following line to your /etc/hosts file: <br> 127.0.0.1 host-name-you-want
 
-## Lunch k8 cluster
+## Start k8s cluster
 
 ```sh
 kubectl apply -f external-services/kubernetes/app/namespaces/dev.yaml
