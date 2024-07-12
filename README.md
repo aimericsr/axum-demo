@@ -86,7 +86,7 @@ With that, we can correlate application traces with prometeuses metrics from kub
 - Timout
 - Rate Limiting
 - Serve static file
-- Helth check routes
+- Health check routes
 - Rest Routes
 - RPC routes
 - Auth with cookies and jwt
