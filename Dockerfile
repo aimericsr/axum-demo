@@ -1,11 +1,10 @@
 # Install cargo-chef
 FROM clux/muslrust:1.76.0 AS chef
 USER root
-RUN rustup target add x86_64-unknown-linux-musl
-RUN cargo install cargo-chef
-#RUN cargo install cargo-chef@0.1.63
+#RUN rustup target add x86_64-unknown-linux-musl
+RUN cargo install cargo-chef@0.1.67
 WORKDIR /app
-#COPY /Users/aimericsorin/Documents/Techno/Rust/tower-otel .
+#COPY tower-otel .
 
 # Install dependencies
 FROM chef AS planner
