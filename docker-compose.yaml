@@ -2,7 +2,7 @@ services:
   # Core Service
 
   web:
-    profiles: ["app"]
+    profiles: ["prod"]
     image: aimeric/axum-demo:latest
     #build: .
     healthcheck:
@@ -25,7 +25,7 @@ services:
   # Dependent Service
 
   db:
-    profiles: ["app"]
+    profiles: ["dev", "prod"]
     image: postgres:15
     user: postgres
     healthcheck:
@@ -42,7 +42,7 @@ services:
   # Telemetry Components
 
   otel-collector:
-    profiles: ["app"]
+    profiles: ["dev", "prod"]
     image: otel/opentelemetry-collector-contrib:0.86.0
     # healthcheck:
     #   test: wget --no-verbose --tries=1 --spider http://localhost:13133 || exit 1
@@ -55,7 +55,7 @@ services:
       - 4317:4317 # OTLP gRPC receiver
 
   prometheus:
-    profiles: ["app"]
+    profiles: ["dev", "prod"]
     image: prom/prometheus:v2.47.0
     ports:
       - 9090:9090
@@ -69,14 +69,14 @@ services:
       - ./infrastructure/docker-compose/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
 
   jaeger:
-    profiles: ["app"]
+    profiles: ["dev", "prod"]
     image: jaegertracing/all-in-one:1.49
     ports:
       - 16686:16686 # Web UI
       - 14250:14250 # Listen for traces
 
   grafana:
-    profiles: ["app"]
+    profiles: ["dev", "prod"]
     image: grafana/grafana:10.1.2
     ports:
       - 3000:3000

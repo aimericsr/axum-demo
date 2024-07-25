@@ -57,7 +57,7 @@ opentelemetry-otlp = { version = "0.17.0", features = ["trace", "http-proto", "m
 tracing-opentelemetry = "0.25.0"
 opentelemetry-semantic-conventions = "0.16.0"
 opentelemetry-resource-detectors = "0.3.0"
-#tower-otel = { path = "../tower-otel" }
+tower-otel = { git = "https://github.com/aimericsr/tower-otel" }
 # -- Crypt & Encoding
 rand = "0.8.5"
 hmac = "0.12.1"

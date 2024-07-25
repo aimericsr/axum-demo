@@ -25,7 +25,7 @@ spec:
         kubernetes.io/hostname: "minikube"
       containers:
       - name: axum-demo
-        image: aimeric/axum-demo:v1.0.3
+        image: aimeric/axum-demo:latest
         imagePullPolicy: IfNotPresent
         resources:
           requests:
@@ -119,4 +119,13 @@ spec:
             configMapKeyRef:
               name: axum-demo
               key: otel_service_version
+        - name: OTEL_SERVICE_NAMESPACE
+          valueFrom:
+            configMapKeyRef:
+              name: axum-demo
+              key: otel_service_namespace
+
+
+
+
 
