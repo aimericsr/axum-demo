@@ -2,6 +2,7 @@ use crate::config::Otel;
 use core::time::Duration;
 use opentelemetry::global;
 use opentelemetry::trace::TraceError;
+use opentelemetry::trace::TracerProvider;
 use opentelemetry::KeyValue;
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_resource_detectors::{
@@ -9,9 +10,9 @@ use opentelemetry_resource_detectors::{
 };
 use opentelemetry_sdk::propagation::TraceContextPropagator;
 use opentelemetry_sdk::resource::{EnvResourceDetector, TelemetryResourceDetector};
-use opentelemetry_sdk::trace::config;
+use opentelemetry_sdk::trace::Config;
 use opentelemetry_sdk::trace::{BatchConfig, RandomIdGenerator, Sampler};
-use opentelemetry_sdk::{trace as sdktrace, Resource};
+use opentelemetry_sdk::{trace::Tracer, Resource};
 use opentelemetry_semantic_conventions::resource::{
     SERVICE_NAME, SERVICE_NAMESPACE, SERVICE_VERSION,
 };
@@ -40,7 +41,7 @@ fn get_subscriber(otel: &Otel) -> impl Subscriber + Sync + Send {
     };
 
     let otel_layer = if otel.enabled {
-        let tracer = init_otlp_traces(otel).expect("Failed to init the otlp tracer");
+        let tracer = init_otlp_traces(otel);
         let opentelemetry_layer = tracing_opentelemetry::layer().with_tracer(tracer);
         Some(opentelemetry_layer)
     } else {
@@ -54,7 +55,7 @@ fn get_subscriber(otel: &Otel) -> impl Subscriber + Sync + Send {
 }
 
 /// Init the opentelemetry tracer
-fn init_otlp_traces(otel: &Otel) -> Result<sdktrace::Tracer, TraceError> {
+fn init_otlp_traces(otel: &Otel) -> Tracer {
     global::set_text_map_propagator(TraceContextPropagator::new());
 
     let detectors_ressources = Resource::from_detectors(
@@ -77,7 +78,7 @@ fn init_otlp_traces(otel: &Otel) -> Result<sdktrace::Tracer, TraceError> {
 
     let ressources = detectors_ressources.merge(&default_ressources);
 
-    opentelemetry_otlp::new_pipeline()
+    let provider = opentelemetry_otlp::new_pipeline()
         .tracing()
         .with_exporter(
             opentelemetry_otlp::new_exporter()
@@ -87,7 +88,7 @@ fn init_otlp_traces(otel: &Otel) -> Result<sdktrace::Tracer, TraceError> {
             //.with_compression(opentelemetry_otlp::Compression::Gzip),
         )
         .with_trace_config(
-            config()
+            Config::default()
                 .with_id_generator(RandomIdGenerator::default())
                 .with_max_attributes_per_event(128)
                 .with_max_attributes_per_link(128)
@@ -96,4 +97,13 @@ fn init_otlp_traces(otel: &Otel) -> Result<sdktrace::Tracer, TraceError> {
         )
         .with_batch_config(BatchConfig::default())
         .install_batch(opentelemetry_sdk::runtime::Tokio)
+        .unwrap();
+
+    let tracer = provider
+        .tracer_builder("opentelemetry-otlp")
+        .with_version(env!("CARGO_PKG_VERSION"))
+        .build();
+    let _ = global::set_tracer_provider(provider);
+
+    tracer
 }

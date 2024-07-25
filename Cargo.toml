@@ -7,10 +7,7 @@ authors = ["Aimeric Sorin <aimeric.sorin@gmail.com>"]
 license = "Apache-2.0"
 description = "Simple rust web api to demonstrate axum framework capabilities. Based on https://github.com/rust10x/rust-web-app"
 repository = "https://github.com/aimericsr/axum-demo"
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-# [profile.release]
-# codegen-units = 1
 
 [lib]
 path = "src/lib.rs"
@@ -20,9 +17,8 @@ path = "src/lib.rs"
 name = "axum-demo"
 path = "src/main.rs"
 
-# [profile.release]
-# strip = "symbols"
-
+[profile.release]
+strip = "symbols"
 
 [dependencies]
 # -- Http api
@@ -55,12 +51,12 @@ axum-otel-metrics = "0.8.1"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["std", "env-filter", "json", "fmt", "tracing-log"] }
 # -- OpenTelemetry
-opentelemetry = { version = "0.23.0", features = ["metrics"] }
-opentelemetry_sdk ={ version = "0.23.0", features = ["rt-tokio", "metrics"] }
-opentelemetry-otlp = { version = "0.16.0", features = ["trace", "http-proto", "metrics", "gzip-tonic", "grpc-tonic", "tonic"] }
-tracing-opentelemetry = "0.24.0"
-opentelemetry-semantic-conventions = "0.15.0"
-opentelemetry-resource-detectors = "0.2.0"
+opentelemetry = { version = "0.24.0", features = ["metrics"] }
+opentelemetry_sdk ={ version = "0.24.1", features = ["rt-tokio", "metrics"] }
+opentelemetry-otlp = { version = "0.17.0", features = ["trace", "http-proto", "metrics", "gzip-tonic", "grpc-tonic", "tonic"] }
+tracing-opentelemetry = "0.25.0"
+opentelemetry-semantic-conventions = "0.16.0"
+opentelemetry-resource-detectors = "0.3.0"
 #tower-otel = { path = "../tower-otel" }
 # -- Crypt & Encoding
 rand = "0.8.5"

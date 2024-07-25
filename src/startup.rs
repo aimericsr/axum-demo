@@ -121,11 +121,11 @@ fn routes(mm: ModelManager) -> Router {
             config: governor_conf,
         });
 
-    let timeout_layer = ServiceBuilder::new()
-        .layer(HandleErrorLayer::new(|_: BoxError| async {
-            ErrorWeb::Timeout
-        }))
-        .timeout(Duration::from_secs(1));
+    // let timeout_layer = ServiceBuilder::new()
+    //     .layer(HandleErrorLayer::new(|_: BoxError| async {
+    //         ErrorWeb::Timeout
+    //     }))
+    //     .timeout(Duration::from_secs(1));
 
     let _concurrency_limit = ServiceBuilder::new().concurrency_limit(1);
 
@@ -166,14 +166,14 @@ fn routes(mm: ModelManager) -> Router {
         // .layer(GovernorLayer {
         //     config: governor_conf,
         // })
-        .layer(timeout_layer)
+        //.layer(timeout_layer)
         .layer(map_response(mw_res_map))
         //.layer(OtelLoggerLayer::default())
         .layer(metrics)
 }
 
 /// Graceful shutdown to be able to send the last logs to the otlp backend before stopping the application
-/// SIGINT and SIGTERM are listen
+/// SIGINT and SIGTERM are listen, only linux-based system are supported
 async fn shutdown_signal() {
     #[cfg(unix)]
     let ctrl_c = async {
