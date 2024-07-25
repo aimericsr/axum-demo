@@ -4,7 +4,7 @@ metadata:
   name: axum-demo
   namespace: dev
 data:
-  rust_log: "trace,sqlx::query=error,hyper=error,h2=error,tokio_util=error,tower=error,tonic=info"
+  rust_log: "info"
   app_host: "0.0.0.0"
   app_port: "8080"
   app_web_folder: "static/"
@@ -14,5 +14,6 @@ data:
   otel_exporter_otlp_endpoint: "http://basic-daemonset-collector.dev.svc.cluster.local:4317"
   otel_service_name: "axum-otpl"
   otel_service_version: "1.0.3"
+  otel_service_namespace: "web-api"
   service_pwd_key: CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA
   service_token_key: 9FoHBmkyxbgu_xFoQK7e0jz3RMNVJWgfvbVn712FBNH9LLaAWS3CS6Zpcg6RveiObvCUb6a2z-uAiLjhLh2igw

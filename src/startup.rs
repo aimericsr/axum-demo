@@ -9,7 +9,6 @@ use crate::web::rest::routes_login::routes as routes_login;
 use crate::web::rest::routes_static::routes as routes_static;
 use crate::web::routes_docs::routes as routes_docs;
 use crate::web::Error as ErrorWeb;
-use axum::error_handling::HandleErrorLayer;
 use axum::extract::connect_info::IntoMakeServiceWithConnectInfo;
 use axum::extract::ConnectInfo;
 use axum::http::HeaderValue;
@@ -17,7 +16,6 @@ use axum::http::Method;
 use axum::middleware::AddExtension;
 use axum::middleware::{from_fn_with_state, map_response};
 use axum::serve::Serve;
-use axum::BoxError;
 use axum::Router;
 use axum_otel_metrics::HttpMetricsLayerBuilder;
 use opentelemetry::global;
@@ -31,7 +29,7 @@ use tower::ServiceBuilder;
 use tower_cookies::CookieManagerLayer;
 use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 use tower_http::cors::CorsLayer;
-//use tower_otel::traces::http::service::OtelLoggerLayer;
+use tower_otel::traces::http::service::OtelLoggerLayer;
 use tracing::info;
 use tracing::instrument;
 
@@ -121,11 +119,11 @@ fn routes(mm: ModelManager) -> Router {
             config: governor_conf,
         });
 
-    let timeout_layer = ServiceBuilder::new()
-        .layer(HandleErrorLayer::new(|_: BoxError| async {
-            ErrorWeb::Timeout
-        }))
-        .timeout(Duration::from_secs(1));
+    // let timeout_layer = ServiceBuilder::new()
+    //     .layer(HandleErrorLayer::new(|_: BoxError| async {
+    //         ErrorWeb::Timeout
+    //     }))
+    //     .timeout(Duration::from_secs(1));
 
     let _concurrency_limit = ServiceBuilder::new().concurrency_limit(1);
 
@@ -166,14 +164,14 @@ fn routes(mm: ModelManager) -> Router {
         // .layer(GovernorLayer {
         //     config: governor_conf,
         // })
-        .layer(timeout_layer)
+        //.layer(timeout_layer)
         .layer(map_response(mw_res_map))
-        //.layer(OtelLoggerLayer::default())
+        .layer(OtelLoggerLayer)
         .layer(metrics)
 }
 
 /// Graceful shutdown to be able to send the last logs to the otlp backend before stopping the application
-/// SIGINT and SIGTERM are listen
+/// SIGINT and SIGTERM are listen, only linux-based system are supported
 async fn shutdown_signal() {
     #[cfg(unix)]
     let ctrl_c = async {

@@ -112,7 +112,7 @@ With that, we can correlate application traces with prometeuses metrics from kub
 ## Starting the needed services
 
 ```sh
-docker compose --profile app up -d
+docker compose --profile dev up -d
 ```
 
 ## Tests (Unit, Integration, Doc)
@@ -149,11 +149,11 @@ docker-compose --profile load-test run k6 run -o experimental-prometheus-rw /scr
 ## Minikube
 
 ```sh
+minikube start --memory 4096 --cpus 4
 minikube addons enable dashboard
 minikube addons enable metrics-server
 minikube addons enable ingress
-minikube start --memory 4096 --cpus 4
-minikube tunnel
+# minikube tunnel (ingress available at 127.0.0.1)
 ```
 
 To use Ingress on local with a host add the following line to your /etc/hosts file: <br> 127.0.0.1 host-name-you-want
@@ -161,6 +161,7 @@ To use Ingress on local with a host add the following line to your /etc/hosts fi
 ## Start k8s cluster
 
 ```sh
+# Create namespace
 kubectl apply -f infrastructure/kubernetes/app/namespaces/dev.yaml
 kubectl config set-context minikube --namespace=dev
 
@@ -171,13 +172,13 @@ helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm
 
 # Install Prometheus to scrape kubernetes engine metrics, install also Grafana with build-in dashboard
 helm install prometheus prometheus-community/kube-prometheus-stack --version "51.2.0" \
-     -f infrastructure/kubernetes/helm/kube-prometheus-stack/values.yaml \
-     --namespace=dev
+    -f infrastructure/kubernetes/helm/kube-prometheus-stack/values.yaml \
+    --namespace=dev
 
 # Create postgres exporter to be able to monitor with prometheus
 helm install postgres-exporter prometheus-community/prometheus-postgres-exporter --version "5.1.0" \
     -f infrastructure/kubernetes/helm/prometheus-postgres-exporter/values.yaml \
-     --namespace=dev
+    --namespace=dev
 
 # Install Cert manager
 helm install \
@@ -191,7 +192,7 @@ helm install \
 cmctl check api --wait=2m
 
 # Install the opentelemetry Operator, this automatically generate a self-signed cert and a secret for the webhook
-helm install my-opentelemetry-operator open-telemetry/opentelemetry-operator --version 0.39.1 \
+helm install my-opentelemetry-operator open-telemetry/opentelemetry-operator --version "0.39.1" \
     -f infrastructure/kubernetes/helm/opentelemetry-operator/values.yaml
 
 # Create custom CRD for otlp collectors
@@ -208,9 +209,21 @@ kubectl apply -R -f infrastructure/kubernetes/app/ingresses
 
 # Create Service account
 kubectl apply -f infrastructure/kubernetes/app/rbac/github-ci.yaml
+TOKEN=$(kubectl create token github-ci)
+
+# Extract info from default minikube profile
+SERVER_ADDRESS=$(kubectl config view -o jsonpath='{.clusters[?(@.name == "minikube")].cluster.server}')
+CA_CERT=$(kubectl config view -o jsonpath='{.clusters[?(@.name == "minikube")].cluster.certificate-authority}')
+# User
+kubectl config set-credentials github-ci --token=$TOKEN
+# Cluster
+kubectl config set-cluster github-ci --server=$SERVER_ADDRESS
+kubectl config set-cluster github-ci --certificate-authority=$CA_CERT
+# Context
+kubectl config set-context github-ci --user=github-ci
+kubectl config set-context github-ci --cluster=github-ci
+kubectl config set-context github-ci --namespace=dev
+kubectl config use-context github-ci
 kubectl config get-contexts
-kubectl create token github-ci -n development
-kubectl config set-credentials sa-user --token=$TOKEN
-kubectl config set-context sa-context --user=sa-user
-kubectl config use-context sa-context
 ```
+
