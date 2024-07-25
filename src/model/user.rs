@@ -19,8 +19,8 @@ pub struct User {
 
 #[derive(Deserialize)]
 pub struct UserForCreate {
-    pub username: String,
-    pub pwd_clear: String,
+    pub _username: String,
+    pub _pwd_clear: String,
 }
 
 #[derive(Fields)]

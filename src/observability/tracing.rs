@@ -1,7 +1,6 @@
 use crate::config::Otel;
 use core::time::Duration;
 use opentelemetry::global;
-use opentelemetry::trace::TraceError;
 use opentelemetry::trace::TracerProvider;
 use opentelemetry::KeyValue;
 use opentelemetry_otlp::WithExportConfig;

@@ -9,7 +9,6 @@ use crate::web::rest::routes_login::routes as routes_login;
 use crate::web::rest::routes_static::routes as routes_static;
 use crate::web::routes_docs::routes as routes_docs;
 use crate::web::Error as ErrorWeb;
-use axum::error_handling::HandleErrorLayer;
 use axum::extract::connect_info::IntoMakeServiceWithConnectInfo;
 use axum::extract::ConnectInfo;
 use axum::http::HeaderValue;
@@ -17,7 +16,6 @@ use axum::http::Method;
 use axum::middleware::AddExtension;
 use axum::middleware::{from_fn_with_state, map_response};
 use axum::serve::Serve;
-use axum::BoxError;
 use axum::Router;
 use axum_otel_metrics::HttpMetricsLayerBuilder;
 use opentelemetry::global;
@@ -168,7 +166,7 @@ fn routes(mm: ModelManager) -> Router {
         // })
         //.layer(timeout_layer)
         .layer(map_response(mw_res_map))
-        .layer(OtelLoggerLayer::default())
+        .layer(OtelLoggerLayer)
         .layer(metrics)
 }
 
