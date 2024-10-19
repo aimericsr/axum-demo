@@ -1,6 +1,6 @@
 use crate::error::{Error, Result};
 use dotenvy::dotenv;
-use secrecy::Secret;
+use secrecy::SecretBox;
 use std::env;
 use std::str::FromStr;
 use std::sync::OnceLock;
@@ -35,10 +35,10 @@ pub struct ApplicationSettings {
 }
 
 pub struct Postgres {
-    pub db_user: Secret<String>,
-    pub db_password: Secret<String>,
-    pub db_host: Secret<String>,
-    pub db_name: Secret<String>,
+    pub db_user: SecretBox<String>,
+    pub db_password: SecretBox<String>,
+    pub db_host: SecretBox<String>,
+    pub db_name: SecretBox<String>,
     pub db_port: u16,
 }
 
@@ -53,7 +53,7 @@ pub struct Otel {
     pub service_name: String,
     pub service_version: String,
     pub service_namespace: String,
-    pub enabled: bool,
+    pub otel_enabled: bool,
     pub stdout_enabled: bool,
 }
 
@@ -67,10 +67,10 @@ impl Config {
                 web_folder: get_env("APP_WEB_FOLDER")?,
             },
             postgres: Postgres {
-                db_user: get_env("SERVICE_DB_USER")?.into(),
-                db_password: get_env("SERVICE_DB_PASSWORD")?.into(),
-                db_host: get_env("SERVICE_DB_HOST")?.into(),
-                db_name: get_env("SERVICE_DB_NAME")?.into(),
+                db_user: Box::new(get_env("SERVICE_DB_USER")?).into(),
+                db_password: Box::new(get_env("SERVICE_DB_PASSWORD")?).into(),
+                db_host: Box::new(get_env("SERVICE_DB_HOST")?).into(),
+                db_name: Box::new(get_env("SERVICE_DB_NAME")?).into(),
                 db_port: get_env_parse("SERVICE_DB_PORT")?,
             },
             otel: Otel {
@@ -78,8 +78,9 @@ impl Config {
                 service_name: get_env("OTEL_SERVICE_NAME")?,
                 service_version: get_env("OTEL_SERVICE_VERSION")?,
                 service_namespace: get_env("OTEL_SERVICE_NAMESPACE")?,
-                enabled: get_env_parse("OTEL_ENABLED")?,
-                stdout_enabled: get_env_parse("STDOUT_LOG_ENABLED")?,
+
+                stdout_enabled: get_env_parse("OTEL_STDOUT_ENABLED")?,
+                otel_enabled: get_env_parse("OTEL_ENABLED")?,
             },
             crypt: Crypt {
                 pwd_key: get_env_b64u_as_u8s("SERVICE_PWD_KEY")?,

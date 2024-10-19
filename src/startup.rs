@@ -171,7 +171,7 @@ fn routes(mm: ModelManager) -> Router {
 }
 
 /// Graceful shutdown to be able to send the last logs to the otlp backend before stopping the application
-/// SIGINT and SIGTERM are listen, only linux-based system are supported
+/// SIGINT and SIGTERM are listen, only linux-based system are supported as signal management greatly dependens on the OS
 async fn shutdown_signal() {
     #[cfg(unix)]
     let ctrl_c = async {

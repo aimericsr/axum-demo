@@ -4,7 +4,7 @@ use axum_demo::{
     observability::tracing::init_subscriber,
     startup::Application,
 };
-use secrecy::ExposeSecret;
+use secrecy::{ExposeSecret, SecretBox};
 use sqlx::{postgres::PgConnectOptions, Connection, Executor, PgConnection, PgPool};
 use std::sync::OnceLock;
 use uuid::Uuid;
@@ -71,9 +71,9 @@ impl TestApp {
 pub async fn spawn_app() -> TestApp {
     let configuration = {
         let mut c = get_configuration().expect("Failed to read configuration");
-        c.postgres.db_name = Uuid::new_v4().to_string().into();
+        c.postgres.db_name = Box::new(Uuid::new_v4().to_string()).into();
         c.application.port = 0;
-        c.otel.enabled = true;
+        c.otel.otel_enabled = true;
         c.otel.stdout_enabled = false;
         c
     };

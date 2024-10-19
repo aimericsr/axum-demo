@@ -5,7 +5,7 @@ edition = "2021"
 rust-version = "1.74"
 authors = ["Aimeric Sorin <aimeric.sorin@gmail.com>"]
 license = "Apache-2.0"
-description = "Simple rust web api to demonstrate axum framework capabilities. Based on https://github.com/rust10x/rust-web-app"
+description = "Basic rust web api to demonstrate axum framework capabilities. Based on https://github.com/rust10x/rust-web-app"
 repository = "https://github.com/aimericsr/axum-demo"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -22,27 +22,27 @@ strip = "symbols"
 
 [dependencies]
 # -- Http api
-tokio = { version = "1.38.0", features = ["signal", "rt-multi-thread"] }
-axum = { version = "0.7.5", features = ["tokio"] }
-axum-macros = "0.4.1"
-tower-http = { version = "0.5.2", features = ["fs", "timeout", "cors", "trace"] }
-tower = { version = "0.4.13", features = ["limit"]} 
+tokio = { version = "1.40.0", features = ["signal", "rt-multi-thread"] }
+axum = { version = "0.7.7", features = ["tokio"] }
+axum-macros = "0.4.2"
+tower-http = { version = "0.6.1", features = ["fs", "timeout", "cors", "trace"] }
+tower = { version = "0.5.1", features = ["limit"]} 
 tower-cookies = "0.10.0"
 tower_governor = { version = "0.4.2", features = []}
-hyper = { version = "1.4.0", features = ["full"]}
+hyper = { version = "1.4.1", features = ["full"]}
 # -- Error
-thiserror = "1.0.61"
+thiserror = "1.0.64"
 problemdetails = { version = "0.4.1", features = ["axum"] }
 # -- Serde
-serde = { version = "1.0.199", features = ["derive"] }
-serde_json = "1.0.116"
-serde_with = "3.8.1"
+serde = { version = "1.0.210", features = ["derive"] }
+serde_json = "1.0.131"
+serde_with = "3.10.0"
 # -- Db
 sqlx = { version = "0.7.4", features = [ "runtime-tokio-rustls", "postgres", "uuid", "time" ] }
 sqlb = "0.4.0"
 # -- Docs
-utoipa = { version= "4.2.0", features = ["axum_extras"] }
-utoipa-swagger-ui = { version= "7.0.1", features = ["axum"] }
+utoipa = { version= "4.2.3", features = ["axum_extras"] }
+utoipa-swagger-ui = { version= "7.1.0", features = ["axum"] }
 utoipa-redoc = { version= "4.0.0", features = ["axum"] }
 utoipa-rapidoc = { version= "4.0.0", features = ["axum"] }
 # -- Metrics
@@ -51,12 +51,12 @@ axum-otel-metrics = "0.8.1"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["std", "env-filter", "json", "fmt", "tracing-log"] }
 # -- OpenTelemetry
-opentelemetry = { version = "0.24.0", features = ["metrics"] }
-opentelemetry_sdk ={ version = "0.24.1", features = ["rt-tokio", "metrics"] }
-opentelemetry-otlp = { version = "0.17.0", features = ["trace", "http-proto", "metrics", "gzip-tonic", "grpc-tonic", "tonic"] }
-tracing-opentelemetry = "0.25.0"
-opentelemetry-semantic-conventions = "0.16.0"
-opentelemetry-resource-detectors = "0.3.0"
+opentelemetry = { version = "0.26.0", features = ["metrics"] }
+opentelemetry_sdk ={ version = "0.26.0", features = ["rt-tokio", "metrics"] }
+opentelemetry-otlp = { version = "0.26.0", features = ["trace", "http-proto", "metrics", "gzip-tonic", "grpc-tonic", "tonic"] }
+tracing-opentelemetry = "0.27.0"
+opentelemetry-semantic-conventions = "0.26.0"
+opentelemetry-resource-detectors = "0.5.0"
 tower-otel = { git = "https://github.com/aimericsr/tower-otel" }
 # -- Crypt & Encoding
 rand = "0.8.5"
@@ -65,21 +65,21 @@ sha2 = "0.10.8"
 base64-url = "3.0.0"
 time = "0.3.36"
 # -- Utils
-async-trait = "0.1.80"
-strum_macros = "0.26.2"
-uuid = { version = "1.8.0", features = ["v4", "fast-rng"] }
-secrecy = "0.8.0" 
-validator = "0.16.1"
-validator_derive = "0.16.0"
-regex = "1.10.4"
+async-trait = "0.1.83"
+strum_macros = "0.26.4"
+uuid = { version = "1.10.0", features = ["v4", "fast-rng"] }
+secrecy = "0.10.2" 
+validator = "0.18.1"
+validator_derive = "0.18.2"
+regex = "1.11.0"
 dotenvy = "0.15.7"
 redact = { version = "0.1.10", features = ["serde"] }
 http = "1.1.0"
+opentelemetry-stdout = { version = "0.26.0", features = ["trace"] }
 
 [dev-dependencies]
-anyhow = "1.0.82"
-reqwest = { version = "0.12.4", features = ["json"]}
-once_cell = "1.19.0"
+anyhow = "1.0.90"
+reqwest = { version = "0.12.8", features = ["json"]}
 
 [lints.rust]
 unsafe_code = "forbid"

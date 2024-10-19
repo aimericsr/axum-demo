@@ -13,7 +13,7 @@ use std::result::Result as Resultstd;
 use tower_cookies::Cookies;
 use tracing::debug;
 use utoipa::{IntoParams, ToSchema};
-use validator::HasLen;
+use validator::{Validate, ValidateLength};
 use validator_derive::Validate;
 
 pub fn routes() -> Router<SharedState> {
@@ -46,35 +46,33 @@ pub struct LoginPayload {
     #[validate(length(min = 1, message = "Can not be empty"))]
     pub username: String,
     #[validate(length(min = 1, message = "Can not be empty",))]
-    pub pwd: StringWrapper,
+    pub pwd: SecretStringWrapper,
 }
 
+// Move this part of the code in it's own file
 #[derive(Debug, Deserialize)]
-pub struct StringWrapper(pub Secret<String>);
+pub struct SecretStringWrapper(pub Secret<String>);
 
-impl HasLen for &StringWrapper {
-    fn length(&self) -> u64 {
-        self.0.expose_secret().length()
-    }
-}
-
-impl Serialize for StringWrapper {
+impl Serialize for SecretStringWrapper {
     fn serialize<S>(&self, serializer: S) -> Resultstd<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
-        self.0.expose_secret().serialize(serializer)
+        serializer.serialize_bytes(self.0.expose_secret().as_bytes())
     }
 }
 
-// #[derive(Debug, Deserialize)]
-// struct SecretValidate(Secret<String>);
+impl Validate for SecretStringWrapper {
+    fn validate(&self) -> Resultstd<(), validator::ValidationErrors> {
+        Ok(())
+    }
+}
 
-// impl HasLen for SecretValidate {
-//     fn length(&self) -> u64 {
-//         self.0.expose_secret().length()
-//     }
-// }
+impl ValidateLength<usize> for SecretStringWrapper {
+    fn length(&self) -> Option<usize> {
+        Some(self.0.expose_secret().len())
+    }
+}
 
 #[utoipa::path(
     post,
