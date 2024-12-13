@@ -1,2 +1,4 @@
-/// Handle sending traces to the destinations (stdout and to an endpoint with the opentelemetry format).
-pub mod tracing;
+/// Handle the state of the runtime by
+pub mod metrics;
+/// Handle sending traces to different destinations using the OTEL format (stdout and via the netowork)
+pub mod traces;

@@ -1,10 +1,11 @@
 # Install cargo-chef
-FROM clux/muslrust:1.80.0-stable AS chef
-#FROM rust:1.80-alpine3.19 AS chef
-#FROM lukemathwalker/cargo-chef:latest-rust-1.80.0-alpine3.20 AS chef
+#FROM clux/muslrust:1.80.0-stable AS chef
+#FROM rust:1.82-alpine3.19 AS chef
+FROM lukemathwalker/cargo-chef:latest-rust-1.82.0-alpine3.20 AS chef
 USER root
+RUN rustup target add x86_64-unknown-linux-gnu
 RUN cargo install cargo-chef@0.1.67
-RUN rustup target add x86_64-unknown-linux-musl
+RUN apt install -y x86_64-linux-gnu-gcc
 WORKDIR /app
 
 # Install dependencies
@@ -15,9 +16,9 @@ RUN cargo chef prepare --recipe-path recipe.json
 # Build the binary
 FROM chef AS builder
 COPY --from=planner /app/recipe.json recipe.json
-RUN cargo chef cook --release --target x86_64-unknown-linux-musl --recipe-path recipe.json
+RUN cargo chef cook --release --target x86_64-unknown-linux-gnu --recipe-path recipe.json
 COPY . .
-RUN cargo build --release --target x86_64-unknown-linux-musl --bin axum-demo
+RUN cargo build --release --target x86_64-unknown-linux-gnu --bin axum-demo
 
 # Alpine 
 FROM alpine:3.20.1 AS runtime
@@ -25,7 +26,7 @@ WORKDIR "/usr/local/bin/"
 #RUN apk add --no-cache tzdata
 #ENV TZ=Europe/Paris
 RUN addgroup -S myuser && adduser -S myuser -G myuser
-COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/axum-demo .
+COPY --from=builder /app/target/x86_64-unknown-linux-gnu/release/axum-demo .
 COPY .env .
 USER myuser
 CMD ["./axum-demo"]

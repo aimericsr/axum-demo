@@ -1,42 +1,41 @@
 use crate::config::Otel;
 use core::time::Duration;
-use opentelemetry::global;
 use opentelemetry::trace::TracerProvider as TraceProviderOtel;
 use opentelemetry::KeyValue;
-use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_otlp::{ExportConfig, Protocol, WithExportConfig, WithTonicConfig};
 use opentelemetry_resource_detectors::{
     HostResourceDetector, OsResourceDetector, ProcessResourceDetector,
 };
-use opentelemetry_sdk::propagation::TraceContextPropagator;
 use opentelemetry_sdk::resource::{
     EnvResourceDetector, SdkProvidedResourceDetector, TelemetryResourceDetector,
 };
-use opentelemetry_sdk::trace::Config;
-use opentelemetry_sdk::trace::TracerProvider;
-use opentelemetry_sdk::trace::{BatchConfig, RandomIdGenerator, Sampler};
-use opentelemetry_sdk::{trace::Tracer, Resource};
+
+use opentelemetry_sdk::trace::{RandomIdGenerator, Sampler};
+use opentelemetry_sdk::trace::{SpanLimits, TracerProvider};
+use opentelemetry_sdk::Resource;
 use opentelemetry_semantic_conventions::resource::{
     SERVICE_NAME, SERVICE_NAMESPACE, SERVICE_VERSION,
 };
 use opentelemetry_semantic_conventions::SCHEMA_URL;
-use tracing::subscriber::set_global_default;
 use tracing::Subscriber;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::{layer::SubscriberExt, Registry};
 
-/// Set the subscriber as the default for the lifetime of the applications.
-pub fn init_subscriber(otel: &Otel) {
+/// Init the traces configuration for the lifetime of the applications.
+/// User code should only emit spans and events with the Tracing API
+pub fn init_traces(otel: &Otel) {
+    tracing_log::LogTracer::init().expect("Failed to set log tracer");
     let subscriber = get_subscriber(otel);
-    set_global_default(subscriber).expect("Failed to set subscriber");
+    tracing::subscriber::set_global_default(subscriber).expect("Failed to set subscriber");
 }
 
-/// Retreive the subscriber configured
+/// Retreive the fully configured subscriber
 fn get_subscriber(otel: &Otel) -> impl Subscriber + Sync + Send {
     // Config which trace levels to collect
     let env_filter = EnvFilter::builder().try_from_env().unwrap();
 
-    // Config multiple target to send traces
-    let stdout_layer = if otel.stdout_enabled {
+    // Configure multiples targets to send traces to
+    let stdout_json_layer = if otel.stdout_enabled {
         Some(tracing_subscriber::fmt::layer().json())
     } else {
         None
@@ -46,10 +45,7 @@ fn get_subscriber(otel: &Otel) -> impl Subscriber + Sync + Send {
         let provider = TracerProvider::builder()
             .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
             .build();
-        let tracer = provider
-            .tracer_builder("opentelemetry-otlp")
-            .with_version(env!("CARGO_PKG_VERSION"))
-            .build();
+        let tracer = provider.tracer("axum-app");
         let opentelemetry_layer = tracing_opentelemetry::layer().with_tracer(tracer);
         Some(opentelemetry_layer)
     } else {
@@ -57,11 +53,8 @@ fn get_subscriber(otel: &Otel) -> impl Subscriber + Sync + Send {
     };
 
     let otel_layer = if otel.otel_enabled {
-        let provider = init_otlp_traces(otel);
-        let tracer = provider
-            .tracer_builder("opentelemetry-otlp")
-            .with_version(env!("CARGO_PKG_VERSION"))
-            .build();
+        let provider = get_tracer_provider(otel);
+        let tracer = provider.tracer("axum-app2");
         let opentelemetry_layer = tracing_opentelemetry::layer().with_tracer(tracer);
         Some(opentelemetry_layer)
     } else {
@@ -70,16 +63,18 @@ fn get_subscriber(otel: &Otel) -> impl Subscriber + Sync + Send {
 
     Registry::default()
         .with(env_filter)
-        .with(stdout_layer)
+        .with(stdout_json_layer)
         .with(otel_stdout_layer)
         .with(otel_layer)
 }
 
 /// Init the opentelemetry tracer
-fn init_otlp_traces(otel: &Otel) -> TracerProvider {
+fn get_tracer_provider(otel: &Otel) -> TracerProvider {
+    // For the moment, user code only interact with the Tracing API so the propagation
+    // is done throught this API and not via opentelemetry
     //global::set_text_map_propagator(TraceContextPropagator::new());
 
-    let detectors_ressources = Resource::from_detectors(
+    let detected_ressources = Resource::from_detectors(
         Duration::from_millis(10),
         vec![
             Box::<EnvResourceDetector>::default(),
@@ -98,31 +93,30 @@ fn init_otlp_traces(otel: &Otel) -> TracerProvider {
         KeyValue::new(SERVICE_NAMESPACE, otel.service_namespace.clone()),
     ]);
 
-    let ressources = detectors_ressources.merge(&default_ressources);
+    let ressources = detected_ressources.merge(&default_ressources);
 
-    let provider = opentelemetry_otlp::new_pipeline()
-        .tracing()
-        .with_exporter(
-            opentelemetry_otlp::new_exporter()
-                .tonic()
-                .with_endpoint(otel.endpoint.clone())
-                .with_timeout(Duration::from_secs(5))
-                .with_compression(opentelemetry_otlp::Compression::Gzip),
-        )
-        .with_trace_config(
-            Config::default()
-                .with_sampler(Sampler::AlwaysOn)
-                .with_id_generator(RandomIdGenerator::default())
-                .with_max_events_per_span(64)
-                .with_max_links_per_span(64)
-                .with_max_attributes_per_event(128)
-                .with_max_attributes_per_link(128)
-                .with_max_attributes_per_span(128)
-                .with_resource(ressources),
-        )
-        .with_batch_config(BatchConfig::default())
-        .install_batch(opentelemetry_sdk::runtime::Tokio)
+    let exporter = opentelemetry_otlp::SpanExporter::builder()
+        .with_tonic()
+        .with_export_config(ExportConfig {
+            endpoint: Some("http://localhost:4317".into()),
+            protocol: Protocol::Grpc,
+            timeout: Duration::from_secs(3),
+        })
+        .with_compression(opentelemetry_otlp::Compression::Zstd)
+        .build()
         .unwrap();
 
-    provider
+    TracerProvider::builder()
+        .with_resource(ressources)
+        .with_batch_exporter(exporter, opentelemetry_sdk::runtime::Tokio)
+        .with_sampler(Sampler::AlwaysOn)
+        .with_id_generator(RandomIdGenerator::default())
+        .with_span_limits(SpanLimits {
+            max_events_per_span: 64,
+            max_attributes_per_span: 64,
+            max_links_per_span: 64,
+            max_attributes_per_event: 64,
+            max_attributes_per_link: 64,
+        })
+        .build()
 }

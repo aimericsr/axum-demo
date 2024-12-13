@@ -1,17 +1,17 @@
 use axum_demo::config::Postgres as PostgresConfig;
 use axum_demo::{
     config::{get_configuration, Otel},
-    observability::tracing::init_subscriber,
+    observability::traces::init_traces,
     startup::Application,
 };
-use secrecy::{ExposeSecret, SecretBox};
+use secrecy::ExposeSecret;
 use sqlx::{postgres::PgConnectOptions, Connection, Executor, PgConnection, PgPool};
 use std::sync::OnceLock;
 use uuid::Uuid;
 pub fn tracing(otel: &Otel) -> &'static () {
     static INSTANCE: OnceLock<()> = OnceLock::new();
 
-    INSTANCE.get_or_init(|| init_subscriber(otel))
+    INSTANCE.get_or_init(|| init_traces(otel))
 }
 
 pub struct TestApp {
@@ -107,6 +107,7 @@ async fn configure_database(config: &PostgresConfig) -> PgPool {
         .execute(format!(r#"CREATE DATABASE "{}";"#, config.db_name.expose_secret()).as_str())
         .await
         .expect("Failed to create database.");
+
     // Migrate database
     connection_info = connection_info.database(config.db_name.expose_secret());
     let connection_pool = PgPool::connect_with(connection_info)
@@ -116,5 +117,6 @@ async fn configure_database(config: &PostgresConfig) -> PgPool {
         .run(&connection_pool)
         .await
         .expect("Failed to migrate the database");
+
     connection_pool
 }

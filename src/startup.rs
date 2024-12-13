@@ -17,7 +17,6 @@ use axum::middleware::AddExtension;
 use axum::middleware::{from_fn_with_state, map_response};
 use axum::serve::Serve;
 use axum::Router;
-use axum_otel_metrics::HttpMetricsLayerBuilder;
 use opentelemetry::global;
 use opentelemetry::metrics::Counter;
 use std::net::SocketAddr;
@@ -105,8 +104,8 @@ fn routes(mm: ModelManager) -> Router {
     // Build services for Rate Limit and Timeout
     let governor_conf = Arc::new(
         GovernorConfigBuilder::default()
-            .per_second(5)
-            .burst_size(2)
+            .per_second(50)
+            .burst_size(5)
             .use_headers()
             .finish()
             .unwrap(),
@@ -132,13 +131,13 @@ fn routes(mm: ModelManager) -> Router {
         .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
         .allow_methods([Method::GET]);
 
-    let metrics = HttpMetricsLayerBuilder::new()
-        .with_service_name("axum-demo".to_string())
-        .with_service_version("0.0.1".to_string())
-        .build();
+    // let metrics = HttpMetricsLayerBuilder::new()
+    //     .with_service_name("axum-demo".to_string())
+    //     .with_service_version("0.0.1".to_string())
+    //     .build();
 
     let prom = CustomPrometheusMetrics {
-        ready_endpoint: global::meter("axum-app").u64_counter("foobar").init(),
+        ready_endpoint: global::meter("axum-app").u64_counter("foobar").build(),
     };
     let state = SharedState {
         custom_prometheus_metrics: prom,
@@ -148,7 +147,7 @@ fn routes(mm: ModelManager) -> Router {
     // Build the main Router
     Router::new()
         .merge(routes_health().with_state(state.clone()))
-        .merge(metrics.routes::<SharedState>().with_state(state.clone()))
+        //.merge(metrics.routes::<SharedState>().with_state(state.clone()))
         .merge(routes_hello())
         .merge(routes_login().with_state(state.clone()))
         .merge(routes_static())
@@ -167,7 +166,7 @@ fn routes(mm: ModelManager) -> Router {
         //.layer(timeout_layer)
         .layer(map_response(mw_res_map))
         .layer(OtelLoggerLayer)
-        .layer(metrics)
+    //.layer(metrics)
 }
 
 /// Graceful shutdown to be able to send the last logs to the otlp backend before stopping the application

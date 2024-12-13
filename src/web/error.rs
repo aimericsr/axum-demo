@@ -103,7 +103,7 @@ impl Error {
             JsonValidation(validation_errors) => (
                 StatusCode::BAD_REQUEST,
                 ClientError::JSON_VALDIDATION {
-                    errors: validation_errors.to_owned(),
+                    errors: validation_errors.to_string(),
                 },
             ),
             JsonSchema => (StatusCode::BAD_REQUEST, ClientError::JSON_SCHEMA),
@@ -145,7 +145,8 @@ pub enum ClientError {
     #[error("The route does not exist")]
     ROUTE_NOT_FOUND,
     #[error("The json is not valid, please make sure that the json is valid")]
-    JSON_VALDIDATION { errors: validator::ValidationErrors },
+    JSON_VALDIDATION { errors: String },
+    //JSON_VALDIDATION { errors: validator::ValidationErrors },
     #[error("The json schema is not valid, please make sure to use the right schema")]
     JSON_SCHEMA,
     #[error("The entity {entity} with id {id} does not exist")]

@@ -2,6 +2,7 @@ use crate::crypt::{pwd, EncryptContent};
 use crate::ctx::Ctx;
 use crate::model::user::{UserBmc, UserForLogin};
 use crate::startup::SharedState;
+use crate::web::mw_res_map::HttpApiProblemCustom;
 use crate::web::mw_validate_json::ValidatedJson;
 use crate::web::{self, remove_token_cookie, Error, Result};
 use axum::extract::State;
@@ -46,7 +47,8 @@ pub struct LoginPayload {
     #[validate(length(min = 1, message = "Can not be empty"))]
     pub username: String,
     #[validate(length(min = 1, message = "Can not be empty",))]
-    pub pwd: SecretStringWrapper,
+    pub pwd: String,
+    //pub pwd: SecretStringWrapper,
 }
 
 // Move this part of the code in it's own file
@@ -115,7 +117,8 @@ async fn login(
     pwd::validate_pwd(
         &EncryptContent {
             salt: user.pwd_salt.to_string(),
-            content: pwd_clear.0.expose_secret().clone(),
+            //content: pwd_clear.0.expose_secret().clone(),
+            content: pwd_clear.clone(),
         },
         &pwd,
     )
