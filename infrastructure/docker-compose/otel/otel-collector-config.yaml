@@ -8,15 +8,15 @@ receivers:
       - job_name: 'otel-collector'
         scrape_interval: 10s
         static_configs:
-        - targets: ["0.0.0.0:8888"]
+        - targets: [ "0.0.0.0:8888" ]
       - job_name: axum-demo
         scrape_interval: 15s
         static_configs:
-        - targets: ["web:8080"]
+        - targets: [ "web:8080" ]
 
 processors:
   resourcedetection:
-    detectors: [env, gcp]
+    detectors: [ env, gcp ]
     timeout: 2s
     override: false
   batch:
@@ -39,14 +39,15 @@ extensions:
   pprof:
   zpages:
 
+
 service:
-  extensions: [pprof, zpages, health_check]
+  extensions: [ pprof, zpages, health_check ]
   pipelines:
-    # metrics:
-    #   receivers: [prometheus]
-    #   processors: []
-    #   exporters: [prometheusremotewrite, logging]
+    metrics:
+      receivers: [ otlp ]
+      processors: []
+      exporters: [ prometheusremotewrite, logging ]
     traces:
-      receivers: [otlp]
-      processors: [resourcedetection, batch]
-      exporters: [otlp/jaeger]
+      receivers: [ otlp ]
+      processors: [ resourcedetection, batch ]
+      exporters: [ otlp/jaeger ]

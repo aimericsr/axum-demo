@@ -1,19 +1,29 @@
 use axum_demo::config::get_configuration;
-use axum_demo::observability::tracing::init_subscriber;
+use axum_demo::observability::metrics::{init_metrics, init_tokio_metrics};
+use axum_demo::observability::traces::init_traces;
 use axum_demo::startup::Application;
 
-#[tokio::main]
-async fn main() -> std::io::Result<()> {
-    let config = get_configuration().expect("Failed to read configuration");
+fn main() -> std::io::Result<()> {
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async {
+            let config = get_configuration().expect("Failed to read configuration");
 
-    init_subscriber(&config.otel);
+            let meter = init_metrics(&config.otel);
+            init_tokio_metrics(&meter).await;
 
-    let application = Application::build(config)
-        .await
-        .expect("Failed to build the app");
-    application
-        .run_until_stopped()
-        .await
-        .expect("Failed to lunch the app");
-    Ok(())
+            init_traces(&config.otel);
+
+            let application = Application::build(config, meter)
+                .await
+                .expect("Failed to build the app");
+
+            application
+                .run_until_stopped()
+                .await
+                .expect("Failed to lunch the app");
+            Ok(())
+        })
 }

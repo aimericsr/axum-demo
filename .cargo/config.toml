@@ -15,5 +15,5 @@
 # [build]
 # rustflags = ["-Z", "threads=8"]
 
-
-
+[build]
+rustflags = ["--cfg", "tokio_unstable"]

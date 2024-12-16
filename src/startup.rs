@@ -9,6 +9,7 @@ use crate::web::rest::routes_login::routes as routes_login;
 use crate::web::rest::routes_static::routes as routes_static;
 use crate::web::routes_docs::routes as routes_docs;
 use crate::web::Error as ErrorWeb;
+use axum::error_handling::HandleErrorLayer;
 use axum::extract::connect_info::IntoMakeServiceWithConnectInfo;
 use axum::extract::ConnectInfo;
 use axum::http::HeaderValue;
@@ -16,10 +17,10 @@ use axum::http::Method;
 use axum::middleware::AddExtension;
 use axum::middleware::{from_fn_with_state, map_response};
 use axum::serve::Serve;
+use axum::BoxError;
 use axum::Router;
-use axum_otel_metrics::HttpMetricsLayerBuilder;
-use opentelemetry::global;
 use opentelemetry::metrics::Counter;
+use opentelemetry::metrics::Meter;
 use std::net::SocketAddr;
 use std::result::Result as ResultIO;
 use std::sync::Arc;
@@ -29,6 +30,7 @@ use tower::ServiceBuilder;
 use tower_cookies::CookieManagerLayer;
 use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 use tower_http::cors::CorsLayer;
+use tower_otel::metrics::service::OtelMetricsLayer;
 use tower_otel::traces::http::service::OtelLoggerLayer;
 use tracing::info;
 use tracing::instrument;
@@ -45,10 +47,10 @@ pub struct Application {
 impl Application {
     /// build the axum server with the provided configuration without lunch it
     #[instrument(skip_all)]
-    pub async fn build(config: Config) -> Result<Self> {
+    pub async fn build(config: Config, meter: Meter) -> Result<Self> {
         let mm = setup_db_migrations().await;
 
-        let routes = routes(mm);
+        let routes = routes(mm, meter);
 
         let addr = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.application.port))
             .await
@@ -92,63 +94,57 @@ async fn setup_db_migrations() -> ModelManager {
 
 #[derive(Clone, Debug)]
 pub struct SharedState {
-    pub custom_prometheus_metrics: CustomPrometheusMetrics,
+    pub metric: OtelMetric,
     pub mm: ModelManager,
 }
 
 #[derive(Clone, Debug)]
-pub struct CustomPrometheusMetrics {
-    pub ready_endpoint: Counter<u64>,
+pub struct OtelMetric {
+    pub app_domain_health_user_count: Counter<u64>,
 }
 
-fn routes(mm: ModelManager) -> Router {
-    // Build services for Rate Limit and Timeout
+fn routes(mm: ModelManager, meter: Meter) -> Router {
     let governor_conf = Arc::new(
         GovernorConfigBuilder::default()
-            .per_second(5)
-            .burst_size(2)
+            .per_second(50)
+            .burst_size(5)
             .use_headers()
             .finish()
             .unwrap(),
     );
-    let rate_limit_layer = ServiceBuilder::new()
-        // .layer(HandleErrorLayer::new(|_: BoxError| async move {
-        //     ErrorWeb::RateLimitExceeded
-        // }))
-        .layer(GovernorLayer {
-            config: governor_conf,
-        });
+    let rate_limit_layer = ServiceBuilder::new().layer(GovernorLayer {
+        config: governor_conf,
+    });
 
-    // let timeout_layer = ServiceBuilder::new()
-    //     .layer(HandleErrorLayer::new(|_: BoxError| async {
-    //         ErrorWeb::Timeout
-    //     }))
-    //     .timeout(Duration::from_secs(1));
+    let timeout_layer = ServiceBuilder::new()
+        .layer(HandleErrorLayer::new(|_: BoxError| async {
+            ErrorWeb::Timeout
+        }))
+        .timeout(Duration::from_secs(1));
 
-    let _concurrency_limit = ServiceBuilder::new().concurrency_limit(1);
+    let concurrency_limit_layer = ServiceBuilder::new().concurrency_limit(10_000);
 
-    // Set CORS
     let cors_layer = CorsLayer::new()
         .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
         .allow_methods([Method::GET]);
 
-    let metrics = HttpMetricsLayerBuilder::new()
-        .with_service_name("axum-demo".to_string())
-        .with_service_version("0.0.1".to_string())
+    let app_domain_health_user_count = meter
+        .u64_counter("app.domain.health.user.count")
+        .with_unit("users")
+        .with_description("The number of users requesting the health info of this service.")
         .build();
-
-    let prom = CustomPrometheusMetrics {
-        ready_endpoint: global::meter("axum-app").u64_counter("foobar").init(),
+    let otel_metric = OtelMetric {
+        app_domain_health_user_count,
     };
+
     let state = SharedState {
-        custom_prometheus_metrics: prom,
+        metric: otel_metric,
         mm,
     };
 
     // Build the main Router
     Router::new()
         .merge(routes_health().with_state(state.clone()))
-        .merge(metrics.routes::<SharedState>().with_state(state.clone()))
         .merge(routes_hello())
         .merge(routes_login().with_state(state.clone()))
         .merge(routes_static())
@@ -161,17 +157,15 @@ fn routes(mm: ModelManager) -> Router {
         .fallback(|| async { ErrorWeb::FallBack })
         .layer(cors_layer)
         .layer(rate_limit_layer)
-        // .layer(GovernorLayer {
-        //     config: governor_conf,
-        // })
-        //.layer(timeout_layer)
+        .layer(timeout_layer)
         .layer(map_response(mw_res_map))
         .layer(OtelLoggerLayer)
-        .layer(metrics)
+        .layer(OtelMetricsLayer::new(meter))
+        .layer(concurrency_limit_layer)
 }
 
 /// Graceful shutdown to be able to send the last logs to the otlp backend before stopping the application
-/// SIGINT and SIGTERM are listen, only linux-based system are supported
+/// SIGINT and SIGTERM are listen, only linux-based system are supported as signal management greatly dependens on the OS
 async fn shutdown_signal() {
     #[cfg(unix)]
     let ctrl_c = async {

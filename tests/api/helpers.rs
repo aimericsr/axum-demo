@@ -1,7 +1,7 @@
 use axum_demo::config::Postgres as PostgresConfig;
 use axum_demo::{
     config::{get_configuration, Otel},
-    observability::tracing::init_subscriber,
+    observability::traces::init_traces,
     startup::Application,
 };
 use secrecy::ExposeSecret;
@@ -11,7 +11,7 @@ use uuid::Uuid;
 pub fn tracing(otel: &Otel) -> &'static () {
     static INSTANCE: OnceLock<()> = OnceLock::new();
 
-    INSTANCE.get_or_init(|| init_subscriber(otel))
+    INSTANCE.get_or_init(|| init_traces(otel))
 }
 
 pub struct TestApp {
@@ -71,9 +71,9 @@ impl TestApp {
 pub async fn spawn_app() -> TestApp {
     let configuration = {
         let mut c = get_configuration().expect("Failed to read configuration");
-        c.postgres.db_name = Uuid::new_v4().to_string().into();
+        c.postgres.db_name = Box::new(Uuid::new_v4().to_string()).into();
         c.application.port = 0;
-        c.otel.enabled = true;
+        c.otel.otel_enabled = true;
         c.otel.stdout_enabled = false;
         c
     };
@@ -84,7 +84,20 @@ pub async fn spawn_app() -> TestApp {
     let db_pool = configure_database(&configuration.postgres).await;
     // Launch the application as a background task
 
-    let application = Application::build(configuration)
+    // Init metrics
+    let exporter = opentelemetry_stdout::MetricExporter::default();
+    let reader = opentelemetry_sdk::metrics::PeriodicReader::builder(
+        exporter,
+        opentelemetry_sdk::runtime::Tokio,
+    )
+    .build();
+    let provider = opentelemetry_sdk::metrics::SdkMeterProvider::builder()
+        .with_reader(reader.clone())
+        .build();
+    opentelemetry::global::set_meter_provider(provider);
+    let meter = opentelemetry::global::meter("axum_demo");
+
+    let application = Application::build(configuration, meter)
         .await
         .expect("Failed to build the app");
     let address = format!("http://127.0.0.1:{}", application.port());
@@ -107,6 +120,7 @@ async fn configure_database(config: &PostgresConfig) -> PgPool {
         .execute(format!(r#"CREATE DATABASE "{}";"#, config.db_name.expose_secret()).as_str())
         .await
         .expect("Failed to create database.");
+
     // Migrate database
     connection_info = connection_info.database(config.db_name.expose_secret());
     let connection_pool = PgPool::connect_with(connection_info)
@@ -116,5 +130,6 @@ async fn configure_database(config: &PostgresConfig) -> PgPool {
         .run(&connection_pool)
         .await
         .expect("Failed to migrate the database");
+
     connection_pool
 }

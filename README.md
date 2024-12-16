@@ -80,8 +80,8 @@ With that, we can correlate application traces with prometeuses metrics from kub
 - [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807) compliant for all error message
 - [OpenAPI](https://www.openapis.org) docs
 - Traces export to an otel backend in the [otlp](https://opentelemetry.io) format
+- Push metrics via otlp protocol to otlp collector, then metrics are send to prometheus via prometheusremotewrite
 - Graceful Shutdown for sending last traces before the application stop
-- Expose metrics in the [prometheus](https://prometheus.io) format at /metrics
 - Visualize data with [grafana](https://grafana.com)
 - Timout
 - Rate Limiting

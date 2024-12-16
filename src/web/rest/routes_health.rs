@@ -2,7 +2,6 @@ use std::time::Duration;
 
 use axum::{extract::State, routing::get, Json, Router};
 use hyper::{header, HeaderMap};
-use opentelemetry::KeyValue;
 use tracing::instrument;
 
 use crate::startup::SharedState;
@@ -45,14 +44,8 @@ async fn health() -> HeaderMap {
     )
 )]
 async fn health_ready(State(state): State<SharedState>) -> Json<Vec<String>> {
-    state
-        .custom_prometheus_metrics
-        .ready_endpoint
-        .add(1, &[KeyValue::new("test", "value")]);
-    state
-        .custom_prometheus_metrics
-        .ready_endpoint
-        .add(1, &[KeyValue::new("test2", "value2")]);
+    state.metric.app_domain_health_user_count.add(1, &[]);
+
     Json(vec!["ready".to_owned(), "true".to_owned()])
 }
 
