@@ -26,7 +26,7 @@ pub fn init_metrics(otel: &Otel) -> Meter {
     .with_timeout(Duration::from_secs(10))
     .build();
 
-    let ressources = get_ressources(&otel);
+    let ressources = get_ressources(otel);
 
     let provider = opentelemetry_sdk::metrics::SdkMeterProvider::builder()
         .with_reader(reader.clone())

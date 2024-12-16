@@ -62,7 +62,7 @@ fn get_tracer_provider(otel: &Otel) -> TracerProvider {
     // is done throught this API and not via opentelemetry
     //global::set_text_map_propagator(TraceContextPropagator::new());
 
-    let ressources = get_ressources(&otel);
+    let ressources = get_ressources(otel);
 
     let exporter = opentelemetry_otlp::SpanExporter::builder()
         .with_tonic()
