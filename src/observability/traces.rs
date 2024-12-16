@@ -1,22 +1,10 @@
+use super::get_ressources;
 use crate::config::Otel;
 use core::time::Duration;
 use opentelemetry::trace::TracerProvider as TraceProviderOtel;
-use opentelemetry::KeyValue;
 use opentelemetry_otlp::{ExportConfig, Protocol, WithExportConfig, WithTonicConfig};
-use opentelemetry_resource_detectors::{
-    HostResourceDetector, OsResourceDetector, ProcessResourceDetector,
-};
-use opentelemetry_sdk::resource::{
-    EnvResourceDetector, SdkProvidedResourceDetector, TelemetryResourceDetector,
-};
-
 use opentelemetry_sdk::trace::{RandomIdGenerator, Sampler};
 use opentelemetry_sdk::trace::{SpanLimits, TracerProvider};
-use opentelemetry_sdk::Resource;
-use opentelemetry_semantic_conventions::resource::{
-    SERVICE_NAME, SERVICE_NAMESPACE, SERVICE_VERSION,
-};
-use opentelemetry_semantic_conventions::SCHEMA_URL;
 use tracing::Subscriber;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::{layer::SubscriberExt, Registry};
@@ -74,26 +62,7 @@ fn get_tracer_provider(otel: &Otel) -> TracerProvider {
     // is done throught this API and not via opentelemetry
     //global::set_text_map_propagator(TraceContextPropagator::new());
 
-    let detected_ressources = Resource::from_detectors(
-        Duration::from_millis(10),
-        vec![
-            Box::<EnvResourceDetector>::default(),
-            Box::new(SdkProvidedResourceDetector),
-            Box::new(TelemetryResourceDetector),
-            Box::new(OsResourceDetector),
-            Box::new(ProcessResourceDetector),
-            Box::<HostResourceDetector>::default(),
-        ],
-    );
-
-    let default_ressources = Resource::new(vec![
-        KeyValue::new("service.schema.url", SCHEMA_URL),
-        KeyValue::new(SERVICE_NAME, otel.service_name.clone()),
-        KeyValue::new(SERVICE_VERSION, otel.service_version.clone()),
-        KeyValue::new(SERVICE_NAMESPACE, otel.service_namespace.clone()),
-    ]);
-
-    let ressources = detected_ressources.merge(&default_ressources);
+    let ressources = get_ressources(&otel);
 
     let exporter = opentelemetry_otlp::SpanExporter::builder()
         .with_tonic()

@@ -27,14 +27,14 @@ tokio-metrics = "0.4.0"
 axum = { version = "0.7.9", features = ["tokio"] }
 axum-macros = "0.4.2"
 tower-http = { version = "0.6.2", features = ["fs", "timeout", "cors", "trace"] }
-tower = { version = "0.5.2", features = ["limit"]} 
+tower = { version = "0.5.2", features = ["limit", "timeout"]} 
 tower-cookies = "0.10.0"
 tower_governor = { version = "0.4.2", features = []}
 hyper = { version = "1.5.1", features = ["full"]}
 http = "1.2.0"
 futures = "0.3.31"
 # -- Error
-thiserror = "2"
+thiserror = "2.0.7"
 problemdetails = { version = "0.4.1", features = ["axum"] }
 # -- Serde
 serde = { version = "1", features = ["derive"] }
@@ -45,7 +45,7 @@ sqlx = { version = "0.7.4", features = [ "runtime-tokio-rustls", "postgres", "uu
 sqlb = "0.4.0"
 # -- Docs
 utoipa = { version= "5.2.0", features = ["axum_extras"] }
-utoipa-swagger-ui = { version= "8.0.3", features = ["axum"] }
+utoipa-swagger-ui = { version= "8.0.3", features = ["axum", "reqwest"] }
 utoipa-redoc = { version= "5.0.0", features = ["axum"] }
 utoipa-rapidoc = { version= "5.0.0", features = ["axum"] }
 utoipa-scalar = { version = "0.2.0", features = ["axum"] }

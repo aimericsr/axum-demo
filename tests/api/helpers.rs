@@ -84,7 +84,20 @@ pub async fn spawn_app() -> TestApp {
     let db_pool = configure_database(&configuration.postgres).await;
     // Launch the application as a background task
 
-    let application = Application::build(configuration)
+    // Init metrics
+    let exporter = opentelemetry_stdout::MetricExporter::default();
+    let reader = opentelemetry_sdk::metrics::PeriodicReader::builder(
+        exporter,
+        opentelemetry_sdk::runtime::Tokio,
+    )
+    .build();
+    let provider = opentelemetry_sdk::metrics::SdkMeterProvider::builder()
+        .with_reader(reader.clone())
+        .build();
+    opentelemetry::global::set_meter_provider(provider);
+    let meter = opentelemetry::global::meter("axum_demo");
+
+    let application = Application::build(configuration, meter)
         .await
         .expect("Failed to build the app");
     let address = format!("http://127.0.0.1:{}", application.port());

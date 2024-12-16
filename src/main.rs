@@ -11,12 +11,12 @@ fn main() -> std::io::Result<()> {
         .block_on(async {
             let config = get_configuration().expect("Failed to read configuration");
 
-            let meter = init_metrics();
-            init_tokio_metrics(meter).await;
+            let meter = init_metrics(&config.otel);
+            init_tokio_metrics(&meter).await;
 
             init_traces(&config.otel);
 
-            let application = Application::build(config)
+            let application = Application::build(config, meter)
                 .await
                 .expect("Failed to build the app");
 

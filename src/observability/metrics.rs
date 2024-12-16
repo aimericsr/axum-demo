@@ -1,9 +1,10 @@
+use super::get_ressources;
+use crate::config::Otel;
 use opentelemetry::{metrics::Meter, KeyValue};
 use opentelemetry_otlp::{ExportConfig, Protocol, WithExportConfig};
-use opentelemetry_sdk::Resource;
 use std::time::Duration;
 
-pub fn init_metrics() -> Meter {
+pub fn init_metrics(otel: &Otel) -> Meter {
     //let exporter = opentelemetry_stdout::MetricExporter::default();
 
     let exporter = opentelemetry_otlp::MetricExporter::builder()
@@ -25,26 +26,25 @@ pub fn init_metrics() -> Meter {
     .with_timeout(Duration::from_secs(10))
     .build();
 
+    let ressources = get_ressources(&otel);
+
     let provider = opentelemetry_sdk::metrics::SdkMeterProvider::builder()
-        .with_reader(reader)
-        .with_resource(Resource::new(vec![KeyValue::new(
-            "service.name",
-            "axum-demo",
-        )]))
+        .with_reader(reader.clone())
+        .with_resource(ressources)
         .build();
 
-    opentelemetry::global::set_meter_provider(provider.clone());
+    opentelemetry::global::set_meter_provider(provider);
 
     opentelemetry::global::meter("axum_demo")
 }
 
-pub async fn init_tokio_metrics(meter: Meter) {
+pub async fn init_tokio_metrics(meter: &Meter) {
     let tokio_metrics = tokio::runtime::Handle::current().metrics();
 
     // Stable tokio metrics
     let tokio_metrics_num_workers = tokio_metrics.clone();
     meter
-        .f64_observable_gauge("tokio.runtime.worker_threads.count")
+        .f64_observable_up_down_counter("tokio.runtime.worker_threads.count")
         .with_unit("threads")
         .with_description("The number of worker threads in the Tokio runtime that are actively driving the readiness of futures.")
         .with_callback(move |observer| {
@@ -60,7 +60,7 @@ pub async fn init_tokio_metrics(meter: Meter) {
 
     let tokio_metrics_num_alive_tasks = tokio_metrics.clone();
     meter
-        .f64_observable_gauge("tokio.runtime.tasks.active.count")
+        .f64_observable_up_down_counter("tokio.runtime.tasks.active.count")
         .with_unit("tasks")
         .with_description("The number of tasks currently alive and managed by the Tokio runtime, including all tasks that are running or scheduled.")
         .with_callback(move |observer| {
@@ -73,7 +73,7 @@ pub async fn init_tokio_metrics(meter: Meter) {
 
     let tokio_metrics_global_queue_depth = tokio_metrics.clone();
     meter
-        .f64_observable_gauge("tokio.runtime.queue.global.depth")
+        .f64_observable_up_down_counter("tokio.runtime.queue.global.depth")
         .with_unit("tasks")
         .with_description("The number of tasks waiting in the global Tokio queue, indicating potential contention for runtime worker threads.")
         .with_callback(move |observer| {

@@ -1,11 +1,11 @@
-# Install cargo-chef
-#FROM clux/muslrust:1.80.0-stable AS chef
+# Statically linked : Alpine, Scratch
+FROM clux/muslrust:1.83.0-stable AS chef
 #FROM rust:1.82-alpine3.19 AS chef
-FROM lukemathwalker/cargo-chef:latest-rust-1.82.0-alpine3.20 AS chef
+#FROM lukemathwalker/cargo-chef:latest-rust-1.82.0-alpine3.20 AS chef
 USER root
-RUN rustup target add x86_64-unknown-linux-gnu
-RUN cargo install cargo-chef@0.1.67
-RUN apt install -y x86_64-linux-gnu-gcc
+#RUN rustup target add x86_64-unknown-linux-gnu
+RUN cargo install cargo-chef
+#RUN apt install -y x86_64-linux-gnu-gcc
 WORKDIR /app
 
 # Install dependencies
@@ -31,12 +31,12 @@ COPY .env .
 USER myuser
 CMD ["./axum-demo"]
 
-# # Scratch
-# FROM scratch AS runtime
-# WORKDIR "/usr/local/bin/"
-# COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/axum-demo .
-# COPY .env .
-# ENV TZ=Europe/Paris
-# CMD ["./axum-demo"]
+# # # Scratch
+# # FROM scratch AS runtime
+# # WORKDIR "/usr/local/bin/"
+# # COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/axum-demo .
+# # COPY .env .
+# # ENV TZ=Europe/Paris
+# # CMD ["./axum-demo"]
 
 
