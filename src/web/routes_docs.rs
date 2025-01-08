@@ -36,10 +36,17 @@ use utoipa_swagger_ui::SwaggerUi;
 )]
 struct ApiDoc;
 
+/// Serving multiples format of API documentation :
+/// - /swagger-ui
+/// - /rapidoc
+/// - /redoc
+/// - /scalar
 pub fn routes() -> Router {
+    let api_doc = ApiDoc::openapi();
+
     Router::new()
-        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
-        .merge(Redoc::with_url("/redoc", ApiDoc::openapi()))
+        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", api_doc.clone()))
         .merge(RapiDoc::new("/api-docs/openapi.json").path("/rapidoc"))
-        .merge(Scalar::with_url("/scalar", ApiDoc::openapi()))
+        .merge(Redoc::with_url("/redoc", api_doc.clone()))
+        .merge(Scalar::with_url("/scalar", api_doc))
 }

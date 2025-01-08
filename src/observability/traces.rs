@@ -3,6 +3,7 @@ use crate::config::Otel;
 use core::time::Duration;
 use opentelemetry::trace::TracerProvider as TraceProviderOtel;
 use opentelemetry_otlp::{ExportConfig, Protocol, WithExportConfig, WithTonicConfig};
+use opentelemetry_sdk::propagation::TraceContextPropagator;
 use opentelemetry_sdk::trace::{RandomIdGenerator, Sampler};
 use opentelemetry_sdk::trace::{SpanLimits, TracerProvider};
 use tracing::Subscriber;
@@ -29,16 +30,16 @@ fn get_subscriber(otel: &Otel) -> impl Subscriber + Sync + Send {
         None
     };
 
-    let otel_stdout_layer = if otel.stdout_enabled {
-        let provider = TracerProvider::builder()
-            .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
-            .build();
-        let tracer = provider.tracer("axum-app");
-        let opentelemetry_layer = tracing_opentelemetry::layer().with_tracer(tracer);
-        Some(opentelemetry_layer)
-    } else {
-        None
-    };
+    // let otel_stdout_layer = if otel.stdout_enabled {
+    //     let provider = TracerProvider::builder()
+    //         .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
+    //         .build();
+    //     let tracer = provider.tracer("axum-app");
+    //     let opentelemetry_layer = tracing_opentelemetry::layer().with_tracer(tracer);
+    //     Some(opentelemetry_layer)
+    // } else {
+    //     None
+    // };
 
     let otel_layer = if otel.otel_enabled {
         let provider = get_tracer_provider(otel);
@@ -52,7 +53,7 @@ fn get_subscriber(otel: &Otel) -> impl Subscriber + Sync + Send {
     Registry::default()
         .with(env_filter)
         .with(stdout_json_layer)
-        .with(otel_stdout_layer)
+        //.with(otel_stdout_layer)
         .with(otel_layer)
 }
 
@@ -60,7 +61,7 @@ fn get_subscriber(otel: &Otel) -> impl Subscriber + Sync + Send {
 fn get_tracer_provider(otel: &Otel) -> TracerProvider {
     // For the moment, user code only interact with the Tracing API so the propagation
     // is done throught this API and not via opentelemetry
-    //global::set_text_map_propagator(TraceContextPropagator::new());
+    opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
 
     let ressources = get_ressources(otel);
 

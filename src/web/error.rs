@@ -3,6 +3,7 @@ use std::sync::Arc;
 use crate::{crypt, model, web};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use http::{header, HeaderMap};
 use serde::Serialize;
 use thiserror::Error;
 use tracing::error;
@@ -153,4 +154,115 @@ pub enum ClientError {
     ENTITY_NOT_FOUND { entity: &'static str, id: i64 },
     #[error("Service error, please contact the administrator")]
     SERVICE_ERROR,
+}
+
+// RFC 7807
+#[derive(Debug, Serialize)]
+pub struct ProblemDetails {
+    pub type_url: String,
+    pub title: String,
+    pub status: u16,
+    pub detail: Option<String>,
+    pub instance: Option<String>,
+    #[serde(flatten)]
+    pub extensions: std::collections::HashMap<String, serde_json::Value>,
+}
+
+impl IntoResponse for ProblemDetails {
+    fn into_response(self) -> Response {
+        let body = match serde_json::to_string(&self) {
+            Ok(json) => json,
+            Err(_) => {
+                return (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error")
+                    .into_response();
+            }
+        };
+
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            header::CONTENT_TYPE,
+            header::HeaderValue::from_static("application/problem+json"),
+        );
+
+        // Set the response status and body
+        (
+            StatusCode::from_u16(self.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR),
+            headers,
+            body,
+        )
+            .into_response()
+    }
+}
+
+pub struct ProblemDetailsBuilder {
+    type_url: Option<String>,
+    title: Option<String>,
+    status: Option<StatusCode>,
+    detail: Option<String>,
+    instance: Option<String>,
+    extensions: std::collections::HashMap<String, serde_json::Value>,
+}
+
+impl ProblemDetailsBuilder {
+    pub fn new() -> Self {
+        Self {
+            type_url: None,
+            title: None,
+            status: None,
+            detail: None,
+            instance: None,
+            extensions: std::collections::HashMap::new(),
+        }
+    }
+
+    pub fn type_url(mut self, type_url: impl Into<String>) -> Self {
+        self.type_url = Some(type_url.into());
+        self
+    }
+
+    pub fn title(mut self, title: impl Into<String>) -> Self {
+        self.title = Some(title.into());
+        self
+    }
+
+    pub fn status(mut self, status: impl Into<StatusCode>) -> Self {
+        self.status = Some(status.into());
+        self
+    }
+
+    pub fn detail(mut self, detail: impl Into<String>) -> Self {
+        self.detail = Some(detail.into());
+        self
+    }
+
+    pub fn instance(mut self, instance: impl Into<String>) -> Self {
+        self.instance = Some(instance.into());
+        self
+    }
+
+    pub fn extension(
+        mut self,
+        key: impl Into<String>,
+        value: impl Into<serde_json::Value>,
+    ) -> Self {
+        self.extensions.insert(key.into(), value.into());
+        self
+    }
+
+    pub fn build(self) -> core::result::Result<ProblemDetails, &'static str> {
+        if let (Some(type_url), Some(title), Some(status)) =
+            (self.type_url, self.title, self.status)
+        {
+            Ok(ProblemDetails {
+                type_url,
+                title,
+                status: status.as_u16(),
+                detail: self.detail,
+                instance: self.instance,
+                extensions: self.extensions,
+            })
+        } else {
+            Err("Missing required fields: type_url, title, and status")
+        }
+    }
 }

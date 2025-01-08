@@ -14,7 +14,7 @@ pub fn routes() -> Router {
 fn sub_routes() -> Router {
     Router::new()
         .route("/", get(hello))
-        .route("/:name", get(hello_name))
+        .route("/{name}", get(hello_name))
 }
 
 #[utoipa::path(

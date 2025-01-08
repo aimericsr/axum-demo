@@ -1,16 +1,14 @@
-use std::sync::Arc;
-
-use crate::web;
+use crate::web::error::{ClientError, Error, ProblemDetailsBuilder};
 use axum::body::Body;
-use axum::extract::Host;
 use axum::http::Uri;
 use axum::response::{IntoResponse, Response};
+use axum_extra::extract::Host;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-//use tower_otel::traces::helper::get_current_otel_trace_id;
+use std::sync::Arc;
+use tower_otel::traces::get_current_otel_trace_id;
 use tracing::{error, info};
 use utoipa::ToSchema;
-use web::Error;
 
 /// Map all web:Error to web:ClientError
 pub async fn mw_res_map(host: Host, uri: Uri, res: Response<Body>) -> impl IntoResponse {
@@ -27,8 +25,8 @@ pub async fn mw_res_map(host: Host, uri: Uri, res: Response<Body>) -> impl IntoR
         .as_ref()
         .map(|(status_code, client_error)| {
             // Retreive the current opentelemetry trace id
-            //let trace_id = get_current_otel_trace_id().unwrap_or("unknown".to_string());
-            let trace_id = "unknown".to_string();
+            let trace_id = get_current_otel_trace_id().unwrap_or("unknown".to_string());
+            //let trace_id = "unknown".to_string();
 
             // Set the message(enum name) and detail(Display implementation)
             let client_error_message = client_error.as_ref();
@@ -62,20 +60,26 @@ pub async fn mw_res_map(host: Host, uri: Uri, res: Response<Body>) -> impl IntoR
             }
 
             match client_error {
-                web::ClientError::JSON_VALDIDATION { errors } => problemdetails::new(status_code)
-                    .with_title(client_error_message)
-                    .with_detail(client_error_detail)
-                    .with_type(type_url)
-                    .with_instance(uri.to_string())
-                    .with_value("trace_id", trace_id)
-                    .with_value("detail_validation", errors.to_string())
+                ClientError::JSON_VALDIDATION { errors } => ProblemDetailsBuilder::new()
+                    .type_url(type_url)
+                    .title("title")
+                    .status(status_code)
+                    .detail(client_error_detail)
+                    .instance(uri.to_string())
+                    .extension("trace_id", trace_id)
+                    .extension("detail_validation", errors.to_string())
+                    .build()
+                    .unwrap()
                     .into_response(),
-                _ => problemdetails::new(status_code)
-                    .with_title(client_error_message)
-                    .with_detail(client_error_detail)
-                    .with_type(type_url)
-                    .with_instance(uri.to_string())
-                    .with_value("trace_id", trace_id)
+                _ => ProblemDetailsBuilder::new()
+                    .type_url(type_url)
+                    .title("title")
+                    .status(status_code)
+                    .detail(client_error_detail)
+                    .instance(uri.to_string())
+                    .extension("trace_id", trace_id)
+                    .build()
+                    .unwrap()
                     .into_response(),
             }
         });

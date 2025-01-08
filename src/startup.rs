@@ -25,13 +25,15 @@ use std::net::SocketAddr;
 use std::result::Result as ResultIO;
 use std::sync::Arc;
 use std::time::Duration;
+use tokio::net::TcpListener;
 use tokio::signal;
 use tower::ServiceBuilder;
 use tower_cookies::CookieManagerLayer;
 use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 use tower_http::cors::CorsLayer;
-use tower_otel::metrics::service::OtelMetricsLayer;
-use tower_otel::traces::http::service::OtelLoggerLayer;
+use tower_otel::metrics::axum::OtelMetricsLayer;
+
+use tower_otel::traces::axum::OtelLoggerLayer;
 use tracing::info;
 use tracing::instrument;
 
@@ -39,6 +41,7 @@ use tracing::instrument;
 pub struct Application {
     port: u16,
     server: Serve<
+        TcpListener,
         IntoMakeServiceWithConnectInfo<Router, SocketAddr>,
         AddExtension<Router, ConnectInfo<SocketAddr>>,
     >,
@@ -55,6 +58,7 @@ impl Application {
         let addr = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.application.port))
             .await
             .unwrap();
+
         let port = addr.local_addr().unwrap().port();
 
         let server = axum::serve(
@@ -148,7 +152,6 @@ fn routes(mm: ModelManager, meter: Meter) -> Router {
         .merge(routes_hello())
         .merge(routes_login().with_state(state.clone()))
         .merge(routes_static())
-        .merge(routes_docs())
         .layer(from_fn_with_state(
             state.mm.clone(),
             web::mw_auth::mw_ctx_resolve,
@@ -157,6 +160,7 @@ fn routes(mm: ModelManager, meter: Meter) -> Router {
         .fallback(|| async { ErrorWeb::FallBack })
         .layer(cors_layer)
         .layer(rate_limit_layer)
+        .merge(routes_docs())
         .layer(timeout_layer)
         .layer(map_response(mw_res_map))
         .layer(OtelLoggerLayer)

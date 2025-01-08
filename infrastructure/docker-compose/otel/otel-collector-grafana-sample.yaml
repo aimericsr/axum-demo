@@ -1,0 +1,37 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+
+
+processors:
+  resourcedetection:
+    detectors: [ env ]
+    timeout: 2s
+    override: false
+  batch:
+    timeout: 5s
+
+exporters:
+  otlphttp:
+    endpoint: "<grafana-server>:4318"
+    headers:
+      Authorization: "Bearer <your-token>"
+
+extensions:
+  health_check:
+  pprof:
+  zpages:
+
+
+service:
+  extensions: [ pprof, zpages, health_check ]
+  pipelines:
+    metrics:
+      receivers: [ otlp ]
+      processors: [ resourcedetection, batch ]
+      exporters: [ otlphttp, logging ]
+    traces:
+      receivers: [ otlp ]
+      processors: [ resourcedetection, batch ]
+      exporters: [ otlphttp, logging ]
