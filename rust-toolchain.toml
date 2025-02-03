@@ -1,2 +1,6 @@
 [toolchain]
-channel = "1.75.0"
+# When updating this, also update:
+# - .github/workflows/audit-workflow.yaml
+# - .github/workflows/test-lint-workflow.yaml
+# - Cargo.toml
+channel = "1.81"

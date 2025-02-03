@@ -1,4 +1,4 @@
-use crate::config::Otel;
+use crate::config::Tracing;
 use opentelemetry::KeyValue;
 use opentelemetry_resource_detectors::{
     HostResourceDetector, OsResourceDetector, ProcessResourceDetector,
@@ -13,7 +13,7 @@ use opentelemetry_semantic_conventions::resource::{
 use opentelemetry_semantic_conventions::SCHEMA_URL;
 use std::time::Duration;
 
-pub(crate) fn get_ressources(otel: &Otel) -> Resource {
+pub(crate) fn get_ressources(otel: &Tracing) -> Resource {
     let detected_ressources = Resource::from_detectors(
         Duration::from_millis(10),
         vec![
@@ -36,7 +36,7 @@ pub(crate) fn get_ressources(otel: &Otel) -> Resource {
     detected_ressources.merge(&default_ressources)
 }
 
-/// Handle the state of the runtime by
+/// Handle sending metrics to different destinations using the OTEL format (stdout and via the netowork)
 pub mod metrics;
 /// Handle sending traces to different destinations using the OTEL format (stdout and via the netowork)
 pub mod traces;

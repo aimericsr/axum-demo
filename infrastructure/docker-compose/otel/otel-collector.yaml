@@ -13,10 +13,16 @@ processors:
     timeout: 5s
 
 exporters:
-  otlphttp:
-    endpoint: "<grafana-server>:4318"
-    headers:
-      Authorization: "Bearer <your-token>"
+  logging:
+    loglevel: debug
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+  prometheusremotewrite:
+    endpoint: prometheus:1234
+    tls:
+      insecure: true
 
 extensions:
   health_check:
@@ -30,8 +36,8 @@ service:
     metrics:
       receivers: [ otlp ]
       processors: [ resourcedetection, batch ]
-      exporters: [ otlphttp, logging ]
+      exporters: [ prometheusremotewrite, logging ]
     traces:
       receivers: [ otlp ]
       processors: [ resourcedetection, batch ]
-      exporters: [ otlphttp, logging ]
+      exporters: [ otlp/jaeger, logging ]

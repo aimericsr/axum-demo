@@ -2,7 +2,7 @@ use crate::crypt::{pwd, EncryptContent};
 use crate::ctx::Ctx;
 use crate::model::user::{UserBmc, UserForLogin};
 use crate::startup::SharedState;
-use crate::web::mw_res_map::HttpApiProblemCustom;
+use crate::web::error::ProblemDetails;
 use crate::web::mw_validate_json::ValidatedJson;
 use crate::web::{self, remove_token_cookie, Error, Result};
 use axum::extract::State;
@@ -84,8 +84,8 @@ impl ValidateLength<usize> for SecretStringWrapper {
     request_body = LoginPayload,
     responses(
         (status = 200, description = "Login successfully", body = LoginResponse),
-        (status = 403, description = "Login Fail", body = HttpApiProblemCustom),
-        (status = 500, description = "Internal Server Error", body = HttpApiProblemCustom)
+        (status = 403, description = "Login Fail", body = ProblemDetails),
+        (status = 500, description = "Internal Server Error", body = ProblemDetails)
     ),
     security(
         ("api_key" = ["aaa","bb"])

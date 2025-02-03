@@ -13,10 +13,19 @@ COPY . .
 RUN cargo build --bin axum-demo
 
 FROM debian:bookworm-slim AS runtime
-WORKDIR /app
+WORKDIR /usr/local/bin
 COPY --from=builder /app/target/debug/axum-demo /usr/local/bin
 COPY .env .
 RUN apt update
-RUN apt install strace
-CMD ["strace -f /usr/local/bin/axum-demo"]
-#CMD ["/bin/bash"]
+RUN apt install -y strace procps htop binutils
+# lscpu, readelf, ps
+#CMD ["cargo", "watch", "-x", "build --bin axum-demo", "-x", "run"]
+#CMD [ "sleep 10000 &" ]
+
+CMD [ "/bin/bash" ]
+
+# docker build -t axum-demo:v0.0.1 -f Dockerfile.dev . 
+# docker run -p 8080:8080 -it axum-demo:v0.0.1
+# docker run -v $(pwd) -v $(pwd)/target:/app/target -p 8080:8080 -it axum-demo:v0.0.1
+
+#strace -f /usr/local/bin/axum-demo

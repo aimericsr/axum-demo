@@ -4,11 +4,9 @@ use axum::http::Uri;
 use axum::response::{IntoResponse, Response};
 use axum_extra::extract::Host;
 use regex::Regex;
-use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tower_otel::traces::get_current_otel_trace_id;
 use tracing::{error, info};
-use utoipa::ToSchema;
 
 /// Map all web:Error to web:ClientError
 pub async fn mw_res_map(host: Host, uri: Uri, res: Response<Body>) -> impl IntoResponse {
@@ -26,7 +24,6 @@ pub async fn mw_res_map(host: Host, uri: Uri, res: Response<Body>) -> impl IntoR
         .map(|(status_code, client_error)| {
             // Retreive the current opentelemetry trace id
             let trace_id = get_current_otel_trace_id().unwrap_or("unknown".to_string());
-            //let trace_id = "unknown".to_string();
 
             // Set the message(enum name) and detail(Display implementation)
             let client_error_message = client_error.as_ref();
@@ -66,10 +63,9 @@ pub async fn mw_res_map(host: Host, uri: Uri, res: Response<Body>) -> impl IntoR
                     .status(status_code)
                     .detail(client_error_detail)
                     .instance(uri.to_string())
-                    .extension("trace_id", trace_id)
+                    .trace_id(trace_id)
                     .extension("detail_validation", errors.to_string())
                     .build()
-                    .unwrap()
                     .into_response(),
                 _ => ProblemDetailsBuilder::new()
                     .type_url(type_url)
@@ -77,29 +73,12 @@ pub async fn mw_res_map(host: Host, uri: Uri, res: Response<Body>) -> impl IntoR
                     .status(status_code)
                     .detail(client_error_detail)
                     .instance(uri.to_string())
-                    .extension("trace_id", trace_id)
+                    .trace_id(trace_id)
                     .build()
-                    .unwrap()
                     .into_response(),
             }
         });
     error_response.unwrap_or(res)
-}
-
-#[derive(Debug, Serialize, Deserialize, ToSchema)]
-pub struct HttpApiProblemCustom {
-    #[schema(example = "http://localhost:8080/swagger-ui/#/Account/account_login")]
-    r#type: String,
-    #[schema(example = 404)]
-    status: i32,
-    #[schema(example = "JSON_VALDIDATION")]
-    title: String,
-    #[schema(example = "JSON_VALDIDATION_DETAIL")]
-    detail: String,
-    #[schema(example = "/account/login")]
-    instance: String,
-    #[schema(example = "afb61afc9b97368003e84351d3eb7586")]
-    trace_id: String,
 }
 
 fn to_open_api_deeplink(input: &str) -> String {

@@ -1,17 +1,15 @@
 [package]
 name = "axum-demo"
-version = "1.0.1"
+version = "0.0.1"
 edition = "2021"
-rust-version = "1.74"
+rust-version = "1.81"
 authors = ["Aimeric Sorin <aimeric.sorin@gmail.com>"]
 license = "Apache-2.0"
 description = "Basic rust web api to demonstrate axum framework capabilities. Based on https://github.com/rust10x/rust-web-app"
 repository = "https://github.com/aimericsr/axum-demo"
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
 path = "src/lib.rs"
-#doctest = false
 
 [[bin]]
 name = "axum-demo"
@@ -22,7 +20,7 @@ strip = "symbols"
 
 [dependencies]
 # -- Http api
-tokio = { version = "1.41", features = ["signal", "rt-multi-thread"] }
+tokio = { version = "1", features = ["signal", "rt-multi-thread"] }
 tokio-metrics = "0.4"
 axum = "0.8"
 axum-macros = "0.5"
@@ -30,13 +28,12 @@ axum-extra = "0.10"
 tower = { version = "0.5", features = ["limit", "timeout"]} 
 tower-http = { version = "0.6", features = ["fs", "timeout", "cors", "trace"] }
 tower-cookies = "0.11"
-tower_governor = { version = "0.6", features = []}
-hyper = { version = "1", features = ["full"]}
+tower_governor = "0.6"
+hyper = "1"
 http = "1"
 futures = "0.3"
 # -- Error
 thiserror = "2"
-problemdetails = { version = "0.4", features = ["axum"] }
 # -- Serde
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -46,12 +43,11 @@ sqlx = { version = "0.7", features = [ "runtime-tokio-rustls", "postgres", "uuid
 sqlb = "0.4"
 # -- Docs
 utoipa = { version = "5.3.1", features = ["axum_extras"] }
-utoipa-swagger-ui = { version = "8.1.1", features = ["axum", "reqwest"] }
-utoipa-redoc = { version = "5.0.1", features = ["axum"] }
-utoipa-rapidoc = { version = "5.0.1", features = ["axum"] }
-utoipa-scalar = { version = "0.2.1", features = ["axum"] }
-# -- Metrics
-axum-otel-metrics = "0.9.1"
+utoipa-swagger-ui = { version = "9", features = ["axum", "reqwest"] }
+utoipa-redoc = { version = "6", features = ["axum"] }
+utoipa-rapidoc = { version = "6", features = ["axum"] }
+utoipa-scalar = { version = "0.3", features = ["axum"] }
+utoipauto = "0.2.0"
 # -- Tracing
 tracing = "0.1"
 tracing-log = "0.2"
@@ -64,10 +60,10 @@ opentelemetry-stdout = "0.27"
 opentelemetry-semantic-conventions = "0.27"
 opentelemetry-resource-detectors = "0.6"
 tracing-opentelemetry = "0.28"
-tower-otel = { git = "https://github.com/aimericsr/tower-otel" }
-#tower-otel = { path = "../tower-otel" }
+#tower-otel = { git = "https://github.com/aimericsr/tower-otel" }
+tower-otel = { path = "../tower-otel" }
 # -- Crypt & Encoding
-rand = "0.8"
+rand = "0.9"
 hmac = "0.12"
 sha2 = "0.10"
 base64-url = "3"
@@ -76,11 +72,12 @@ time = "0.3"
 strum_macros = "0.26"
 uuid = { version = "1", features = ["v4", "fast-rng"] }
 secrecy = "0.10" 
-validator = "0.19"
-validator_derive = "0.19"
+validator = "0.20"
+validator_derive = "0.20"
 regex = "1"
 dotenvy = "0.15"
 redact = { version = "0.1", features = ["serde"] }
+tracing-appender = "0.2.3"
 
 [dev-dependencies]
 anyhow = "1"

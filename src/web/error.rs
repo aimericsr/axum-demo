@@ -1,10 +1,9 @@
-use std::sync::Arc;
-
 use crate::{crypt, model, web};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use http::{header, HeaderMap};
 use serde::Serialize;
+use std::sync::Arc;
 use thiserror::Error;
 use tracing::error;
 use utoipa::ToSchema;
@@ -156,19 +155,47 @@ pub enum ClientError {
     SERVICE_ERROR,
 }
 
-// RFC 7807
-#[derive(Debug, Serialize)]
+/// Represents a problem details object as defined by RFC 7807.
+/// This structure provides a standardized format for returning error details
+/// in HTTP responses, including additional custom fields.
+#[derive(Debug, Serialize, ToSchema)]
 pub struct ProblemDetails {
-    pub type_url: String,
-    pub title: String,
-    pub status: u16,
-    pub detail: Option<String>,
-    pub instance: Option<String>,
+    /// A URI reference that identifies the problem type.
+    /// This should point to a human-readable document about the error type.
+    #[schema(example = "http://localhost:8080/swagger-ui/#/Account/account_login")]
+    type_url: String,
+
+    /// A short, human-readable summary of the problem type.
+    #[schema(example = "JSON_VALIDATION")]
+    title: String,
+
+    /// The HTTP status code applicable to the problem, as an integer.
+    #[schema(example = 404)]
+    status: u16,
+
+    /// An optional detailed, human-readable explanation specific to the occurrence of the problem.
+    #[schema(example = "JSON_VALIDATION_DETAIL")]
+    detail: Option<String>,
+
+    /// An optional URI reference that identifies the specific occurrence of the problem.
+    #[schema(example = "/account/login")]
+    instance: Option<String>,
+
+    /// A map for including custom fields not defined in RFC 7807.
     #[serde(flatten)]
-    pub extensions: std::collections::HashMap<String, serde_json::Value>,
+    extensions: std::collections::HashMap<String, serde_json::Value>,
+
+    /// A custom field representing the trace ID for correlating logs or tracking issues.
+    #[schema(example = "afb61afc9b97368003e84351d3eb7586")]
+    trace_id: String,
 }
 
 impl IntoResponse for ProblemDetails {
+    /// Converts the `ProblemDetails` object into an HTTP response with a
+    /// `Content-Type` of `application/problem+json`.
+    ///
+    /// # Returns
+    /// - An HTTP response with the serialized problem details as the body.
     fn into_response(self) -> Response {
         let body = match serde_json::to_string(&self) {
             Ok(json) => json,
@@ -184,7 +211,6 @@ impl IntoResponse for ProblemDetails {
             header::HeaderValue::from_static("application/problem+json"),
         );
 
-        // Set the response status and body
         (
             StatusCode::from_u16(self.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR),
             headers,
@@ -194,6 +220,9 @@ impl IntoResponse for ProblemDetails {
     }
 }
 
+/// A builder for constructing `ProblemDetails` objects.
+/// This follows the builder pattern for optional configuration and ease of use.
+#[derive(Debug)]
 pub struct ProblemDetailsBuilder {
     type_url: Option<String>,
     title: Option<String>,
@@ -201,9 +230,17 @@ pub struct ProblemDetailsBuilder {
     detail: Option<String>,
     instance: Option<String>,
     extensions: std::collections::HashMap<String, serde_json::Value>,
+    trace_id: Option<String>,
+}
+
+impl Default for ProblemDetailsBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ProblemDetailsBuilder {
+    /// Creates a new `ProblemDetailsBuilder` instance with no fields set.
     pub fn new() -> Self {
         Self {
             type_url: None,
@@ -212,34 +249,41 @@ impl ProblemDetailsBuilder {
             detail: None,
             instance: None,
             extensions: std::collections::HashMap::new(),
+            trace_id: None,
         }
     }
 
+    /// Sets the `type_url` field.
     pub fn type_url(mut self, type_url: impl Into<String>) -> Self {
         self.type_url = Some(type_url.into());
         self
     }
 
+    /// Sets the `title` field.
     pub fn title(mut self, title: impl Into<String>) -> Self {
         self.title = Some(title.into());
         self
     }
 
+    /// Sets the `status` field.
     pub fn status(mut self, status: impl Into<StatusCode>) -> Self {
         self.status = Some(status.into());
         self
     }
 
+    /// Sets the `detail` field.
     pub fn detail(mut self, detail: impl Into<String>) -> Self {
         self.detail = Some(detail.into());
         self
     }
 
+    /// Sets the `instance` field.
     pub fn instance(mut self, instance: impl Into<String>) -> Self {
         self.instance = Some(instance.into());
         self
     }
 
+    /// Adds a custom extension field.
     pub fn extension(
         mut self,
         key: impl Into<String>,
@@ -249,20 +293,31 @@ impl ProblemDetailsBuilder {
         self
     }
 
-    pub fn build(self) -> core::result::Result<ProblemDetails, &'static str> {
-        if let (Some(type_url), Some(title), Some(status)) =
-            (self.type_url, self.title, self.status)
+    /// Sets the `trace_id` field.
+    pub fn trace_id(mut self, trace_id: impl Into<String>) -> Self {
+        self.trace_id = Some(trace_id.into());
+        self
+    }
+
+    /// Builds the `ProblemDetails` object.
+    ///
+    /// # Panics
+    /// Panics if any of the required fields (`type_url`, `title`, `status`, or `trace_id`) are missing.
+    pub fn build(self) -> ProblemDetails {
+        if let (Some(type_url), Some(title), Some(status), Some(trace_id)) =
+            (self.type_url, self.title, self.status, self.trace_id)
         {
-            Ok(ProblemDetails {
+            ProblemDetails {
                 type_url,
                 title,
                 status: status.as_u16(),
                 detail: self.detail,
                 instance: self.instance,
                 extensions: self.extensions,
-            })
+                trace_id,
+            }
         } else {
-            Err("Missing required fields: type_url, title, and status")
+            panic!("Missing required fields: type_url, title, status, and trace_id")
         }
     }
 }
