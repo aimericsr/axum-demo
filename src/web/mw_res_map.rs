@@ -5,7 +5,7 @@ use axum::response::{IntoResponse, Response};
 use axum_extra::extract::Host;
 use regex::Regex;
 use std::sync::Arc;
-use tower_otel::traces::get_current_otel_trace_id;
+use tower_otel::get_current_otel_trace_id;
 use tracing::{error, info};
 
 /// Map all web:Error to web:ClientError

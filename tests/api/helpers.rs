@@ -86,11 +86,7 @@ pub async fn spawn_app() -> TestApp {
 
     // Init metrics
     let exporter = opentelemetry_stdout::MetricExporter::default();
-    let reader = opentelemetry_sdk::metrics::PeriodicReader::builder(
-        exporter,
-        opentelemetry_sdk::runtime::Tokio,
-    )
-    .build();
+    let reader = opentelemetry_sdk::metrics::PeriodicReader::builder(exporter).build();
     let provider = opentelemetry_sdk::metrics::SdkMeterProvider::builder()
         .with_reader(reader.clone())
         .build();

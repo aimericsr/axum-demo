@@ -8,23 +8,20 @@ pub fn init_metrics(otel: &Tracing) -> Meter {
     //let exporter = opentelemetry_stdout::MetricExporter::default();
 
     let exporter = opentelemetry_otlp::MetricExporter::builder()
+        // .with_tonic()
         .with_tonic()
-        .with_export_config(ExportConfig {
-            endpoint: Some("http://localhost:4317".into()),
-            timeout: Duration::from_secs(3),
-            protocol: Protocol::Grpc,
-        })
         .with_temporality(opentelemetry_sdk::metrics::Temporality::Cumulative)
+        // .with_export_config(ExportConfig {
+        //     endpoint: Some("http://localhost:4317".into()),
+        //     timeout: Duration::from_secs(3),
+        //     protocol: Protocol::Grpc,
+        // })
         .build()
         .unwrap();
 
-    let reader = opentelemetry_sdk::metrics::PeriodicReader::builder(
-        exporter,
-        opentelemetry_sdk::runtime::Tokio,
-    )
-    .with_interval(std::time::Duration::from_secs(3))
-    .with_timeout(Duration::from_secs(10))
-    .build();
+    let reader = opentelemetry_sdk::metrics::PeriodicReader::builder(exporter)
+        .with_interval(std::time::Duration::from_secs(3))
+        .build();
 
     let ressources = get_ressources(otel);
 

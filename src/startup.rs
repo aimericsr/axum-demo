@@ -1,6 +1,7 @@
 use crate::config::Config;
 pub use crate::error::{Error, Result};
 use crate::model::ModelManager;
+use crate::observability::traces::OTLP_EXPORTER;
 use crate::web;
 use crate::web::mw_res_map::mw_res_map;
 use crate::web::rest::routes_health::routes as routes_health;
@@ -19,6 +20,7 @@ use axum::middleware::{from_fn_with_state, map_response};
 use axum::serve::Serve;
 use axum::BoxError;
 use axum::Router;
+use http::request::Parts;
 use opentelemetry::metrics::Counter;
 use opentelemetry::metrics::Meter;
 use std::net::SocketAddr;
@@ -31,9 +33,8 @@ use tower::ServiceBuilder;
 use tower_cookies::CookieManagerLayer;
 use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 use tower_http::cors::CorsLayer;
-use tower_otel::metrics::axum::OtelMetricsLayer;
-
-use tower_otel::traces::axum::OtelLoggerLayer;
+use tower_otel::axum::metrics::OtelMetricsLayer;
+use tower_otel::axum::traces::OtelLoggerLayer;
 use tracing::info;
 use tracing::instrument;
 
@@ -146,6 +147,14 @@ fn routes(mm: ModelManager, meter: Meter) -> Router {
         mm,
     };
 
+    let logger = OtelLoggerLayer::default()
+        .with_filter(Arc::new(|_req: &Parts| true))
+        .with_span_attributes(Arc::new(|_req: &Parts| {
+            let mut vec: Vec<(&'static str, &'static str)> = Vec::new();
+            vec.push(("MY_APP", "axum"));
+            vec
+        }));
+
     // Build the main Router
     Router::new()
         .merge(routes_health().with_state(state.clone()))
@@ -163,7 +172,7 @@ fn routes(mm: ModelManager, meter: Meter) -> Router {
         .merge(routes_docs())
         .layer(timeout_layer)
         .layer(map_response(mw_res_map))
-        .layer(OtelLoggerLayer)
+        .layer(logger)
         .layer(OtelMetricsLayer::new(meter))
         .layer(concurrency_limit_layer)
 }
@@ -196,8 +205,11 @@ async fn shutdown_signal() {
         },
     }
 
+    let tracer = OTLP_EXPORTER.get().expect("Exporter not initialized");
     tokio::select! {
-        _  = tokio::task::spawn_blocking(opentelemetry::global::shutdown_tracer_provider) => {
+        _  = tokio::task::spawn_blocking(|| {
+            tracer.shutdown()
+        }) => {
             info!("graceful shutdown has been completed successfully");
         },
         _ = tokio::time::sleep(Duration::from_secs(5)) => {

@@ -53,13 +53,13 @@ tracing = "0.1"
 tracing-log = "0.2"
 tracing-subscriber = { version = "0.3", features = ["std", "env-filter", "json", "fmt", "tracing-log"] }
 # -- OpenTelemetry
-opentelemetry = "0.27"
-opentelemetry_sdk = { version = "0.27", features = ["rt-tokio"] }
-opentelemetry-otlp = { version = "0.27", features = ["zstd-tonic", "tonic"] }
-opentelemetry-stdout = "0.27"
-opentelemetry-semantic-conventions = "0.27"
-opentelemetry-resource-detectors = "0.6"
-tracing-opentelemetry = "0.28"
+opentelemetry = "0.28"
+opentelemetry_sdk = { version = "0.28" }
+opentelemetry-otlp = { version = "0.28", features = ["grpc-tonic"] }
+opentelemetry-stdout = "0.28"
+opentelemetry-semantic-conventions = "0.28"
+opentelemetry-resource-detectors = "0.7"
+tracing-opentelemetry = "0.29"
 #tower-otel = { git = "https://github.com/aimericsr/tower-otel" }
 tower-otel = { path = "../tower-otel" }
 # -- Crypt & Encoding

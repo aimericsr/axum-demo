@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use axum::{extract::State, routing::get, Json, Router};
 use hyper::{header, HeaderMap};
-use tower_otel::traces::get_current_otel_trace_id;
+use tower_otel::get_current_otel_trace_id;
 use tracing::instrument;
 
 use crate::startup::SharedState;
@@ -54,7 +54,8 @@ async fn health() -> HeaderMap {
 async fn health_ready(State(state): State<SharedState>) -> Result<Json<Vec<String>>, ()> {
     state.metric.app_domain_health_user_count.add(1, &[]);
     let trace_id = get_current_otel_trace_id().unwrap_or("unknown".to_string());
-    dbg!(trace_id);
+    // dbg!(tracing::Span::current());
+    // dbg!(trace_id);
     //Err(())
     Ok(Json(vec!["ready".to_owned(), "true".to_owned()]))
 }
