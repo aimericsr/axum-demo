@@ -4,10 +4,9 @@ use opentelemetry_resource_detectors::{
     HostResourceDetector, OsResourceDetector, ProcessResourceDetector,
 };
 use opentelemetry_sdk::Resource;
-use opentelemetry_semantic_conventions::resource::{SERVICE_NAMESPACE, SERVICE_VERSION};
 use opentelemetry_semantic_conventions::SCHEMA_URL;
 
-pub(crate) fn get_ressources(otel: &Tracing) -> Resource {
+pub(crate) fn get_ressources(_otel: &Tracing) -> Resource {
     let default_ressources = Resource::builder();
 
     let detected_ressources = default_ressources.with_detectors(&[
@@ -16,13 +15,8 @@ pub(crate) fn get_ressources(otel: &Tracing) -> Resource {
         Box::<HostResourceDetector>::default(),
     ]);
 
-    let attributes_ressources = detected_ressources
-        .with_service_name(otel.service_name.clone())
-        .with_attributes([
-            KeyValue::new("service.schema.url", SCHEMA_URL),
-            KeyValue::new(SERVICE_VERSION, otel.service_version.clone()),
-            KeyValue::new(SERVICE_NAMESPACE, otel.service_namespace.clone()),
-        ]);
+    let attributes_ressources =
+        detected_ressources.with_attributes([KeyValue::new("service.schema.url", SCHEMA_URL)]);
 
     attributes_ressources.build()
 }

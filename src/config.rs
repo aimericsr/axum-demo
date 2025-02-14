@@ -67,10 +67,6 @@ pub struct Crypt {
 }
 
 pub struct Tracing {
-    pub endpoint: String,
-    pub service_name: String,
-    pub service_version: String,
-    pub service_namespace: String,
     pub otel_enabled: bool,
     pub stdout_enabled: bool,
     pub file_enabled: bool,
@@ -94,10 +90,6 @@ impl Config {
                 db_port: get_env_parse("SERVICE_DB_PORT")?,
             },
             tracing: Tracing {
-                service_name: get_env("OTEL_SERVICE_NAME")?,
-                service_namespace: get_env("OTEL_SERVICE_NAMESPACE")?,
-                service_version: get_env("OTEL_SERVICE_VERSION")?,
-                endpoint: get_env("OTEL_EXPORTER_OTLP_ENDPOINT")?,
                 stdout_enabled: get_env_parse("STDOUT_ENABLED")?,
                 file_enabled: get_env_parse("FILE_ENABLED")?,
                 otel_enabled: get_env_parse("OTEL_ENABLED")?,
