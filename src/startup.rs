@@ -112,7 +112,7 @@ fn routes(mm: ModelManager, meter: Meter) -> Router {
     let governor_conf = Arc::new(
         GovernorConfigBuilder::default()
             .per_second(5)
-            .burst_size(50)
+            .burst_size(20)
             .use_headers()
             .finish()
             .unwrap(),
@@ -150,11 +150,7 @@ fn routes(mm: ModelManager, meter: Meter) -> Router {
 
     let logger = OtelLoggerLayer::default()
         .with_filter(Arc::new(|_req: &Parts| true))
-        .with_span_attributes(Arc::new(|_req: &Parts| {
-            let mut vec: Vec<(&'static str, &'static str)> = Vec::new();
-            vec.push(("MY_APP", "axum"));
-            vec
-        }));
+        .with_span_attributes(Arc::new(|_req: &Parts| vec![("MY_APP", "axum")]));
 
     // Build the main Router
     Router::new()

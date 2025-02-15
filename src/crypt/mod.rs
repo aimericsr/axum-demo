@@ -46,7 +46,7 @@ mod tests {
     fn test_encrypt_into_b64u_ok() -> Result<()> {
         // -- Setup & Fixtures
         let mut fx_key = [0u8; 64]; // 512 bits = 64 bytes
-        rand::thread_rng().fill_bytes(&mut fx_key);
+        rand::rng().fill_bytes(&mut fx_key);
         let fx_enc_content = EncryptContent {
             content: "hello world".to_string(),
             salt: "some pepper".to_string(),

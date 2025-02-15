@@ -22,15 +22,15 @@ pub struct TestApp {
 impl TestApp {
     #[warn(dead_code)]
     pub async fn seed_user(&self) -> String {
-        let username = String::from("demo2");
-        let _ = String::from("demo2");
+        let username = String::from("demo");
+        let _ = String::from("demo");
 
         self.db_pool
             .execute(format!(r#"INSERT INTO "user" (username) VALUES ('{}');"#, username).as_str())
             .await
-            .expect("Failed to create database.");
+            .expect("Failed to create user.");
 
-        // note that bound parameters are added to the query macro
+        //note that bound parameters are added to the query macro
         // let user = sqlx::query_as!(
         //     UserForLogin,
         //     "SELECT * FROM user WHERE username = ?",

@@ -1,7 +1,6 @@
 use super::get_ressources;
 use crate::config::{Env, Tracing};
 use opentelemetry::trace::TracerProvider as TraceProviderOtel;
-use opentelemetry_otlp::{ExportConfig, Protocol, WithExportConfig};
 use opentelemetry_sdk::propagation::TraceContextPropagator;
 use opentelemetry_sdk::trace::{RandomIdGenerator, Sampler};
 use opentelemetry_sdk::trace::{SdkTracerProvider, SpanLimits};
@@ -87,12 +86,10 @@ fn init_subscriber(otel: &Tracing, env: &Env) -> impl Subscriber + Sync + Send {
 fn get_stdout_tracer(otel: &Tracing) -> SdkTracerProvider {
     let ressources = get_ressources(otel);
 
-    let provider = SdkTracerProvider::builder()
+    SdkTracerProvider::builder()
         .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
         .with_resource(ressources)
-        .build();
-
-    provider
+        .build()
 }
 
 /// Init the OTLP opentelemetry tracer
@@ -109,7 +106,7 @@ fn get_otlp_tracer(otel: &Tracing) -> SdkTracerProvider {
         .build()
         .unwrap();
 
-    let provider = SdkTracerProvider::builder()
+    SdkTracerProvider::builder()
         .with_resource(ressources)
         .with_batch_exporter(exporter)
         .with_sampler(Sampler::AlwaysOn)
@@ -121,7 +118,5 @@ fn get_otlp_tracer(otel: &Tracing) -> SdkTracerProvider {
             max_attributes_per_event: 64,
             max_attributes_per_link: 64,
         })
-        .build();
-
-    provider
+        .build()
 }

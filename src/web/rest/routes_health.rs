@@ -53,9 +53,7 @@ async fn health() -> HeaderMap {
 )]
 async fn health_ready(State(state): State<SharedState>) -> Result<Json<Vec<String>>, ()> {
     state.metric.app_domain_health_user_count.add(1, &[]);
-    let trace_id = get_current_otel_trace_id().unwrap_or("unknown".to_string());
-    // dbg!(tracing::Span::current());
-    // dbg!(trace_id);
+    let _ = get_current_otel_trace_id().unwrap_or("unknown".to_string());
     //Err(())
     Ok(Json(vec!["ready".to_owned(), "true".to_owned()]))
 }
