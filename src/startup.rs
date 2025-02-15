@@ -111,12 +111,13 @@ pub struct OtelMetric {
 fn routes(mm: ModelManager, meter: Meter) -> Router {
     let governor_conf = Arc::new(
         GovernorConfigBuilder::default()
-            .per_second(50)
-            .burst_size(5)
+            .per_second(5)
+            .burst_size(50)
             .use_headers()
             .finish()
             .unwrap(),
     );
+
     let rate_limit_layer = ServiceBuilder::new().layer(GovernorLayer {
         config: governor_conf,
     });

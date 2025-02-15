@@ -60,8 +60,8 @@ opentelemetry-stdout = "0.28"
 opentelemetry-semantic-conventions = "0.28"
 opentelemetry-resource-detectors = "0.7"
 tracing-opentelemetry = "0.29"
-#tower-otel = { git = "https://github.com/aimericsr/tower-otel" }
-tower-otel = { path = "../tower-otel" }
+tower-otel = { git = "https://github.com/aimericsr/tower-otel" }
+#tower-otel = { path = "../tower-otel" }
 # -- Crypt & Encoding
 rand = "0.9"
 hmac = "0.12"

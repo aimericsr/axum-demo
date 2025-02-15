@@ -6,6 +6,7 @@ receivers:
   docker_stats:
   hostmetrics:
     collection_interval: 10s
+    # root_path: /hostfs
     scrapers:
       cpu:
       disk:
@@ -50,25 +51,40 @@ exporters:
     endpoint: jaeger:4317
     tls:
       insecure: true
+  otlphttp/prometheus:
+    endpoint: http://prometheus:9090/api/v1/otlp
+    compression: none
+    tls:
+      insecure: true
   prometheusremotewrite:
     endpoint: http://prometheus:9090/api/v1/write
     tls:
-      insecure_skip_verify: true
       insecure: true
 
 extensions:
   health_check:
+    endpoint: otel-collector:13133
   pprof:
   zpages:
 
 
 service:
-  extensions: [ pprof, zpages, health_check ]
+  telemetry:
+    logs:
+      level: INFO
+    metrics:
+      readers:
+      - periodic:
+          exporter:
+            otlp:
+              protocol: http/protobuf
+              endpoint: http://prometheus:9090/api/v1/otlp
+  extensions: [ health_check, pprof, zpages ]
   pipelines:
     metrics:
-      receivers: [ otlp, docker_stats, hostmetrics, postgresql ]
+      receivers: [ otlp, postgresql, docker_stats, hostmetrics ]
       processors: [ resourcedetection/docker, resourcedetection/system, batch ]
-      exporters: [ prometheusremotewrite ]
+      exporters: [ otlphttp/prometheus ]
     traces:
       receivers: [ otlp ]
       processors: [ resourcedetection/docker, resourcedetection/system, batch ]

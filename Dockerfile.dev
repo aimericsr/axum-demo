@@ -1,28 +1,19 @@
 # Dynamically linked : Debian
-FROM lukemathwalker/cargo-chef:latest-rust-1.75.0-alpine3.18 AS chef
+FROM lukemathwalker/cargo-chef:latest-rust-1.81.0 AS chef
 WORKDIR /app
-
-FROM chef AS planner
+RUN cargo install --locked bacon
 COPY . .
 RUN cargo chef prepare --recipe-path recipe.json
-
-FROM chef AS builder 
-COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --recipe-path recipe.json
-COPY . .
 RUN cargo build --bin axum-demo
-
-FROM debian:bookworm-slim AS runtime
-WORKDIR /usr/local/bin
-COPY --from=builder /app/target/debug/axum-demo /usr/local/bin
-COPY .env .
 RUN apt update
+# for cli like : lscpu, readelf, ps
 RUN apt install -y strace procps htop binutils
-# lscpu, readelf, ps
-#CMD ["cargo", "watch", "-x", "build --bin axum-demo", "-x", "run"]
-#CMD [ "sleep 10000 &" ]
+RUN echo "aaaa"
+CMD bacon run
 
-CMD [ "/bin/bash" ]
+#CMD [ "sleep 10000 &" ]
+#CMD [ "/bin/bash" ]
 
 # docker build -t axum-demo:v0.0.1 -f Dockerfile.dev . 
 # docker run -p 8080:8080 -it axum-demo:v0.0.1
