@@ -4,7 +4,6 @@ use crate::model::user::{UserBmc, UserForAuth};
 use crate::model::ModelManager;
 use crate::web::AUTH_TOKEN;
 use crate::web::{Error, Result};
-use async_trait::async_trait;
 use axum::body::Body;
 use axum::extract::{FromRequestParts, State};
 use axum::http::request::Parts;
@@ -82,7 +81,6 @@ async fn _ctx_resolve(mm: State<ModelManager>, cookies: &Cookies) -> CtxExtResul
 }
 
 // Retreive info from the request extensions
-#[async_trait]
 impl<S: Send + Sync> FromRequestParts<S> for Ctx {
     type Rejection = Error;
 

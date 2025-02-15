@@ -1,5 +1,5 @@
 use axum_demo::config::get_configuration;
-use axum_demo::observability::metrics::{init_metrics, init_tokio_metrics};
+use axum_demo::observability::metrics::init_metrics;
 use axum_demo::observability::traces::init_traces;
 use axum_demo::startup::Application;
 
@@ -11,10 +11,9 @@ fn main() -> std::io::Result<()> {
         .block_on(async {
             let config = get_configuration().expect("Failed to read configuration");
 
-            let meter = init_metrics(&config.otel);
-            init_tokio_metrics(&meter).await;
+            let meter = init_metrics(&config.tracing);
 
-            init_traces(&config.otel);
+            init_traces(&config.tracing, &config.env);
 
             let application = Application::build(config, meter)
                 .await

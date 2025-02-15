@@ -1,9 +1,9 @@
-use std::sync::Arc;
-
 use crate::{crypt, model, web};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use http::{header, HeaderMap};
 use serde::Serialize;
+use std::sync::Arc;
 use thiserror::Error;
 use tracing::error;
 use utoipa::ToSchema;
@@ -153,4 +153,171 @@ pub enum ClientError {
     ENTITY_NOT_FOUND { entity: &'static str, id: i64 },
     #[error("Service error, please contact the administrator")]
     SERVICE_ERROR,
+}
+
+/// Represents a problem details object as defined by RFC 7807.
+/// This structure provides a standardized format for returning error details
+/// in HTTP responses, including additional custom fields.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ProblemDetails {
+    /// A URI reference that identifies the problem type.
+    /// This should point to a human-readable document about the error type.
+    #[schema(example = "http://localhost:8080/swagger-ui/#/Account/account_login")]
+    type_url: String,
+
+    /// A short, human-readable summary of the problem type.
+    #[schema(example = "JSON_VALIDATION")]
+    title: String,
+
+    /// The HTTP status code applicable to the problem, as an integer.
+    #[schema(example = 404)]
+    status: u16,
+
+    /// An optional detailed, human-readable explanation specific to the occurrence of the problem.
+    #[schema(example = "JSON_VALIDATION_DETAIL")]
+    detail: Option<String>,
+
+    /// An optional URI reference that identifies the specific occurrence of the problem.
+    #[schema(example = "/account/login")]
+    instance: Option<String>,
+
+    /// A map for including custom fields not defined in RFC 7807.
+    #[serde(flatten)]
+    extensions: std::collections::HashMap<String, serde_json::Value>,
+
+    /// A custom field representing the trace ID for correlating logs or tracking issues.
+    #[schema(example = "afb61afc9b97368003e84351d3eb7586")]
+    trace_id: String,
+}
+
+impl IntoResponse for ProblemDetails {
+    /// Converts the `ProblemDetails` object into an HTTP response with a
+    /// `Content-Type` of `application/problem+json`.
+    ///
+    /// # Returns
+    /// - An HTTP response with the serialized problem details as the body.
+    fn into_response(self) -> Response {
+        let body = match serde_json::to_string(&self) {
+            Ok(json) => json,
+            Err(_) => {
+                return (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error")
+                    .into_response();
+            }
+        };
+
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            header::CONTENT_TYPE,
+            header::HeaderValue::from_static("application/problem+json"),
+        );
+
+        (
+            StatusCode::from_u16(self.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR),
+            headers,
+            body,
+        )
+            .into_response()
+    }
+}
+
+/// A builder for constructing `ProblemDetails` objects.
+/// This follows the builder pattern for optional configuration and ease of use.
+#[derive(Debug)]
+pub struct ProblemDetailsBuilder {
+    type_url: Option<String>,
+    title: Option<String>,
+    status: Option<StatusCode>,
+    detail: Option<String>,
+    instance: Option<String>,
+    extensions: std::collections::HashMap<String, serde_json::Value>,
+    trace_id: Option<String>,
+}
+
+impl Default for ProblemDetailsBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl ProblemDetailsBuilder {
+    /// Creates a new `ProblemDetailsBuilder` instance with no fields set.
+    pub fn new() -> Self {
+        Self {
+            type_url: None,
+            title: None,
+            status: None,
+            detail: None,
+            instance: None,
+            extensions: std::collections::HashMap::new(),
+            trace_id: None,
+        }
+    }
+
+    /// Sets the `type_url` field.
+    pub fn type_url(mut self, type_url: impl Into<String>) -> Self {
+        self.type_url = Some(type_url.into());
+        self
+    }
+
+    /// Sets the `title` field.
+    pub fn title(mut self, title: impl Into<String>) -> Self {
+        self.title = Some(title.into());
+        self
+    }
+
+    /// Sets the `status` field.
+    pub fn status(mut self, status: impl Into<StatusCode>) -> Self {
+        self.status = Some(status.into());
+        self
+    }
+
+    /// Sets the `detail` field.
+    pub fn detail(mut self, detail: impl Into<String>) -> Self {
+        self.detail = Some(detail.into());
+        self
+    }
+
+    /// Sets the `instance` field.
+    pub fn instance(mut self, instance: impl Into<String>) -> Self {
+        self.instance = Some(instance.into());
+        self
+    }
+
+    /// Adds a custom extension field.
+    pub fn extension(
+        mut self,
+        key: impl Into<String>,
+        value: impl Into<serde_json::Value>,
+    ) -> Self {
+        self.extensions.insert(key.into(), value.into());
+        self
+    }
+
+    /// Sets the `trace_id` field.
+    pub fn trace_id(mut self, trace_id: impl Into<String>) -> Self {
+        self.trace_id = Some(trace_id.into());
+        self
+    }
+
+    /// Builds the `ProblemDetails` object.
+    ///
+    /// # Panics
+    /// Panics if any of the required fields (`type_url`, `title`, `status`, or `trace_id`) are missing.
+    pub fn build(self) -> ProblemDetails {
+        if let (Some(type_url), Some(title), Some(status), Some(trace_id)) =
+            (self.type_url, self.title, self.status, self.trace_id)
+        {
+            ProblemDetails {
+                type_url,
+                title,
+                status: status.as_u16(),
+                detail: self.detail,
+                instance: self.instance,
+                extensions: self.extensions,
+                trace_id,
+            }
+        } else {
+            panic!("Missing required fields: type_url, title, status, and trace_id")
+        }
+    }
 }

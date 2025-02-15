@@ -1,11 +1,10 @@
 use crate::web::Error;
 use axum::extract::Request;
-use axum::{async_trait, extract::FromRequest, Json, RequestExt};
+use axum::{extract::FromRequest, Json, RequestExt};
 use validator::Validate;
 
 pub struct ValidatedJson<J>(pub J);
 
-#[async_trait]
 impl<S, J> FromRequest<S> for ValidatedJson<J>
 where
     S: Send + Sync,

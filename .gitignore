@@ -22,3 +22,5 @@ Cargo.lock
 **/terraform.tfstate.backup
 **/key.json
 .DS_Store
+
+**/otel-collector-grafana.yaml

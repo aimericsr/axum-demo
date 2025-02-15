@@ -1,6 +1,6 @@
-use axum_demo::config::Postgres as PostgresConfig;
+use axum_demo::config::{Env, Postgres as PostgresConfig};
 use axum_demo::{
-    config::{get_configuration, Otel},
+    config::{get_configuration, Tracing},
     observability::traces::init_traces,
     startup::Application,
 };
@@ -8,10 +8,10 @@ use secrecy::ExposeSecret;
 use sqlx::{postgres::PgConnectOptions, Connection, Executor, PgConnection, PgPool};
 use std::sync::OnceLock;
 use uuid::Uuid;
-pub fn tracing(otel: &Otel) -> &'static () {
+pub fn tracing(otel: &Tracing, env: &Env) -> &'static () {
     static INSTANCE: OnceLock<()> = OnceLock::new();
 
-    INSTANCE.get_or_init(|| init_traces(otel))
+    INSTANCE.get_or_init(|| init_traces(otel, env))
 }
 
 pub struct TestApp {
@@ -22,15 +22,15 @@ pub struct TestApp {
 impl TestApp {
     #[warn(dead_code)]
     pub async fn seed_user(&self) -> String {
-        let username = String::from("demo2");
-        let _ = String::from("demo2");
+        let username = String::from("demo");
+        let _ = String::from("demo");
 
         self.db_pool
             .execute(format!(r#"INSERT INTO "user" (username) VALUES ('{}');"#, username).as_str())
             .await
-            .expect("Failed to create database.");
+            .expect("Failed to create user.");
 
-        // note that bound parameters are added to the query macro
+        //note that bound parameters are added to the query macro
         // let user = sqlx::query_as!(
         //     UserForLogin,
         //     "SELECT * FROM user WHERE username = ?",
@@ -73,12 +73,12 @@ pub async fn spawn_app() -> TestApp {
         let mut c = get_configuration().expect("Failed to read configuration");
         c.postgres.db_name = Box::new(Uuid::new_v4().to_string()).into();
         c.application.port = 0;
-        c.otel.otel_enabled = true;
-        c.otel.stdout_enabled = false;
+        c.tracing.file_enabled = false;
+        c.tracing.stdout_enabled = false;
         c
     };
 
-    tracing(&configuration.otel);
+    tracing(&configuration.tracing, &configuration.env);
 
     //Create and migrate the database
     let db_pool = configure_database(&configuration.postgres).await;
@@ -86,11 +86,7 @@ pub async fn spawn_app() -> TestApp {
 
     // Init metrics
     let exporter = opentelemetry_stdout::MetricExporter::default();
-    let reader = opentelemetry_sdk::metrics::PeriodicReader::builder(
-        exporter,
-        opentelemetry_sdk::runtime::Tokio,
-    )
-    .build();
+    let reader = opentelemetry_sdk::metrics::PeriodicReader::builder(exporter).build();
     let provider = opentelemetry_sdk::metrics::SdkMeterProvider::builder()
         .with_reader(reader.clone())
         .build();

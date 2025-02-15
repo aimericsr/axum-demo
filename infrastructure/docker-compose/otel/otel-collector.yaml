@@ -1,0 +1,91 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: otel-collector:4317
+  docker_stats:
+  hostmetrics:
+    collection_interval: 10s
+    # root_path: /hostfs
+    scrapers:
+      cpu:
+      disk:
+      load:
+      filesystem:
+      memory:
+      network:
+      paging:
+      processes:
+      process:
+      system:
+  postgresql:
+    endpoint: db:5432
+    username: monitoring_user
+    password: secure_password
+    databases:
+    - app_db
+    collection_interval: 10s
+    tls:
+      insecure: true
+
+processors:
+  resourcedetection/env:
+    detectors: [ env ]
+    timeout: 2s
+    override: false
+  resourcedetection/system:
+    detectors: [ "system" ]
+    system:
+      hostname_sources: [ "dns", "os" ]
+  resourcedetection/docker:
+    detectors: [ env, docker ]
+    timeout: 2s
+    override: false
+  batch:
+    timeout: 5s
+
+exporters:
+  debug:
+    verbosity: detailed
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+  otlphttp/prometheus:
+    endpoint: http://prometheus:9090/api/v1/otlp
+    compression: none
+    tls:
+      insecure: true
+  prometheusremotewrite:
+    endpoint: http://prometheus:9090/api/v1/write
+    tls:
+      insecure: true
+
+extensions:
+  health_check:
+    endpoint: otel-collector:13133
+  pprof:
+  zpages:
+
+
+service:
+  telemetry:
+    logs:
+      level: INFO
+    metrics:
+      readers:
+      - periodic:
+          exporter:
+            otlp:
+              protocol: http/protobuf
+              endpoint: http://prometheus:9090/api/v1/otlp
+  extensions: [ health_check, pprof, zpages ]
+  pipelines:
+    metrics:
+      receivers: [ otlp, postgresql, docker_stats, hostmetrics ]
+      processors: [ resourcedetection/docker, resourcedetection/system, batch ]
+      exporters: [ otlphttp/prometheus ]
+    traces:
+      receivers: [ otlp ]
+      processors: [ resourcedetection/docker, resourcedetection/system, batch ]
+      exporters: [ otlp/jaeger ]

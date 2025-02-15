@@ -1,83 +1,114 @@
 use super::get_ressources;
-use crate::config::Otel;
-use core::time::Duration;
+use crate::config::{Env, Tracing};
 use opentelemetry::trace::TracerProvider as TraceProviderOtel;
-use opentelemetry_otlp::{ExportConfig, Protocol, WithExportConfig, WithTonicConfig};
+use opentelemetry_sdk::propagation::TraceContextPropagator;
 use opentelemetry_sdk::trace::{RandomIdGenerator, Sampler};
-use opentelemetry_sdk::trace::{SpanLimits, TracerProvider};
+use opentelemetry_sdk::trace::{SdkTracerProvider, SpanLimits};
+use std::sync::OnceLock;
 use tracing::Subscriber;
-use tracing_subscriber::EnvFilter;
+use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::{layer::SubscriberExt, Registry};
+use tracing_subscriber::{EnvFilter, Layer};
+
+pub static OTLP_EXPORTER: OnceLock<SdkTracerProvider> = OnceLock::new();
 
 /// Init the traces configuration for the lifetime of the applications.
 /// User code should only emit spans and events with the Tracing API
-pub fn init_traces(otel: &Otel) {
+/// Log records are forwared as tracing events for compatibility
+pub fn init_traces(otel: &Tracing, env: &Env) {
     tracing_log::LogTracer::init().expect("Failed to set log tracer");
-    let subscriber = get_subscriber(otel);
+    let subscriber = init_subscriber(otel, env);
     tracing::subscriber::set_global_default(subscriber).expect("Failed to set subscriber");
 }
 
 /// Retreive the fully configured subscriber
-fn get_subscriber(otel: &Otel) -> impl Subscriber + Sync + Send {
+fn init_subscriber(otel: &Tracing, env: &Env) -> impl Subscriber + Sync + Send {
     // Config which trace levels to collect
-    let env_filter = EnvFilter::builder().try_from_env().unwrap();
+    let filter_layer = EnvFilter::try_from_default_env()
+        .or_else(|_| EnvFilter::try_new("info"))
+        .unwrap();
 
-    // Configure multiples targets to send traces to
-    let stdout_json_layer = if otel.stdout_enabled {
-        Some(tracing_subscriber::fmt::layer().json())
+    // Configure multiples targets to send traces
+    let file_layer = if otel.file_enabled {
+        let file_appender = tracing_appender::rolling::hourly("", "rolling.log");
+        let (non_blocking, _file_guard) = tracing_appender::non_blocking(file_appender);
+        let common_layer = tracing_subscriber::fmt::layer()
+            .with_span_events(FmtSpan::CLOSE)
+            .with_writer(non_blocking);
+        let layer = match env {
+            Env::Dev => common_layer.pretty().boxed(),
+            _ => common_layer.json().boxed(),
+        };
+        Some(layer)
     } else {
         None
     };
 
-    let otel_stdout_layer = if otel.stdout_enabled {
-        let provider = TracerProvider::builder()
-            .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
-            .build();
-        let tracer = provider.tracer("axum-app");
-        let opentelemetry_layer = tracing_opentelemetry::layer().with_tracer(tracer);
-        Some(opentelemetry_layer)
+    let stdout_layer = if otel.stdout_enabled {
+        let common_layer = tracing_subscriber::fmt::layer()
+            .with_span_events(FmtSpan::CLOSE)
+            .with_writer(std::io::stdout);
+
+        let layer = match env {
+            Env::Dev => common_layer.pretty().boxed(),
+            _ => common_layer.json().boxed(),
+        };
+        Some(layer)
     } else {
         None
     };
 
     let otel_layer = if otel.otel_enabled {
-        let provider = get_tracer_provider(otel);
-        let tracer = provider.tracer("axum-app2");
-        let opentelemetry_layer = tracing_opentelemetry::layer().with_tracer(tracer);
-        Some(opentelemetry_layer)
+        opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
+        let tracer = match env {
+            Env::Dev => get_stdout_tracer(otel),
+            _ => get_otlp_tracer(otel),
+        };
+
+        OTLP_EXPORTER
+            .set(tracer.clone())
+            .expect("Exporter already set");
+
+        let layer = tracing_opentelemetry::layer().with_tracer(tracer.tracer("axum-app"));
+        Some(layer)
     } else {
         None
     };
 
     Registry::default()
-        .with(env_filter)
-        .with(stdout_json_layer)
-        .with(otel_stdout_layer)
+        .with(filter_layer)
+        .with(file_layer)
+        .with(stdout_layer)
         .with(otel_layer)
 }
 
-/// Init the opentelemetry tracer
-fn get_tracer_provider(otel: &Otel) -> TracerProvider {
-    // For the moment, user code only interact with the Tracing API so the propagation
-    // is done throught this API and not via opentelemetry
-    //global::set_text_map_propagator(TraceContextPropagator::new());
+/// Init the stdout opentelemetry tracer
+fn get_stdout_tracer(otel: &Tracing) -> SdkTracerProvider {
+    let ressources = get_ressources(otel);
 
+    SdkTracerProvider::builder()
+        .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
+        .with_resource(ressources)
+        .build()
+}
+
+/// Init the OTLP opentelemetry tracer
+fn get_otlp_tracer(otel: &Tracing) -> SdkTracerProvider {
     let ressources = get_ressources(otel);
 
     let exporter = opentelemetry_otlp::SpanExporter::builder()
         .with_tonic()
-        .with_export_config(ExportConfig {
-            endpoint: Some("http://localhost:4317".into()),
-            protocol: Protocol::Grpc,
-            timeout: Duration::from_secs(3),
-        })
-        .with_compression(opentelemetry_otlp::Compression::Zstd)
+        // .with_export_config(ExportConfig {
+        //     endpoint: Some("http://localhost:4317".into()),
+        //     protocol: Protocol::HttpBinary,
+        //     timeout: Duration::from_secs(3),
+        // })
         .build()
         .unwrap();
 
-    TracerProvider::builder()
+    SdkTracerProvider::builder()
         .with_resource(ressources)
-        .with_batch_exporter(exporter, opentelemetry_sdk::runtime::Tokio)
+        .with_batch_exporter(exporter)
         .with_sampler(Sampler::AlwaysOn)
         .with_id_generator(RandomIdGenerator::default())
         .with_span_limits(SpanLimits {

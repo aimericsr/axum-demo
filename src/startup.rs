@@ -1,6 +1,7 @@
 use crate::config::Config;
 pub use crate::error::{Error, Result};
 use crate::model::ModelManager;
+use crate::observability::traces::OTLP_EXPORTER;
 use crate::web;
 use crate::web::mw_res_map::mw_res_map;
 use crate::web::rest::routes_health::routes as routes_health;
@@ -19,19 +20,21 @@ use axum::middleware::{from_fn_with_state, map_response};
 use axum::serve::Serve;
 use axum::BoxError;
 use axum::Router;
+use http::request::Parts;
 use opentelemetry::metrics::Counter;
 use opentelemetry::metrics::Meter;
 use std::net::SocketAddr;
 use std::result::Result as ResultIO;
 use std::sync::Arc;
 use std::time::Duration;
+use tokio::net::TcpListener;
 use tokio::signal;
 use tower::ServiceBuilder;
 use tower_cookies::CookieManagerLayer;
 use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 use tower_http::cors::CorsLayer;
-use tower_otel::metrics::service::OtelMetricsLayer;
-use tower_otel::traces::http::service::OtelLoggerLayer;
+use tower_otel::axum::metrics::OtelMetricsLayer;
+use tower_otel::axum::traces::OtelLoggerLayer;
 use tracing::info;
 use tracing::instrument;
 
@@ -39,6 +42,7 @@ use tracing::instrument;
 pub struct Application {
     port: u16,
     server: Serve<
+        TcpListener,
         IntoMakeServiceWithConnectInfo<Router, SocketAddr>,
         AddExtension<Router, ConnectInfo<SocketAddr>>,
     >,
@@ -55,6 +59,7 @@ impl Application {
         let addr = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.application.port))
             .await
             .unwrap();
+
         let port = addr.local_addr().unwrap().port();
 
         let server = axum::serve(
@@ -106,12 +111,13 @@ pub struct OtelMetric {
 fn routes(mm: ModelManager, meter: Meter) -> Router {
     let governor_conf = Arc::new(
         GovernorConfigBuilder::default()
-            .per_second(50)
-            .burst_size(5)
+            .per_second(5)
+            .burst_size(20)
             .use_headers()
             .finish()
             .unwrap(),
     );
+
     let rate_limit_layer = ServiceBuilder::new().layer(GovernorLayer {
         config: governor_conf,
     });
@@ -142,13 +148,16 @@ fn routes(mm: ModelManager, meter: Meter) -> Router {
         mm,
     };
 
+    let logger = OtelLoggerLayer::default()
+        .with_filter(Arc::new(|_req: &Parts| true))
+        .with_span_attributes(Arc::new(|_req: &Parts| vec![("MY_APP", "axum")]));
+
     // Build the main Router
     Router::new()
         .merge(routes_health().with_state(state.clone()))
         .merge(routes_hello())
         .merge(routes_login().with_state(state.clone()))
         .merge(routes_static())
-        .merge(routes_docs())
         .layer(from_fn_with_state(
             state.mm.clone(),
             web::mw_auth::mw_ctx_resolve,
@@ -157,9 +166,10 @@ fn routes(mm: ModelManager, meter: Meter) -> Router {
         .fallback(|| async { ErrorWeb::FallBack })
         .layer(cors_layer)
         .layer(rate_limit_layer)
+        .merge(routes_docs())
         .layer(timeout_layer)
         .layer(map_response(mw_res_map))
-        .layer(OtelLoggerLayer)
+        .layer(logger)
         .layer(OtelMetricsLayer::new(meter))
         .layer(concurrency_limit_layer)
 }
@@ -192,8 +202,11 @@ async fn shutdown_signal() {
         },
     }
 
+    let tracer = OTLP_EXPORTER.get().expect("Exporter not initialized");
     tokio::select! {
-        _  = tokio::task::spawn_blocking(opentelemetry::global::shutdown_tracer_provider) => {
+        _  = tokio::task::spawn_blocking(|| {
+            tracer.shutdown()
+        }) => {
             info!("graceful shutdown has been completed successfully");
         },
         _ = tokio::time::sleep(Duration::from_secs(5)) => {

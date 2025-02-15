@@ -10,34 +10,6 @@ This section gives a brief overview of the primary types in this crate:
 * [`init_subscriber`](observability::tracing::init_subscriber) is used to setup the instrumentation of the application
 * [`Application`](startup::Application) is the primary type and represents the application information and how to lunch it.
 
-# Basic Usage
-Build the app and lunch it
-```rust,no_run
-use axum_demo::config::get_configuration;
-use axum_demo::observability::tracing::init_subscriber;
-use axum_demo::startup::Application;
-
-#[tokio::main]
-async fn main() -> std::io::Result<()> {
-    // Retreive the configuration
-    let config = get_configuration().expect("Failed to read configuration.");
-
-    // Init the tracing
-    init_subscriber(&config.otel);
-
-    // Build the app
-    let application = Application::build(config)
-        .await
-        .expect("Failed to build the app");
-
-    // Lunch the application to start listening to requests
-    application
-        .run_until_stopped()
-        .await
-        .expect("Failed to lunch the app");
-    Ok(())
-}
-```
 */
 
 /// For dev only, shoud be remove in a future release

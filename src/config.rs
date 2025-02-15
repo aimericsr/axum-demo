@@ -23,9 +23,27 @@ pub fn get_configuration() -> Result<Config> {
 /// Struct holding all the variables needed to start the application.
 pub struct Config {
     pub application: ApplicationSettings,
+    pub env: Env,
     pub postgres: Postgres,
-    pub otel: Otel,
+    pub tracing: Tracing,
     pub crypt: Crypt,
+}
+
+pub enum Env {
+    Dev,
+    Staging,
+    Prod,
+}
+
+impl From<String> for Env {
+    fn from(value: String) -> Self {
+        match value.to_lowercase().trim() {
+            "dev" => Env::Dev,
+            "staging" => Env::Staging,
+            "prod" => Env::Prod,
+            _ => Env::Dev,
+        }
+    }
 }
 
 pub struct ApplicationSettings {
@@ -48,19 +66,17 @@ pub struct Crypt {
     pub token_duration_sec: f64,
 }
 
-pub struct Otel {
-    pub endpoint: String,
-    pub service_name: String,
-    pub service_version: String,
-    pub service_namespace: String,
+pub struct Tracing {
     pub otel_enabled: bool,
     pub stdout_enabled: bool,
+    pub file_enabled: bool,
 }
 
 impl Config {
     fn load_from_env() -> Result<Config> {
         dotenv().expect("Failed to read .env file");
         Ok(Config {
+            env: get_env("APP_ENV")?.into(),
             application: ApplicationSettings {
                 host: get_env("APP_HOST")?,
                 port: get_env_parse("APP_PORT")?,
@@ -73,13 +89,9 @@ impl Config {
                 db_name: Box::new(get_env("SERVICE_DB_NAME")?).into(),
                 db_port: get_env_parse("SERVICE_DB_PORT")?,
             },
-            otel: Otel {
-                endpoint: get_env("OTEL_EXPORTER_OTLP_ENDPOINT")?,
-                service_name: get_env("OTEL_SERVICE_NAME")?,
-                service_version: get_env("OTEL_SERVICE_VERSION")?,
-                service_namespace: get_env("OTEL_SERVICE_NAMESPACE")?,
-
-                stdout_enabled: get_env_parse("OTEL_STDOUT_ENABLED")?,
+            tracing: Tracing {
+                stdout_enabled: get_env_parse("STDOUT_ENABLED")?,
+                file_enabled: get_env_parse("FILE_ENABLED")?,
                 otel_enabled: get_env_parse("OTEL_ENABLED")?,
             },
             crypt: Crypt {

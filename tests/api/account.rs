@@ -36,6 +36,7 @@ struct LogoffPayload {
 async fn login_fails() {
     // Arrange
     let app = spawn_app().await;
+    let _user = app.seed_user();
     let body = LoginPayload {
         username: String::from("test"),
         pwd: String::from("test"),

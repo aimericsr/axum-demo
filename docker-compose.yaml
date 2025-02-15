@@ -1,10 +1,11 @@
 services:
-  # Core Service
-
+  # User Facing App
   web:
     profiles: ["prod"]
-    image: aimeric/axum-demo:latest
-    #build: .
+    # image: aimeric/axum-demo:latest
+    build: 
+      context: .
+      dockerfile: Dockerfile
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8080/health/live || exit 1
       interval: 30s
@@ -18,12 +19,13 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
     env_file:
       - .env
+    volumes:
+            - .:/app
     depends_on:
       db:
         condition: service_healthy
 
-  # Dependent Service
-
+  # Mandatory Services
   db:
     profiles: ["dev", "prod"]
     image: postgres:15
@@ -38,46 +40,50 @@ services:
     environment:
       POSTGRES_PASSWORD: "welcome"
       POSTGRES_DB: "app_db"
+    volumes:
+      - ./infrastructure/docker-compose/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   # Telemetry Components
-
   otel-collector:
     profiles: ["dev", "prod"]
-    image: otel/opentelemetry-collector-contrib:0.86.0
-    # healthcheck:
-    #   test: wget --no-verbose --tries=1 --spider http://localhost:13133 || exit 1
+    image: otel/opentelemetry-collector-contrib:0.119.0
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:13133 || exit 1
     volumes:
-      - ./infrastructure/docker-compose/otel/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+      - ./infrastructure/docker-compose/otel/otel-collector.yaml:/etc/otelcol-contrib/config.yaml
+      - /var/run/docker.sock:/var/run/docker.sock # Monitor Docker metrics
+      # - /proc:/hostfs/proc # Monitor System metrics (Linux Only)
     ports:
-      - 13133:13133 # health_check extension
-      - 8888:8888 # Prometheus metrics exposed by the collector
-      - 8889:8889 # Prometheus exporter metrics
       - 4317:4317 # OTLP gRPC receiver
+      - 8888:8888 # Prometheus metrics exposed by the collector
+      # - 8889:8889 # Prometheus exporter metrics
+      - 13133:13133 # health_check extension
+      - 55679:55679 # zpages
 
   prometheus:
     profiles: ["dev", "prod"]
-    image: prom/prometheus:v2.47.0
+    image: prom/prometheus:v3.1.0
     ports:
       - 9090:9090
       - 1234:1234
     command:
+      - --web.enable-otlp-receiver
       - --web.enable-remote-write-receiver
-      - --enable-feature=native-histograms
-      #- --enable-feature=otlp-write-receiver
       - --config.file=/etc/prometheus/prometheus.yml
+      - --enable-feature=native-histograms
     volumes:
       - ./infrastructure/docker-compose/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
 
   jaeger:
     profiles: ["dev", "prod"]
-    image: jaegertracing/all-in-one:1.49
+    image: jaegertracing/all-in-one:1.66.0
     ports:
-      - 16686:16686 # Web UI
       - 14250:14250 # Listen for traces
+      - 16686:16686 # Web UI
 
   grafana:
     profiles: ["dev", "prod"]
-    image: grafana/grafana:10.1.2
+    image: grafana/grafana:11.5.1
     ports:
       - 3000:3000
     environment:
@@ -89,10 +95,9 @@ services:
       - ./infrastructure/docker-compose/grafana:/etc/grafana/provisioning
 
   # Tests
-
   k6:
     profiles: ["load-test"]
-    image: grafana/k6:0.46.0
+    image: grafana/k6:0.57.0
     environment:
       K6_PROMETHEUS_RW_SERVER_URL: "http://prometheus:9090/api/v1/write"
       K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: "true"

@@ -1,7 +1,7 @@
 # Statically linked : Alpine, Scratch
-FROM clux/muslrust:1.83.0-stable AS chef
+FROM clux/muslrust:1.81.0-stable AS chef
 #FROM rust:1.82-alpine3.19 AS chef
-#FROM lukemathwalker/cargo-chef:latest-rust-1.82.0-alpine3.20 AS chef
+#FROM lukemathwalker/cargo-chef:latest-rust-1.81.0-alpine3.20 AS chef
 USER root
 #RUN rustup target add x86_64-unknown-linux-gnu
 RUN cargo install cargo-chef

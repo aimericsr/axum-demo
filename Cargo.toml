@@ -1,17 +1,15 @@
 [package]
 name = "axum-demo"
-version = "1.0.1"
+version = "0.0.1"
 edition = "2021"
-rust-version = "1.74"
+rust-version = "1.81"
 authors = ["Aimeric Sorin <aimeric.sorin@gmail.com>"]
 license = "Apache-2.0"
 description = "Basic rust web api to demonstrate axum framework capabilities. Based on https://github.com/rust10x/rust-web-app"
 repository = "https://github.com/aimericsr/axum-demo"
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
 path = "src/lib.rs"
-#doctest = false
 
 [[bin]]
 name = "axum-demo"
@@ -22,68 +20,68 @@ strip = "symbols"
 
 [dependencies]
 # -- Http api
-tokio = { version = "1.41.1", features = ["signal", "rt-multi-thread"] }
-tokio-metrics = "0.4.0"
-axum = { version = "0.7.9", features = ["tokio"] }
-axum-macros = "0.4.2"
-tower-http = { version = "0.6.2", features = ["fs", "timeout", "cors", "trace"] }
-tower = { version = "0.5.2", features = ["limit", "timeout"]} 
-tower-cookies = "0.10.0"
-tower_governor = { version = "0.4.2", features = []}
-hyper = { version = "1.5.1", features = ["full"]}
-http = "1.2.0"
-futures = "0.3.31"
+tokio = { version = "1", features = ["signal", "rt-multi-thread"] }
+tokio-metrics = "0.4"
+axum = "0.8"
+axum-macros = "0.5"
+axum-extra = "0.10"
+tower = { version = "0.5", features = ["limit", "timeout"]} 
+tower-http = { version = "0.6", features = ["fs", "timeout", "cors", "trace"] }
+tower-cookies = "0.11"
+tower_governor = "0.6"
+hyper = "1"
+http = "1"
+futures = "0.3"
 # -- Error
-thiserror = "2.0.7"
-problemdetails = { version = "0.4.1", features = ["axum"] }
+thiserror = "2"
 # -- Serde
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-serde_with = "3.10.0"
+serde_with = "3"
 # -- Db
-sqlx = { version = "0.7.4", features = [ "runtime-tokio-rustls", "postgres", "uuid", "time" ] }
-sqlb = "0.4.0"
+sqlx = { version = "0.7", features = [ "runtime-tokio-rustls", "postgres", "uuid", "time" ] }
+sqlb = "0.4"
 # -- Docs
-utoipa = { version= "5.2.0", features = ["axum_extras"] }
-utoipa-swagger-ui = { version= "8.0.3", features = ["axum", "reqwest"] }
-utoipa-redoc = { version= "5.0.0", features = ["axum"] }
-utoipa-rapidoc = { version= "5.0.0", features = ["axum"] }
-utoipa-scalar = { version = "0.2.0", features = ["axum"] }
-# -- Metrics
-axum-otel-metrics = "0.9.1"
+utoipa = { version = "5.3.1", features = ["axum_extras"] }
+utoipa-swagger-ui = { version = "9", features = ["axum", "reqwest"] }
+utoipa-redoc = { version = "6", features = ["axum"] }
+utoipa-rapidoc = { version = "6", features = ["axum"] }
+utoipa-scalar = { version = "0.3", features = ["axum"] }
+utoipauto = "0.2.0"
 # -- Tracing
-tracing = "0.1.41"
-tracing-log = "0.2.0"
-tracing-subscriber = { version = "0.3.19", features = ["std", "env-filter", "json", "fmt", "tracing-log"] }
+tracing = "0.1"
+tracing-log = "0.2"
+tracing-subscriber = { version = "0.3", features = ["std", "env-filter", "json", "fmt", "tracing-log"] }
 # -- OpenTelemetry
-opentelemetry = { version = "0.27.1", features = ["metrics"] }
-opentelemetry_sdk ={ version = "0.27.1", features = ["rt-tokio", "metrics"] }
-opentelemetry-otlp = { version = "0.27.0", features = ["trace", "metrics", "zstd-tonic", "tonic"] }
-opentelemetry-stdout = { version = "0.27.0", features = ["trace", "metrics"] }
-opentelemetry-semantic-conventions = "0.27.0"
-opentelemetry-resource-detectors = "0.6.0"
-tracing-opentelemetry = "0.28.0"
+opentelemetry = "0.28"
+opentelemetry_sdk = { version = "0.28" }
+opentelemetry-otlp = { version = "0.28", features = ["grpc-tonic"] }
+opentelemetry-stdout = "0.28"
+opentelemetry-semantic-conventions = "0.28"
+opentelemetry-resource-detectors = "0.7"
+tracing-opentelemetry = "0.29"
 tower-otel = { git = "https://github.com/aimericsr/tower-otel" }
+#tower-otel = { path = "../tower-otel" }
 # -- Crypt & Encoding
-rand = "0.8.5"
-hmac = "0.12.1"
-sha2 = "0.10.8"
-base64-url = "3.0.0"
-time = "0.3.36"
+rand = "0.9"
+hmac = "0.12"
+sha2 = "0.10"
+base64-url = "3"
+time = "0.3"
 # -- Utils
-async-trait = "0.1.83"
-strum_macros = "0.26.4"
-uuid = { version = "1.10.0", features = ["v4", "fast-rng"] }
-secrecy = "0.10.2" 
-validator = "0.19.0"
-validator_derive = "0.19.0"
-regex = "1.11.0"
-dotenvy = "0.15.7"
-redact = { version = "0.1.10", features = ["serde"] }
+strum_macros = "0.26"
+uuid = { version = "1", features = ["v4", "fast-rng"] }
+secrecy = "0.10" 
+validator = "0.20"
+validator_derive = "0.20"
+regex = "1"
+dotenvy = "0.15"
+redact = { version = "0.1", features = ["serde"] }
+tracing-appender = "0.2.3"
 
 [dev-dependencies]
 anyhow = "1"
-reqwest = { version = "0.12.9", features = ["json"]}
+reqwest = { version = "0.12", features = ["json"]}
 
 [lints.rust]
 unsafe_code = "forbid"
