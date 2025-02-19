@@ -2,10 +2,11 @@ services:
   # User Facing App
   web:
     profiles: ["prod", "dev"]
-    # image: aimeric/axum-demo:latest
-    build: 
-      context: .
-      dockerfile: Dockerfile.dev
+    image: aimeric/axum-demo:latest
+    platform: linux/amd64
+    # build: 
+    #   context: .
+    #   dockerfile: Dockerfile.dev
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8080/health/live || exit 1
       interval: 30s
