@@ -13,8 +13,6 @@ RUN cargo chef cook --release --target x86_64-unknown-linux-musl --recipe-path r
 RUN cargo build --release --target x86_64-unknown-linux-musl --bin axum-demo
 
 # Alpine 
-#RUN apk add --no-cache tzdata
-#ENV TZ=Europe/Paris
 FROM alpine:3.20.1 AS runtime
 WORKDIR /usr/local/bin/
 RUN addgroup -S myuser && adduser -S myuser -G myuser
@@ -23,12 +21,8 @@ COPY .env .
 USER myuser
 CMD ["./axum-demo"]
 
-# # # Scratch
-# # FROM scratch AS runtime
-# # WORKDIR "/usr/local/bin/"
-# # COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/axum-demo .
-# # COPY .env .
-# # ENV TZ=Europe/Paris
-# # CMD ["./axum-demo"]
+# Scratch
+# FROM scratch AS runtime
 
-
+# RUN apk add --no-cache tzdata
+# ENV TZ=Europe/Paris
