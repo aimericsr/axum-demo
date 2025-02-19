@@ -2,7 +2,7 @@
 #FROM rust:1.82-alpine3.19 AS chef
 #FROM lukemathwalker/cargo-chef:latest-rust-1.81.0-alpine3.20 AS chef
 #RUN apt install -y x86_64-linux-gnu-gcc
-FROM clux/muslrust:1.81.0-stable AS chef
+FROM clux/muslrust:1.81.0-stable AS builder
 USER root
 WORKDIR /app
 RUN rustup target add x86_64-unknown-linux-musl
