@@ -1,6 +1,7 @@
 use crate::config::Config;
 pub use crate::error::{Error, Result};
 use crate::model::ModelManager;
+use crate::observability::traces::FILE_GUARD;
 use crate::observability::traces::OTLP_EXPORTER;
 use crate::web;
 use crate::web::mw_res_map::mw_res_map;
@@ -207,7 +208,9 @@ async fn shutdown_signal() {
         _  = tokio::task::spawn_blocking(|| {
             tracer.shutdown()
         }) => {
+            {let _file_guard = FILE_GUARD.get().expect("Worker guard not initialized");}
             info!("graceful shutdown has been completed successfully");
+
         },
         _ = tokio::time::sleep(Duration::from_secs(5)) => {
             info!("Timeout of 5 seconds has been reached without the shutdown to complete, exiting the appliction");

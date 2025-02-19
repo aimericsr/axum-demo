@@ -69,7 +69,7 @@ sha2 = "0.10"
 base64-url = "3"
 time = "0.3"
 # -- Utils
-strum_macros = "0.26"
+strum_macros = "0.27"
 uuid = { version = "1", features = ["v4", "fast-rng"] }
 secrecy = "0.10" 
 validator = "0.20"

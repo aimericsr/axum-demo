@@ -1,11 +1,11 @@
 services:
   # User Facing App
   web:
-    profiles: ["prod"]
+    profiles: ["prod", "dev"]
     # image: aimeric/axum-demo:latest
     build: 
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8080/health/live || exit 1
       interval: 30s
@@ -15,12 +15,10 @@ services:
     ports:
       - 8080:8080
     environment:
-      SERVICE_DB_HOST: "db"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
-    env_file:
-      - .env
-    volumes:
-            - .:/app
+      SERVICE_DB_HOST: ${SERVICE_DB_HOST:-db}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4317} 
+    # volumes:
+    #         - .:/app
     depends_on:
       db:
         condition: service_healthy
@@ -56,9 +54,12 @@ services:
     ports:
       - 4317:4317 # OTLP gRPC receiver
       - 8888:8888 # Prometheus metrics exposed by the collector
-      # - 8889:8889 # Prometheus exporter metrics
       - 13133:13133 # health_check extension
       - 55679:55679 # zpages
+    environment:
+      GRAFANA_CLOUD_OTLP_ENDPOINT: ${GRAFANA_CLOUD_OTLP_ENDPOINT:-default}
+      GRAFANA_CLOUD_INSTANCE_ID: ${GRAFANA_CLOUD_INSTANCE_ID:-default}
+      GRAFANA_CLOUD_API_KEY: ${GRAFANA_CLOUD_API_KEY:-default}
 
   prometheus:
     profiles: ["dev", "prod"]
@@ -78,8 +79,8 @@ services:
     profiles: ["dev", "prod"]
     image: jaegertracing/all-in-one:1.66.0
     ports:
-      - 14250:14250 # Listen for traces
       - 16686:16686 # Web UI
+      - 4316:4317 # Listen for traces over GRCP (different port on host as 4317 is alredy taken by the otel collector)
 
   grafana:
     profiles: ["dev", "prod"]
@@ -96,10 +97,15 @@ services:
 
   # Tests
   k6:
-    profiles: ["load-test"]
+    profiles: ["dev"]
     image: grafana/k6:0.57.0
+    volumes:
+      - ./infrastructure/docker-compose/k6:/home/k6
+    user:
+      root
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["k6 run ${K6_FILE:-script.js}"]
     environment:
       K6_PROMETHEUS_RW_SERVER_URL: "http://prometheus:9090/api/v1/write"
       K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: "true"
-    volumes:
-      - ./infrastructure/docker-compose/k6:/scripts
+      K6_FILE: ${K6_FILE:-script.js}

@@ -7,7 +7,7 @@
 This section gives a brief overview of the primary types in this crate:
 
 * [`config`] load the environnement variables
-* [`init_subscriber`](observability::tracing::init_subscriber) is used to setup the instrumentation of the application
+* [`init_traces`](observability::traces::init_traces) and [`init_metrics`](observability::metrics::init_metrics) to setup traces/metrics
 * [`Application`](startup::Application) is the primary type and represents the application information and how to lunch it.
 
 */
