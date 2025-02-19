@@ -1,25 +1,15 @@
 use super::get_ressources;
 use crate::config::Tracing;
 use opentelemetry::{metrics::Meter, KeyValue};
-use opentelemetry_otlp::{ExportConfig, Protocol, WithExportConfig};
-use std::time::Duration;
 
 pub fn init_metrics(otel: &Tracing) -> Meter {
     //let exporter = opentelemetry_stdout::MetricExporter::default();
 
     let exporter = opentelemetry_otlp::MetricExporter::builder()
-        //.with_http()
         .with_tonic()
         .with_temporality(opentelemetry_sdk::metrics::Temporality::Cumulative)
-        .with_export_config(ExportConfig {
-            endpoint: Some("http://localhost:4317".into()),
-            timeout: Duration::from_secs(3),
-            protocol: Protocol::Grpc,
-        })
         .build()
         .unwrap();
-
-    dbg!(&exporter);
 
     let reader = opentelemetry_sdk::metrics::PeriodicReader::builder(exporter)
         .with_interval(std::time::Duration::from_secs(3))

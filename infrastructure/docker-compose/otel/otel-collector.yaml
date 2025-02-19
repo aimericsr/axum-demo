@@ -27,6 +27,13 @@ receivers:
     collection_interval: 10s
     tls:
       insecure: true
+  prometheus:
+    config:
+      scrape_configs:
+      - job_name: 'otel-collector'
+        scrape_interval: 5s
+        static_configs:
+        - targets: [ 'otel-collector:8888' ]
 
 processors:
   resourcedetection/env:
@@ -60,8 +67,16 @@ exporters:
     endpoint: http://prometheus:9090/api/v1/write
     tls:
       insecure: true
+  otlphttp/grafana_cloud:
+    endpoint: ${env:GRAFANA_CLOUD_OTLP_ENDPOINT}
+    auth:
+      authenticator: basicauth/grafana_cloud
 
 extensions:
+  basicauth/grafana_cloud:
+    client_auth:
+      username: ${env:GRAFANA_CLOUD_INSTANCE_ID}
+      password: ${env:GRAFANA_CLOUD_API_KEY}
   health_check:
     endpoint: otel-collector:13133
   pprof:
@@ -73,16 +88,22 @@ service:
     logs:
       level: INFO
     metrics:
+      level: normal
       readers:
-      - periodic:
+      - pull:
           exporter:
-            otlp:
-              protocol: http/protobuf
-              endpoint: http://prometheus:9090/api/v1/otlp
-  extensions: [ health_check, pprof, zpages ]
+            prometheus:
+              host: otel-collector
+              port: 8888
+      # - periodic:
+      #     exporter:
+      #       otlp:
+      #         protocol: http/protobuf
+      #         endpoint: http://prometheus:9090/api/v1/otlp
+  extensions: [ health_check, pprof, zpages, basicauth/grafana_cloud ]
   pipelines:
     metrics:
-      receivers: [ otlp, postgresql, docker_stats, hostmetrics ]
+      receivers: [ otlp, postgresql, docker_stats, hostmetrics, prometheus ]
       processors: [ resourcedetection/docker, resourcedetection/system, batch ]
       exporters: [ otlphttp/prometheus ]
     traces:

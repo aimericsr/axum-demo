@@ -6,11 +6,13 @@ use opentelemetry_sdk::trace::{RandomIdGenerator, Sampler};
 use opentelemetry_sdk::trace::{SdkTracerProvider, SpanLimits};
 use std::sync::OnceLock;
 use tracing::Subscriber;
+use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::{layer::SubscriberExt, Registry};
 use tracing_subscriber::{EnvFilter, Layer};
 
 pub static OTLP_EXPORTER: OnceLock<SdkTracerProvider> = OnceLock::new();
+pub static FILE_GUARD: OnceLock<Option<WorkerGuard>> = OnceLock::new();
 
 /// Init the traces configuration for the lifetime of the applications.
 /// User code should only emit spans and events with the Tracing API
@@ -30,8 +32,11 @@ fn init_subscriber(otel: &Tracing, env: &Env) -> impl Subscriber + Sync + Send {
 
     // Configure multiples targets to send traces
     let file_layer = if otel.file_enabled {
-        let file_appender = tracing_appender::rolling::hourly("", "rolling.log");
-        let (non_blocking, _file_guard) = tracing_appender::non_blocking(file_appender);
+        let file_appender = tracing_appender::rolling::hourly("logs", "rolling.log");
+        let (non_blocking, file_guard) = tracing_appender::non_blocking(file_appender);
+        FILE_GUARD
+            .set(Some(file_guard))
+            .expect("WorkerGuard already set");
         let common_layer = tracing_subscriber::fmt::layer()
             .with_span_events(FmtSpan::CLOSE)
             .with_writer(non_blocking);
@@ -98,11 +103,6 @@ fn get_otlp_tracer(otel: &Tracing) -> SdkTracerProvider {
 
     let exporter = opentelemetry_otlp::SpanExporter::builder()
         .with_tonic()
-        // .with_export_config(ExportConfig {
-        //     endpoint: Some("http://localhost:4317".into()),
-        //     protocol: Protocol::HttpBinary,
-        //     timeout: Duration::from_secs(3),
-        // })
         .build()
         .unwrap();
 

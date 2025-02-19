@@ -13,6 +13,8 @@ Cargo.lock
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
 
+logs
+
 
 .history
 
@@ -22,5 +24,3 @@ Cargo.lock
 **/terraform.tfstate.backup
 **/key.json
 .DS_Store
-
-**/otel-collector-grafana.yaml
