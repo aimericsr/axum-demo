@@ -36,7 +36,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Build and Push app docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v6
         env:
           IMAGE_URL: ${{ vars.HUB_NAME }}/${{ vars.IMAGE_NAME }}
         with:
