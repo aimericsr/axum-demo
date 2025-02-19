@@ -14,7 +14,6 @@ ARG TARGETARCH
 RUN case "$TARGETARCH" in \
     "amd64")  RUST_TARGET="x86_64-unknown-linux-musl" ;; \
     "arm64")  RUST_TARGET="aarch64-unknown-linux-musl" ;; \
-    "arm/v7") RUST_TARGET="armv7-unknown-linux-musleabihf" ;; \
     *) echo "Unsupported architecture: $TARGETARCH" && exit 1 ;; \
     esac && \
     rustup target add $RUST_TARGET && \
@@ -24,7 +23,7 @@ RUN case "$TARGETARCH" in \
     cargo build --release --target $RUST_TARGET --bin axum-demo
 
 # Alpine Runtime Stage
-FROM alpine:3.20.1 AS runtime
+FROM alpine:3.21 AS runtime
 WORKDIR /usr/local/bin/
 RUN addgroup -S myuser && adduser -S myuser -G myuser
 ARG TARGETARCH
