@@ -5,6 +5,7 @@
 FROM clux/muslrust:1.81.0-stable AS builder
 USER root
 WORKDIR /app
+COPY . .
 RUN rustup target add x86_64-unknown-linux-musl
 RUN cargo install cargo-chef
 RUN cargo chef prepare --recipe-path recipe.json
