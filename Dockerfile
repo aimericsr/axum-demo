@@ -8,7 +8,6 @@ ARG TARGETPLATFORM
 RUN case "$TARGETPLATFORM" in \
         "linux/amd64")  echo "x86_64-unknown-linux-musl"  >> /tmp/target ;; \
         "linux/arm64")  echo "aarch64-unknown-linux-musl"  >> /tmp/target ;; \
-        "linux/arm/v7") echo "armv7-unknown-linux-musleabihf" >> /tmp/target ;; \
         *)             echo "Unsupported TARGETPLATFORM: $TARGETPLATFORM" && exit 1 ;; \
     esac
 
