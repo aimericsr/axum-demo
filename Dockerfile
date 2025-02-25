@@ -3,9 +3,13 @@ FROM --platform=$BUILDPLATFORM tonistiigi/xx:1.6.1 AS xx
 FROM --platform=$BUILDPLATFORM rust:1.81-slim-bookworm AS build
 COPY --from=xx / /
 
-RUN apt update && apt install -y \
-    clang lld pkg-config file cmake curl git 
+WORKDIR /app
+COPY . .
 
+RUN apt update && apt install -y \
+    clang lld file cmake curl git pkg-config libssl-dev
+
+ARG TARGETPLATFORM
 RUN TARGET=$(xx-cargo --print-target-triple) && \
     case "$TARGET" in \
         "x86_64-unknown-linux-gnu") \
@@ -49,14 +53,10 @@ ENV CARGO_TARGET_S390X_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/s390x-linux-gnu-gcc
 ENV CARGO_TARGET_POWERPC64LE_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/powerpc64le-linux-gnu-gcc
 ENV CARGO_TARGET_I686_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/i686-linux-gnu-gcc
 
-WORKDIR /app
-COPY . .
-
-ARG TARGETPLATFORM
 RUN cargo fetch
 RUN cargo build --target=$(xx-cargo --print-target-triple)
 RUN mkdir build && \
-    mv target/$(xx-cargo --print-target-triple)/debug/axum-demo build
+mv target/$(xx-cargo --print-target-triple)/debug/axum-demo build
 RUN xx-verify ./build/axum-demo
 
 FROM debian:bookworm-slim AS runtime
@@ -64,4 +64,4 @@ RUN apt-get update && apt-get install -y libssl3 && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY .env .
 COPY --from=build /app/build/axum-demo /
-ENTRYPOINT ["axum-demo"]
+ENTRYPOINT ["./axum-demo"]
