@@ -12,7 +12,7 @@ RUN apt install -y \
     gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf \
     gcc-s390x-linux-gnu g++-s390x-linux-gnu \
     gcc-powerpc64le-linux-gnu g++-powerpc64le-linux-gnu \
-    gcc-12-i686-linux-gnu g++-12-i686-linux-gnu
+    gcc-i686-linux-gnu g++-i686-linux-gnu
 
 RUN dpkg --add-architecture amd64
 RUN dpkg --add-architecture arm64
@@ -24,8 +24,8 @@ RUN dpkg --add-architecture i386
 RUN apt update
 RUN apt install -y \
     libssl-dev:amd64 libssl-dev:arm64 libssl-dev:armhf \
-    libssl-dev:s390x libssl-dev:ppc64el libssl-dev:i386
-
+    libssl-dev:s390x libssl-dev:ppc64el libssl-dev:i386 
+   
 RUN rustup target add \
     x86_64-unknown-linux-gnu \   
     aarch64-unknown-linux-gnu \ 
@@ -40,7 +40,7 @@ ENV CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/aarch64-linux-gnu-gcc
 ENV CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER=/usr/bin/arm-linux-gnueabihf-gcc
 ENV CARGO_TARGET_S390X_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/s390x-linux-gnu-gcc
 ENV CARGO_TARGET_POWERPC64LE_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/powerpc64le-linux-gnu-gcc
-ENV CARGO_TARGET_I686_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/12-i686-linux-gnu-gcc
+ENV CARGO_TARGET_I686_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/i686-linux-gnu-gcc
 
 WORKDIR /app
 COPY . .
