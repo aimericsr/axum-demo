@@ -19,12 +19,12 @@ RUN dpkg --add-architecture arm64
 RUN dpkg --add-architecture armhf
 RUN dpkg --add-architecture s390x
 RUN dpkg --add-architecture ppc64el
-RUN dpkg --add-architecture i686
+RUN dpkg --add-architecture i386
 
 RUN apt update
 RUN apt install -y \
     libssl-dev:amd64 libssl-dev:arm64 libssl-dev:armhf \
-    libssl-dev:s390x libssl-dev:ppc64el libssl-dev:i686
+    libssl-dev:s390x libssl-dev:ppc64el libssl-dev:i386
 
 RUN rustup target add \
     x86_64-unknown-linux-gnu \   
