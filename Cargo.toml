@@ -16,7 +16,7 @@ name = "axum-demo"
 path = "src/main.rs"
 
 [profile.release]
-strip = "symbols"
+# strip = "symbols"
 
 [dependencies]
 # -- Http api
