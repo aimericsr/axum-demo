@@ -12,7 +12,7 @@ RUN apt install -y \
     gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf \
     gcc-s390x-linux-gnu g++-s390x-linux-gnu \
     gcc-powerpc64le-linux-gnu g++-powerpc64le-linux-gnu \
-    gcc-multilib g++-multilib
+    gcc-12-i686-linux-gnu g++-12-i686-linux-gnu
 
 RUN dpkg --add-architecture amd64
 RUN dpkg --add-architecture arm64
