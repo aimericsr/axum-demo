@@ -6,33 +6,40 @@ COPY --from=xx / /
 RUN apt update && apt install -y \
     clang lld pkg-config file cmake curl git 
 
-RUN apt install -y \
-    gcc-x86-64-linux-gnu g++-x86-64-linux-gnu \
-    gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
-    gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf \
-    gcc-s390x-linux-gnu g++-s390x-linux-gnu \
-    gcc-powerpc64le-linux-gnu g++-powerpc64le-linux-gnu \
-    gcc-i686-linux-gnu g++-i686-linux-gnu
-
-RUN dpkg --add-architecture amd64
-RUN dpkg --add-architecture arm64
-RUN dpkg --add-architecture armhf
-RUN dpkg --add-architecture s390x
-RUN dpkg --add-architecture ppc64el
-RUN dpkg --add-architecture i386
-
-RUN apt update
-RUN apt install -y \
-    libssl-dev:amd64 libssl-dev:arm64 libssl-dev:armhf \
-    libssl-dev:s390x libssl-dev:ppc64el libssl-dev:i386 pkg-config:i386
-   
-RUN rustup target add \
-    x86_64-unknown-linux-gnu \   
-    aarch64-unknown-linux-gnu \ 
-    armv7-unknown-linux-gnueabihf \ 
-    s390x-unknown-linux-gnu \ 
-    powerpc64le-unknown-linux-gnu \
-    i686-unknown-linux-gnu 
+RUN TARGET=$(xx-cargo --print-target-triple) && \
+    case "$TARGET" in \
+        "x86_64-unknown-linux-gnu") \
+            dpkg --add-architecture amd64 && \
+            apt update && \
+            apt install -y gcc-x86-64-linux-gnu g++-x86-64-linux-gnu libssl-dev:amd64 && \
+            rustup target add x86_64-unknown-linux-gnu ;; \
+        "aarch64-unknown-linux-gnu") \
+            dpkg --add-architecture arm64 && \
+            apt update && \
+            apt install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libssl-dev:arm64 && \
+            rustup target add aarch64-unknown-linux-gnu ;; \
+        "armv7-unknown-linux-gnueabihf") \
+            dpkg --add-architecture armhf && \
+            apt update && \
+            apt install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf libssl-dev:armhf && \
+            rustup target add armv7-unknown-linux-gnueabihf ;; \
+        "s390x-unknown-linux-gnu") \
+            dpkg --add-architecture s390x && \
+            apt update && \
+            apt install -y gcc-s390x-linux-gnu g++-s390x-linux-gnu libssl-dev:s390x && \
+            rustup target add s390x-unknown-linux-gnu ;; \
+        "powerpc64le-unknown-linux-gnu") \
+            dpkg --add-architecture ppc64el && \
+            apt update && \
+            apt install -y gcc-powerpc64le-linux-gnu g++-powerpc64le-linux-gnu libssl-dev:ppc64el && \
+            rustup target add powerpc64le-unknown-linux-gnu ;; \
+        "i686-unknown-linux-gnu") \
+            dpkg --add-architecture i386 && \
+            apt update && \
+            apt install -y gcc-i686-linux-gnu g++-i686-linux-gnu libssl-dev:i386 && \
+            rustup target add i686-unknown-linux-gnu ;; \
+        *) echo "No matching packages for $TARGET"; exit 1 ;; \
+    esac
 
 ENV PKG_CONFIG_ALLOW_CROSS=1
 ENV CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/x86_64-linux-gnu-gcc
