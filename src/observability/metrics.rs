@@ -79,19 +79,19 @@ fn init_tokio_metrics(meter: &Meter) {
         })
         .build();
 
-    // Unstable tokio metrics
-    let tokio_metrics_num_workers = tokio_metrics.clone();
-    meter
-        .f64_observable_up_down_counter("tokio.runtime.worker_threads.blocking.count")
-        .with_unit("threads")
-        .with_description("The number of blocking worker threads in the Tokio runtime, used to execute tasks that perform blocking operations. 
-            This pool is dynamically managed by Tokio based on demand."
-        )
-        .with_callback(move |observer| {
-            observer.observe(
-                tokio_metrics_num_workers.clone().num_blocking_threads() as f64,
-                &attributes,
-            )
-        })
-        .build();
+    // // Unstable tokio metrics
+    // let tokio_metrics_num_workers = tokio_metrics.clone();
+    // meter
+    //     .f64_observable_up_down_counter("tokio.runtime.worker_threads.blocking.count")
+    //     .with_unit("threads")
+    //     .with_description("The number of blocking worker threads in the Tokio runtime, used to execute tasks that perform blocking operations.
+    //         This pool is dynamically managed by Tokio based on demand."
+    //     )
+    //     .with_callback(move |observer| {
+    //         observer.observe(
+    //             tokio_metrics_num_workers.clone().num_blocking_threads() as f64,
+    //             &attributes,
+    //         )
+    //     })
+    //     .build();
 }

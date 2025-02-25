@@ -1,41 +1,60 @@
-# Build Stage
-FROM clux/muslrust:1.81.0-stable AS builder
-USER root
+FROM --platform=$BUILDPLATFORM tonistiigi/xx:1.6.1 AS xx
+
+FROM --platform=$BUILDPLATFORM rust:1.81-slim-bookworm AS build
+COPY --from=xx / /
+
+RUN apt update && apt install -y \
+    clang lld pkg-config file cmake curl git 
+
+RUN apt install -y \
+    gcc-x86-64-linux-gnu g++-x86-64-linux-gnu \
+    gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
+    gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf \
+    gcc-s390x-linux-gnu g++-s390x-linux-gnu \
+    gcc-powerpc64le-linux-gnu g++-powerpc64le-linux-gnu \
+    gcc-multilib g++-multilib
+
+RUN dpkg --add-architecture amd64
+RUN dpkg --add-architecture arm64
+RUN dpkg --add-architecture armhf
+RUN dpkg --add-architecture s390x
+RUN dpkg --add-architecture ppc64el
+RUN dpkg --add-architecture i686
+
+RUN apt update
+RUN apt install -y \
+    libssl-dev:amd64 libssl-dev:arm64 libssl-dev:armhf \
+    libssl-dev:s390x libssl-dev:ppc64el libssl-dev:i686
+
+RUN rustup target add \
+    x86_64-unknown-linux-gnu \   
+    aarch64-unknown-linux-gnu \ 
+    armv7-unknown-linux-gnueabihf \ 
+    s390x-unknown-linux-gnu \ 
+    powerpc64le-unknown-linux-gnu \
+    i686-unknown-linux-gnu 
+
+ENV PKG_CONFIG_ALLOW_CROSS=1
+ENV CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/x86_64-linux-gnu-gcc
+ENV CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/aarch64-linux-gnu-gcc
+ENV CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER=/usr/bin/arm-linux-gnueabihf-gcc
+ENV CARGO_TARGET_S390X_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/s390x-linux-gnu-gcc
+ENV CARGO_TARGET_POWERPC64LE_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/powerpc64le-linux-gnu-gcc
+ENV CARGO_TARGET_I686_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/i686-linux-gnu-gcc
+
 WORKDIR /app
 COPY . .
 
 ARG TARGETPLATFORM
-RUN case "$TARGETPLATFORM" in \
-        "linux/amd64")  echo "x86_64-unknown-linux-musl"  >> /tmp/target ;; \
-        "linux/arm64")  echo "aarch64-unknown-linux-musl"  >> /tmp/target ;; \
-        *)             echo "Unsupported TARGETPLATFORM: $TARGETPLATFORM" && exit 1 ;; \
-    esac
+RUN cargo fetch
+RUN cargo build --target=$(xx-cargo --print-target-triple)
+RUN mkdir build && \
+    mv target/$(xx-cargo --print-target-triple)/debug/axum-demo build
+RUN xx-verify ./build/axum-demo
 
-RUN rustup target add $(cat /tmp/target)
-RUN cargo install cargo-chef
-RUN cargo chef prepare --recipe-path recipe.json  
-RUN cargo chef cook --release --target $(cat /tmp/target) --recipe-path recipe.json
-RUN cargo build --release --target $(cat /tmp/target) --bin axum-demo
-RUN mkdir -p target/common/release && \
-    mv target/$(cat /tmp/target)/release/axum-demo target/common/release/axum-demo
-
-# Runtime Stage
-FROM alpine:3.21 AS runtime
-WORKDIR /usr/local/bin/
-RUN addgroup -S myuser && adduser -S myuser -G myuser
-RUN apk add --no-cache tzdata
-ENV TZ=Europe/Paris
-COPY --from=builder /app/target/common/release/axum-demo .
+FROM debian:bookworm-slim AS runtime
+RUN apt-get update && apt-get install -y libssl3 && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
 COPY .env .
-USER myuser
-CMD ["./axum-demo"]
-
-# Statically linked : Alpine, Scratch
-#FROM rust:1.82-alpine3.19 AS chef
-#FROM lukemathwalker/cargo-chef:latest-rust-1.81.0-alpine3.20 AS chef
-#RUN apt install -y x86_64-linux-gnu-gcc
-
-# Scratch Runtime (Alternative)
-# FROM scratch AS runtime
-# RUN apk add --no-cache tzdata
-# ENV TZ=Europe/Paris
+COPY --from=build /app/build/axum-demo /
+ENTRYPOINT ["axum-demo"]

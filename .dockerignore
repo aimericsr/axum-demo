@@ -1,11 +1,13 @@
 .vscode
 .github
-external-services/
-target/
-tests/
+target
+tests
 .dockerignore
 .gitignore
 docker-compose.yaml
 Dockerfile
 LICENSE
 README.md
+rust-toolchain.toml
+logs
+infrastructure

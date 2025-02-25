@@ -1,6 +1,5 @@
 # Dynamically linked : Debian
 FROM lukemathwalker/cargo-chef:latest-rust-1.81.0 AS chef
-RUN echo "aaaa"
 WORKDIR /app
 RUN cargo install --locked bacon
 COPY . .
@@ -10,7 +9,6 @@ RUN cargo build --bin axum-demo
 RUN apt update
 # for cli like : lscpu, readelf, ps, arp
 RUN apt install -y strace procps htop binutils net-tools
-RUN echo "aaaa"
 CMD bacon run -- --bin axum-demo
 
 #CMD [ "sleep 10000 &" ]
