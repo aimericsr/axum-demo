@@ -4,4 +4,4 @@
 # - .github/workflows/test-lint-workflow.yaml
 # - Cargo.toml
 # - Dockerfile / Dockerfile.dev
-channel = "1.81"
+channel = "1.85"

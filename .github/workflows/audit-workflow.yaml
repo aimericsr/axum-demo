@@ -1,7 +1,7 @@
 name: Security audit for dependencies
 
 env:
-  RUST_VERSION: 1.81
+  RUST_VERSION: 1.85
 
 on:
   schedule:

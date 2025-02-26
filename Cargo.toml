@@ -1,8 +1,8 @@
 [package]
 name = "axum-demo"
 version = "0.0.1"
-edition = "2021"
-rust-version = "1.81"
+edition = "2024"
+rust-version = "1.85"
 authors = ["Aimeric Sorin <aimeric.sorin@gmail.com>"]
 license = "Apache-2.0"
 description = "Basic rust web api to demonstrate axum framework capabilities. Based on https://github.com/rust10x/rust-web-app"
