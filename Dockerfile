@@ -1,6 +1,6 @@
 FROM --platform=$BUILDPLATFORM tonistiigi/xx:1.6.1 AS xx
 
-FROM --platform=$BUILDPLATFORM rust:1.81-slim-bookworm AS build
+FROM --platform=$BUILDPLATFORM rust:1.85-slim-bookworm AS build
 COPY --from=xx / /
 
 WORKDIR /app
