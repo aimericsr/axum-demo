@@ -1,7 +1,7 @@
 use crate::config::config;
+use axum::Router;
 use axum::handler::HandlerWithoutStateExt;
 use axum::http::StatusCode;
-use axum::Router;
 use tower_http::services::ServeDir;
 
 pub fn routes() -> Router {

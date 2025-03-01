@@ -8,8 +8,8 @@ use std::sync::OnceLock;
 use tracing::Subscriber;
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::fmt::format::FmtSpan;
-use tracing_subscriber::{layer::SubscriberExt, Registry};
 use tracing_subscriber::{EnvFilter, Layer};
+use tracing_subscriber::{Registry, layer::SubscriberExt};
 
 pub static OTLP_EXPORTER: OnceLock<SdkTracerProvider> = OnceLock::new();
 pub static FILE_GUARD: OnceLock<Option<WorkerGuard>> = OnceLock::new();

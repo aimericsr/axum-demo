@@ -1,8 +1,8 @@
 use axum::{
+    Router,
     extract::{Path, Query},
     response::{Html, IntoResponse},
     routing::get,
-    Router,
 };
 use serde::Deserialize;
 use tracing::debug;

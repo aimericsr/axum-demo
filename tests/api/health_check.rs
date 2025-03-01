@@ -32,24 +32,28 @@ async fn health_check_general_works() {
             .to_str()
             .unwrap()
     );
-    assert!(rate_limit_range.contains(
-        &headers
-            .get("x-ratelimit-limit")
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .parse::<u8>()
-            .unwrap()
-    ));
-    assert!(rate_limit_range.contains(
-        &headers
-            .get("x-ratelimit-remaining")
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .parse::<u8>()
-            .unwrap()
-    ));
+    assert!(
+        rate_limit_range.contains(
+            &headers
+                .get("x-ratelimit-limit")
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .parse::<u8>()
+                .unwrap()
+        )
+    );
+    assert!(
+        rate_limit_range.contains(
+            &headers
+                .get("x-ratelimit-remaining")
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .parse::<u8>()
+                .unwrap()
+        )
+    );
     // assert_eq!(
     //     55,
     //     headers.get("traceparent").unwrap().to_str().unwrap().len()

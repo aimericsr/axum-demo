@@ -1,6 +1,6 @@
 use super::get_ressources;
 use crate::config::Tracing;
-use opentelemetry::{metrics::Meter, KeyValue};
+use opentelemetry::{KeyValue, metrics::Meter};
 
 pub fn init_metrics(otel: &Tracing) -> Meter {
     //let exporter = opentelemetry_stdout::MetricExporter::default();

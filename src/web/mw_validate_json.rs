@@ -1,6 +1,6 @@
 use crate::web::Error;
 use axum::extract::Request;
-use axum::{extract::FromRequest, Json, RequestExt};
+use axum::{Json, RequestExt, extract::FromRequest};
 use validator::Validate;
 
 pub struct ValidatedJson<J>(pub J);

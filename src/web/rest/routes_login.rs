@@ -1,10 +1,10 @@
-use crate::crypt::{pwd, EncryptContent};
+use crate::crypt::{EncryptContent, pwd};
 use crate::ctx::Ctx;
 use crate::model::user::{UserBmc, UserForLogin};
 use crate::startup::SharedState;
 use crate::web::error::ProblemDetails;
 use crate::web::mw_validate_json::ValidatedJson;
-use crate::web::{self, remove_token_cookie, Error, Result};
+use crate::web::{self, Error, Result, remove_token_cookie};
 use axum::extract::State;
 use axum::routing::post;
 use axum::{Json, Router};

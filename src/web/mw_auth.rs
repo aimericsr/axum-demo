@@ -1,13 +1,13 @@
-use crate::crypt::token::{validate_web_token, Token};
+use crate::crypt::token::{Token, validate_web_token};
 use crate::ctx::Ctx;
-use crate::model::user::{UserBmc, UserForAuth};
 use crate::model::ModelManager;
+use crate::model::user::{UserBmc, UserForAuth};
 use crate::web::AUTH_TOKEN;
 use crate::web::{Error, Result};
 use axum::body::Body;
 use axum::extract::{FromRequestParts, State};
-use axum::http::request::Parts;
 use axum::http::Request;
+use axum::http::request::Parts;
 use axum::middleware::Next;
 use axum::response::Response;
 use serde::Serialize;

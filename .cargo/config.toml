@@ -6,14 +6,12 @@
 # linker = "x86_64-linux-gnu-gcc"
 
 # target dev
-# [target.aarch64-apple-darwin]
-# linker = "ld"
+[target.aarch64-apple-darwin]
+#linker = "clang"
 #rustflags = ["-C", "link-arg=-fuse-ld=/opt/homebrew/bin/mold"]
 #rustflags = ["-C", "link-arg=-fuse-ld=lld"]
 
 # Parallel front-end(only available in nightly)
-# [build]
-# rustflags = ["-Z", "threads=8"]
-
 [build]
-rustflags = ["--cfg", "tokio_unstable"]
+rustflags = [ "--cfg", "tokio_unstable"]
+# "-Z", "threads=8",

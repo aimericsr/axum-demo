@@ -1,7 +1,7 @@
 use std::time::Duration;
 
-use axum::{extract::State, routing::get, Json, Router};
-use hyper::{header, HeaderMap};
+use axum::{Json, Router, extract::State, routing::get};
+use hyper::{HeaderMap, header};
 use tower_otel::get_current_otel_trace_id;
 use tracing::instrument;
 

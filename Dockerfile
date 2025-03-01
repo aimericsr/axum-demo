@@ -6,8 +6,7 @@ COPY --from=xx / /
 WORKDIR /app
 COPY . .
 
-RUN apt update && apt install -y --no-install-recommends \
-    clang lld file cmake curl git pkg-config libssl-dev
+RUN apt update && apt install -y --no-install-recommends clang file cmake curl git pkg-config libssl-dev binutils-common musl-tools lld
 
 ARG TARGETPLATFORM
 RUN TARGET=$(xx-cargo --print-target-triple) && \
@@ -47,6 +46,7 @@ RUN TARGET=$(xx-cargo --print-target-triple) && \
 
 ENV PKG_CONFIG_ALLOW_CROSS=1
 ENV CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/x86_64-linux-gnu-gcc
+ENV CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/x86_64-linux-gnu-gcc
 ENV CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/aarch64-linux-gnu-gcc
 ENV CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER=/usr/bin/arm-linux-gnueabihf-gcc
 ENV CARGO_TARGET_S390X_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/s390x-linux-gnu-gcc
@@ -63,5 +63,38 @@ FROM debian:bookworm-slim AS runtime
 RUN apt-get update && apt-get install -y libssl3 && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY .env .
-COPY --from=build /app/build/axum-demo /
+COPY --from=build --chmod=755 /app/build/axum-demo .
 ENTRYPOINT ["./axum-demo"]
+
+# Alpine static build
+# FROM --platform=$BUILDPLATFORM rust:alpine3.21 AS build
+# COPY --from=xx / /
+# ARG TARGETPLATFORM
+
+# WORKDIR /app
+# COPY . .
+
+# RUN apk add mold musl-dev pkgconfig
+# RUN xx-apk add openssl-dev openssl-libs-static
+# ENTRYPOINT [ "/bin/sh" ]
+# RUN rustup target add $(xx-cargo --print-target-triple)
+# ENV PKG_CONFIG_ALLOW_CROSS=1
+# ENV PKG_CONFIG_ALL_STATIC=true
+# ENV RUSTFLAGS="-Clink-arg=-fuse-ld=mold" 
+# ENV OPENSSL_STATIC=true
+# ENV OPENSSL_DIR=/x86_64-alpine-linux-musl/usr
+# x86_64-unknown-linux-musl/usr/lib
+#CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/x86_64-linux-gnu-gcc
+# RUN OPENSSL_DIR=/x86_64-alpine-linux-musl/usr cargo build --target x86_64-unknown-linux-musl
+# RUN mkdir build && \
+#     mv target/$(xx-cargo --print-target-triple)/debug/axum-demo build
+# RUN xx-verify ./build/axum-demo
+
+# FROM alpine:3.21 AS runtime
+# RUN apk add libssl3
+# WORKDIR /app
+# COPY .env .
+# COPY --from=build --chmod=755 /app/build/axum-demo .
+# ENTRYPOINT ["./axum-demo"]
+
+# ENTRYPOINT [ "/bin/bash" ]
