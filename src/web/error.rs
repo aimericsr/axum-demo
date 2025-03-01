@@ -1,7 +1,7 @@
 use crate::{crypt, model, web};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use http::{header, HeaderMap};
+use http::{HeaderMap, header};
 use serde::Serialize;
 use std::sync::Arc;
 use thiserror::Error;

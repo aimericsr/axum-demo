@@ -1,11 +1,11 @@
 use axum_demo::config::{Env, Postgres as PostgresConfig};
 use axum_demo::{
-    config::{get_configuration, Tracing},
+    config::{Tracing, get_configuration},
     observability::traces::init_traces,
     startup::Application,
 };
 use secrecy::ExposeSecret;
-use sqlx::{postgres::PgConnectOptions, Connection, Executor, PgConnection, PgPool};
+use sqlx::{Connection, Executor, PgConnection, PgPool, postgres::PgConnectOptions};
 use std::sync::OnceLock;
 use uuid::Uuid;
 pub fn tracing(otel: &Tracing, env: &Env) -> &'static () {

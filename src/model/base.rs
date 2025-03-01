@@ -2,8 +2,8 @@ use super::{Error, Result};
 use crate::ctx::Ctx;
 use crate::model::ModelManager;
 use sqlb::HasFields;
-use sqlx::postgres::PgRow;
 use sqlx::FromRow;
+use sqlx::postgres::PgRow;
 
 pub trait DbBmc {
     const TABLE: &'static str;

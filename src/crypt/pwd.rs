@@ -1,6 +1,6 @@
 use super::{Error, Result};
 use crate::config::config;
-use crate::crypt::{encrypt_into_b64u, EncryptContent};
+use crate::crypt::{EncryptContent, encrypt_into_b64u};
 
 /// Encrypt the password with the default scheme.
 pub fn encrypt_pwd(enc_content: &EncryptContent) -> Result<String> {

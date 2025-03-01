@@ -1,12 +1,12 @@
-use crate::crypt::{pwd, EncryptContent};
+use crate::crypt::{EncryptContent, pwd};
 use crate::ctx::Ctx;
-use crate::model::base::{self, DbBmc};
 use crate::model::ModelManager;
 use crate::model::Result;
+use crate::model::base::{self, DbBmc};
 use serde::{Deserialize, Serialize};
 use sqlb::{Fields, HasFields};
-use sqlx::postgres::PgRow;
 use sqlx::FromRow;
+use sqlx::postgres::PgRow;
 use tracing::instrument;
 use uuid::Uuid;
 

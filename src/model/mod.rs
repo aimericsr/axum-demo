@@ -1,7 +1,7 @@
 pub mod task;
 pub mod user;
 pub use self::error::{Error, Result};
-use self::store::{new_db_pool, Db};
+use self::store::{Db, new_db_pool};
 use axum_macros::FromRef;
 
 mod base;
@@ -20,8 +20,8 @@ impl ModelManager {
         Ok(ModelManager { db })
     }
 
-    /// Create the db and setup the connection to the db
-    /// Only for tests
+    // Create the db and setup the connection to the db
+    // Only for tests
     // pub async fn new_for_test(db_name: String) -> Result<Self> {
     //     let db = new_db_pool_without_db().await;
     //     let mut connection = PgConnection::connect_with(&db)
