@@ -10,9 +10,9 @@ COPY . .
 
 RUN apk add clang musl-dev lld file libc6-compat pkgconfig openssl-dev openssl-libs-static ca-certificates tzdata
 RUN rustup target add $(xx-cargo --print-target-triple)
-RUN cargo build --target $(xx-cargo --print-target-triple)
+RUN cargo build --release --target $(xx-cargo --print-target-triple)
 RUN mkdir build && \
-    mv target/$(xx-cargo --print-target-triple)/debug/axum-demo build
+    mv target/$(xx-cargo --print-target-triple)/release/axum-demo build
 RUN xx-verify ./build/axum-demo
 
 FROM scratch AS runtime
