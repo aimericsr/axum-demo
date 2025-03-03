@@ -2,8 +2,8 @@ services:
   # User Facing App
   web:
     profiles: ["prod", "dev"]
-    image: aimeric/axum-demo:latest
-    platform: linux/amd64
+    #image: aimeric/axum-demo:0.0.1
+    image: alpine-demo
     # build: 
     #   context: .
     #   dockerfile: Dockerfile.dev
@@ -16,8 +16,9 @@ services:
     ports:
       - 8080:8080
     environment:
-      SERVICE_DB_HOST: ${SERVICE_DB_HOST:-db}
-      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4317} 
+      TZ: Asia/Hong_Kong
+      SERVICE_DB_HOST: db
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
     # volumes:
     #         - .:/app
     depends_on:
@@ -98,7 +99,7 @@ services:
 
   # Tests
   k6:
-    profiles: ["dev"]
+    profiles: ["test"]
     image: grafana/k6:0.57.0
     volumes:
       - ./infrastructure/docker-compose/k6:/home/k6

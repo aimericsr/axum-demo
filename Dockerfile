@@ -10,6 +10,7 @@ COPY . .
 
 RUN apk add clang musl-dev lld file libc6-compat pkgconfig openssl-dev openssl-libs-static ca-certificates tzdata
 RUN rustup target add $(xx-cargo --print-target-triple)
+RUN cargo fetch
 RUN cargo build --release --target $(xx-cargo --print-target-triple)
 RUN mkdir build && \
     mv target/$(xx-cargo --print-target-triple)/release/axum-demo build
@@ -25,11 +26,12 @@ WORKDIR /app
 
 COPY --from=build /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+
 COPY --from=build --chmod=755 /app/build/axum-demo .
 COPY .env .
-
+EXPOSE 8080
 ENV TZ=Europe/Paris
-ENTRYPOINT ["./axum-demo"]
+ENTRYPOINT ["/app/axum-demo"]
 
 # # Glibc
 # FROM --platform=$BUILDPLATFORM tonistiigi/xx:1.6.1 AS xx
