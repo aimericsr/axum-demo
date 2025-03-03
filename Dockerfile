@@ -8,7 +8,7 @@ ARG TARGETPLATFORM
 WORKDIR /app
 COPY . .
 
-RUN apk add clang musl-dev lld file libc6-compat pkgconfig openssl-dev openssl-libs-static ca-certificates tzdata
+RUN apk add clang musl-dev lld file libc6-compat pkgconfig openssl-dev openssl-libs-static ca-certificates
 RUN rustup target add $(xx-cargo --print-target-triple)
 RUN cargo fetch
 RUN cargo build --release --target $(xx-cargo --print-target-triple)
@@ -24,13 +24,11 @@ USER ${USER_UID}:${USER_GID}
 
 WORKDIR /app
 
-COPY --from=build /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 COPY --from=build --chmod=755 /app/build/axum-demo .
 COPY .env .
 EXPOSE 8080
-ENV TZ=Europe/Paris
 ENTRYPOINT ["/app/axum-demo"]
 
 # # Glibc

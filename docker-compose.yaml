@@ -3,7 +3,7 @@ services:
   web:
     profiles: ["prod", "dev"]
     #image: aimeric/axum-demo:0.0.1
-    image: alpine-demo
+    image: axum-demo
     # build: 
     #   context: .
     #   dockerfile: Dockerfile.dev
@@ -16,7 +16,6 @@ services:
     ports:
       - 8080:8080
     environment:
-      TZ: Asia/Hong_Kong
       SERVICE_DB_HOST: db
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
     # volumes:
