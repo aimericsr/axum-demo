@@ -1,20 +1,22 @@
 # Musl
-FROM  tonistiigi/xx:1.6.1 AS xx
-
-FROM rust:1.85-alpine3.21 AS build
-COPY --from=xx / /
-ARG TARGETPLATFORM
-
-WORKDIR /app
-COPY . .
-
+FROM rust:1.85-alpine3.21 AS chef
 RUN apk add clang musl-dev lld file libc6-compat pkgconfig openssl-dev openssl-libs-static ca-certificates
-RUN rustup target add $(xx-cargo --print-target-triple)
-RUN cargo fetch
-RUN cargo build --release --target $(xx-cargo --print-target-triple)
+RUN cargo install cargo-chef 
+WORKDIR /app
+
+FROM chef AS planner
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
+
+FROM chef AS builder
+COPY --from=planner /app/recipe.json recipe.json
+
+RUN cargo chef cook --bin axum-demo --release  --recipe-path recipe.json
+
+COPY . .
+RUN cargo build --bin axum-demo --release 
 RUN mkdir build && \
-    mv target/$(xx-cargo --print-target-triple)/release/axum-demo build
-RUN xx-verify ./build/axum-demo
+    mv target/release/axum-demo build
 
 FROM scratch AS runtime
 
@@ -24,9 +26,9 @@ USER ${USER_UID}:${USER_GID}
 
 WORKDIR /app
 
-COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
-COPY --from=build --chmod=755 /app/build/axum-demo .
+COPY --from=builder --chmod=755 /app/build/axum-demo .
 COPY .env .
 EXPOSE 8080
 ENTRYPOINT ["/app/axum-demo"]
