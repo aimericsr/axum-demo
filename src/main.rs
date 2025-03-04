@@ -9,14 +9,6 @@ fn main() -> std::io::Result<()> {
         .build()
         .unwrap()
         .block_on(async {
-            let text = reqwest::get("https://www.rust-lang.org")
-                .await
-                .unwrap()
-                .text()
-                .await
-                .unwrap();
-            dbg!(text.bytes().nth(33));
-
             let config = get_configuration().expect("Failed to read configuration");
 
             let meter = init_metrics(&config.tracing);
