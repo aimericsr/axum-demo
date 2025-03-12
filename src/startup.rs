@@ -1,8 +1,7 @@
 use crate::config::Config;
 pub use crate::error::{Error, Result};
 use crate::model::ModelManager;
-use crate::observability::traces::FILE_GUARD;
-use crate::observability::traces::OTLP_EXPORTER;
+use crate::observability::ObservabilityGuard;
 use crate::web;
 use crate::web::Error as ErrorWeb;
 use crate::web::mw_res_map::mw_res_map;
@@ -39,7 +38,7 @@ use tower_otel::axum::traces::OtelLoggerLayer;
 use tracing::info;
 use tracing::instrument;
 
-/// Type to hold the newly built server and his port
+/// Type to hold the newly built server and his listening port
 pub struct Application {
     port: u16,
     server: Serve<
@@ -74,8 +73,13 @@ impl Application {
     }
 
     /// Lunch the already build server with graceful shutdown and start listening to requests
-    pub async fn run_until_stopped(self) -> ResultIO<(), std::io::Error> {
-        self.server.with_graceful_shutdown(shutdown_signal()).await
+    pub async fn run_until_stopped(
+        self,
+        observability_guard: ObservabilityGuard,
+    ) -> ResultIO<(), std::io::Error> {
+        self.server
+            .with_graceful_shutdown(shutdown_signal(observability_guard))
+            .await
     }
 
     /// Returns the port on which the application will be listening to
@@ -175,9 +179,10 @@ fn routes(mm: ModelManager, meter: Meter) -> Router {
         .layer(concurrency_limit_layer)
 }
 
-/// Graceful shutdown to be able to send the last logs to the otlp backend before stopping the application
-/// SIGINT and SIGTERM are listen, only linux-based system are supported as signal management greatly dependens on the OS
-async fn shutdown_signal() {
+/// Graceful shutdown to be able to send the last traces/metrics to the otlp backend before stopping the application.
+///
+/// SIGINT and SIGTERM are listen, only linux-based system are supported as signal management greatly dependens on the OS.
+async fn shutdown_signal(observability_guard: ObservabilityGuard) {
     #[cfg(unix)]
     let ctrl_c = async {
         signal::unix::signal(signal::unix::SignalKind::interrupt())
@@ -196,24 +201,20 @@ async fn shutdown_signal() {
 
     tokio::select! {
         _ = ctrl_c => {
-            info!("signal SIGINT received, graceful shutdown started successfully");
+            info!("signal SIGINT received");
         },
         _ = terminate => {
-            info!("signal SIGTERM received, graceful shutdown started successfully");
+            info!("signal SIGTERM received");
         },
     }
+    info!("Graceful shutdown started successfully with a timeout of 5 seconds");
 
-    let tracer = OTLP_EXPORTER.get().expect("Exporter not initialized");
     tokio::select! {
-        _  = tokio::task::spawn_blocking(|| {
-            tracer.shutdown()
-        }) => {
-            {let _file_guard = FILE_GUARD.get().expect("Worker guard not initialized");}
-            info!("graceful shutdown has been completed successfully");
-
+        _  = observability_guard.shutdown() => {
+            info!("Graceful shutdown has been completed successfully");
         },
         _ = tokio::time::sleep(Duration::from_secs(5)) => {
-            info!("Timeout of 5 seconds has been reached without the shutdown to complete, exiting the appliction");
+            info!("Timeout of 5 seconds has been reached without the shutdown to complete, some traces/metrics may have been lost, exiting the appliction");
         },
     }
 }

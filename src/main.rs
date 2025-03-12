@@ -1,6 +1,5 @@
 use axum_demo::config::get_configuration;
-use axum_demo::observability::metrics::init_metrics;
-use axum_demo::observability::traces::init_traces;
+use axum_demo::observability::init_observability;
 use axum_demo::startup::Application;
 
 fn main() -> std::io::Result<()> {
@@ -11,16 +10,14 @@ fn main() -> std::io::Result<()> {
         .block_on(async {
             let config = get_configuration().expect("Failed to read configuration");
 
-            let meter = init_metrics(&config.tracing);
+            let observability_guard = init_observability(&config);
 
-            init_traces(&config.tracing, &config.env);
-
-            let application = Application::build(config, meter)
+            let application = Application::build(config, observability_guard.meter.clone())
                 .await
                 .expect("Failed to build the app");
 
             application
-                .run_until_stopped()
+                .run_until_stopped(observability_guard)
                 .await
                 .expect("Failed to lunch the app");
             Ok(())

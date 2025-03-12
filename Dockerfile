@@ -1,6 +1,5 @@
 # Musl
 FROM rust:1.85-alpine3.21 AS chef
-RUN apk add clang musl-dev lld file libc6-compat pkgconfig openssl-dev openssl-libs-static ca-certificates
 RUN cargo install cargo-chef 
 WORKDIR /app
 
@@ -13,10 +12,11 @@ COPY --from=planner /app/recipe.json recipe.json
 
 RUN cargo chef cook --bin axum-demo --release  --recipe-path recipe.json
 
+RUN apk add clang musl-dev lld file libc6-compat pkgconfig openssl-dev openssl-libs-static ca-certificates
+
 COPY . .
 RUN cargo build --bin axum-demo --release 
-RUN mkdir build && \
-    mv target/release/axum-demo build
+RUN mkdir build && mv target/release/axum-demo build
 
 FROM scratch AS runtime
 

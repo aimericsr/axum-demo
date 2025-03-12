@@ -15,9 +15,6 @@ path = "src/lib.rs"
 name = "axum-demo"
 path = "src/main.rs"
 
-[profile.release]
-# strip = "symbols"
-
 [dependencies]
 # -- Http api
 tokio = { version = "1", features = ["signal", "rt-multi-thread"] }
@@ -32,7 +29,7 @@ tower_governor = "0.6"
 hyper = "1"
 http = "1"
 futures = "0.3"
-reqwest = { version = "0.12.12", features = ["json"]}
+reqwest = { version = "0.12", features = ["json"]}
 # -- Error
 thiserror = "2"
 # -- Serde
