@@ -1,24 +1,37 @@
 services:
-  # User Facing App
+  # Proxy
+  proxy: 
+    profiles: ["dev"]
+    image: haproxy:3.0-bookworm
+    # entrypoint: ["/bin/sh", "-c", "sleep 1000"]
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./infrastructure/docker-compose/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ${HOME}/ssl/localhost.pem:/etc/ssl/localhost.pem
+  # Backend
   web:
     profiles: ["prod", "dev"]
     #image: aimeric/axum-demo:0.0.1
     # image: axum-demo
     build: 
       dockerfile: Dockerfile.dev
-    healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:8080/health/live || exit 1
-      interval: 30s
-      timeout: 5s
-      retries: 5
-      start_period: 5s
+    # healthcheck:
+    #   test: wget --no-verbose --tries=1 --spider http://localhost:8080/health/live || exit 1
+    #   interval: 30s
+    #   timeout: 5s
+    #   retries: 5
+    #   start_period: 5s
     ports:
       - 8080:8080
     environment:
       SERVICE_DB_HOST: db
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
     volumes:
-            - .:/app
+      - .:/app
+    # tty: true
+    # stdin_open: true
     depends_on:
       db:
         condition: service_healthy
@@ -39,7 +52,7 @@ services:
       POSTGRES_PASSWORD: "welcome"
       POSTGRES_DB: "app_db"
     volumes:
-      - ./infrastructure/docker-compose/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./infrastructure/docker-compose/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
   # Telemetry Components
   otel-collector:
@@ -48,8 +61,8 @@ services:
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:13133 || exit 1
     volumes:
-      - ./infrastructure/docker-compose/otel/otel-collector.yaml:/etc/otelcol-contrib/config.yaml
-      - /var/run/docker.sock:/var/run/docker.sock # Monitor Docker metrics
+      - ./infrastructure/docker-compose/otel/otel-collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Monitor Docker metrics
       # - /proc:/hostfs/proc # Monitor System metrics (Linux Only)
     ports:
       - 4317:4317 # OTLP gRPC receiver
@@ -73,7 +86,7 @@ services:
       - --config.file=/etc/prometheus/prometheus.yml
       - --enable-feature=native-histograms
     volumes:
-      - ./infrastructure/docker-compose/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./infrastructure/docker-compose/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
 
   jaeger:
     profiles: ["dev", "prod"]
@@ -93,7 +106,7 @@ services:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_BASIC_ENABLED: "false"
     volumes:
-      - ./infrastructure/docker-compose/grafana:/etc/grafana/provisioning
+      - ./infrastructure/docker-compose/grafana:/etc/grafana/provisioning:ro
 
   # Tests
   k6:

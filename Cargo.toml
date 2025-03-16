@@ -80,9 +80,6 @@ tracing-appender = "0.2.3"
 [dev-dependencies]
 anyhow = "1"
 
-# [lints.rust]
-# unsafe_code = "forbid"
-
 [lints.clippy]
 cast_lossless = "deny"
 cast_possible_truncation = "deny"
