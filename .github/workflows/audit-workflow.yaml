@@ -21,16 +21,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Cache Dependencies
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: ${{ env.RUST_VERSION }}
-
       - name: Install Rust toolchain
         run: |
           rustup update --no-self-update ${{ env.RUST_VERSION }}
           rustup default ${{ env.RUST_VERSION }}
           rustup update --no-self-update nightly
+
+      - name: Cache Dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ env.RUST_VERSION }}
 
       - name: Check outdated dependencies
         run: cargo install --locked cargo-outdated && cargo outdated
