@@ -77,7 +77,7 @@ pub async fn spawn_app() -> TestApp {
         .expect("Failed to build the app");
     let address = format!("http://127.0.0.1:{}", application.port());
     // Launch the application as a background task
-    let _ = tokio::spawn(application.run_until_stopped(observability_guard));
+    let _ = tokio::spawn(application.run_until_stopped());
     TestApp { address, db_pool }
 }
 

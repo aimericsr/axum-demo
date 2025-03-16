@@ -1,7 +1,6 @@
 use crate::config::Config;
 pub use crate::error::{Error, Result};
 use crate::model::ModelManager;
-use crate::observability::ObservabilityGuard;
 use crate::web;
 use crate::web::Error as ErrorWeb;
 use crate::web::mw_res_map::mw_res_map;
@@ -72,14 +71,9 @@ impl Application {
         Ok(Self { port, server })
     }
 
-    /// Lunch the already build server with graceful shutdown and start listening to requests
-    pub async fn run_until_stopped(
-        self,
-        observability_guard: ObservabilityGuard,
-    ) -> ResultIO<(), std::io::Error> {
-        self.server
-            .with_graceful_shutdown(shutdown_signal(observability_guard))
-            .await
+    /// Lunch the already build server until graceful shutdown signal is received and start listening to requests
+    pub async fn run_until_stopped(self) -> ResultIO<(), std::io::Error> {
+        self.server.with_graceful_shutdown(shutdown_signal()).await
     }
 
     /// Returns the port on which the application will be listening to
@@ -182,7 +176,7 @@ fn routes(mm: ModelManager, meter: Meter) -> Router {
 /// Graceful shutdown to be able to send the last traces/metrics to the otlp backend before stopping the application.
 ///
 /// SIGINT and SIGTERM are listen, only linux-based system are supported as signal management greatly dependens on the OS.
-async fn shutdown_signal(observability_guard: ObservabilityGuard) {
+async fn shutdown_signal() {
     #[cfg(unix)]
     let ctrl_c = async {
         signal::unix::signal(signal::unix::SignalKind::interrupt())
@@ -207,14 +201,5 @@ async fn shutdown_signal(observability_guard: ObservabilityGuard) {
             info!("signal SIGTERM received");
         },
     }
-    info!("Graceful shutdown started successfully with a timeout of 5 seconds");
-
-    tokio::select! {
-        _  = observability_guard.shutdown() => {
-            info!("Graceful shutdown has been completed successfully");
-        },
-        _ = tokio::time::sleep(Duration::from_secs(5)) => {
-            info!("Timeout of 5 seconds has been reached without the shutdown to complete, some traces/metrics may have been lost, exiting the appliction");
-        },
-    }
+    info!("Graceful shutdown signal has been send to axum, waiting for task to finish");
 }
