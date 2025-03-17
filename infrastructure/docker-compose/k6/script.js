@@ -1,7 +1,8 @@
 import http from "k6/http";
 import { check, group, sleep } from "k6";
 
-// Setup options
+// You first need to add the cert to you OS store as k6 don't provide this options for self-signed certs
+// k6 run infrastructure/docker-compose/k6/script.js
 export const options = {
   stages: [
     { duration: "15s", target: 300 },
@@ -12,11 +13,18 @@ export const options = {
     http_req_duration: ["p(95)<100", "p(90)<80"],
     http_req_failed: ["rate<0.01"],
   },
+  tlsAuth: [
+    {
+      cert: open(`${__ENV.HOME}/ssl/my-app.crt`),
+      key: open(`${__ENV.HOME}/ssl/my-app.key`),
+    },
+  ],
 };
 
+// k6 run infrastructure/docker-compose/k6/script.js
 // Default user worflow
 export default function () {
-  const BASE_URL = "http://localhost:8080";
+  const BASE_URL = "https://my-app";
 
   group("typical user workflow", function () {
     group("health check general", function () {

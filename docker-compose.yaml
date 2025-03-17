@@ -7,9 +7,10 @@ services:
     ports:
       - 80:80
       - 443:443
+      - 8404:8404
     volumes:
       - ./infrastructure/docker-compose/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-      - ${HOME}/ssl/localhost.pem:/etc/ssl/localhost.pem
+      - ${HOME}/ssl/my-app.pem:/etc/ssl/my-app.pem
   # Backend
   web:
     profiles: ["prod", "dev"]

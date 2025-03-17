@@ -7,10 +7,10 @@ set -e
 # apt-mark hold google-cloud-cli 
 # apt update && apt upgrade -y
 
-echo "Installing necessary packages..."
-apt install ca-certificates curl vim
+echo "Installing necessary packages for Docker ..."
+apt install ca-certificates curl -y
 
-echo "Set up Docker's apt repository...."
+echo "Set up Docker's apt repository ..."
 install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
 chmod a+r /etc/apt/keyrings/docker.asc
@@ -20,7 +20,7 @@ echo \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 apt update
 
-echo "Install Docker...."
+echo "Install Docker ..."
 apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
 
 # echo "Remove existing docker installation..."
@@ -29,3 +29,5 @@ apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-co
 # rm -rf /var/lib/containerd
 # rm /etc/apt/sources.list.d/docker.list
 # rm /etc/apt/keyrings/docker.asc
+
+apt install git -y
