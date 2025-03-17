@@ -30,4 +30,4 @@ apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-co
 # rm /etc/apt/sources.list.d/docker.list
 # rm /etc/apt/keyrings/docker.asc
 
-apt install git -y
+apt install openssl git -y
