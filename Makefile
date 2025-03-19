@@ -1,5 +1,5 @@
 ci: 
-	cargo fmt --all -- --check && cargo clippy -- -D warnings && cargo test --test api
+	cargo fmt --all -- --check && cargo clippy -- -D warnings && cargo test
 
 compose-dev-up: 
 	docker compose --profile dev up -d   

@@ -68,6 +68,8 @@ async fn health_ready(State(state): State<SharedState>) -> Result<Json<Vec<Strin
         (status = 408, description = "Timeout"),
     )
 )]
-async fn health_live() -> Json<Vec<String>> {
-    Json(vec!["alive".to_owned(), "true".to_owned()])
+async fn health_live(headers: HeaderMap) -> HeaderMap {
+    dbg!(&headers);
+    headers
+    //Json(vec!["alive".to_owned(), "true".to_owned()])
 }

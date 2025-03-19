@@ -1,29 +1,11 @@
-# # Dynamically linked : Debian
-# FROM lukemathwalker/cargo-chef:latest-rust-1.85.0 AS chef
-# WORKDIR /app
-# RUN cargo install --locked bacon
-# COPY . .
-# RUN cargo chef prepare --recipe-path recipe.json
-# RUN cargo chef cook --recipe-path recipe.json
-# RUN cargo build --bin axum-demo
-# RUN apt update
-# # for cli like : lscpu, readelf, ps, arp
+FROM rust:1.85-slim-bookworm AS chef
+RUN apt update && apt install -y pkg-config libssl-dev wget
+RUN cargo install cargo-watch
+WORKDIR /app
+COPY . .
+RUN cargo build 
+ENTRYPOINT ["cargo", "watch", "-w", "src", "-x", "run"]
+#ENTRYPOINT ["cargo", "run", "target/debug/axum-demo"]
+
+# for cli like : lscpu, readelf, ps, arp
 # RUN apt install -y strace procps htop binutils net-tools
-# CMD bacon run -- --bin axum-demo
-
-# #CMD [ "sleep 10000 &" ]
-# #CMD [ "/bin/bash" ]
-
-# # docker build -t axum-demo:v0.0.1 -f Dockerfile.dev . 
-# # docker run -p 8080:8080 -it axum-demo:v0.0.1
-# # docker run -v $(pwd) -v $(pwd)/target:/app/target -p 8080:8080 -it axum-demo:v0.0.1
-
-# #strace -f /usr/local/bin/axum-demo
-
-FROM alpine:latest 
-#FROM scratch 
-RUN apk add curl 
-#RUN apk --update add ca-certificates
-ENTRYPOINT [ "sh" ]
-# ENTRYPOINT [ "curl" ]
-# CMD [ "-v", "https://google.com" ] 

@@ -1,18 +1,9 @@
-use axum_demo::config::{Env, Postgres as PostgresConfig};
-use axum_demo::{
-    config::{Tracing, get_configuration},
-    observability::traces::init_traces,
-    startup::Application,
-};
+use axum_demo::config::Postgres as PostgresConfig;
+use axum_demo::observability::ObservabilityGuard;
+use axum_demo::{config::get_configuration, startup::Application};
 use secrecy::ExposeSecret;
-use sqlx::{Connection, Executor, PgConnection, PgPool, postgres::PgConnectOptions};
-use std::sync::OnceLock;
+use sqlx::{postgres::PgConnectOptions, Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
-pub fn tracing(otel: &Tracing, env: &Env) -> &'static () {
-    static INSTANCE: OnceLock<()> = OnceLock::new();
-
-    INSTANCE.get_or_init(|| init_traces(otel, env))
-}
 
 pub struct TestApp {
     pub address: String,
@@ -77,26 +68,15 @@ pub async fn spawn_app() -> TestApp {
         c.tracing.stdout_enabled = false;
         c
     };
-
-    tracing(&configuration.tracing, &configuration.env);
-
     //Create and migrate the database
     let db_pool = configure_database(&configuration.postgres).await;
-    // Launch the application as a background task
 
-    // Init metrics
-    let exporter = opentelemetry_stdout::MetricExporter::default();
-    let reader = opentelemetry_sdk::metrics::PeriodicReader::builder(exporter).build();
-    let provider = opentelemetry_sdk::metrics::SdkMeterProvider::builder()
-        .with_reader(reader.clone())
-        .build();
-    opentelemetry::global::set_meter_provider(provider);
-    let meter = opentelemetry::global::meter("axum_demo");
-
-    let application = Application::build(configuration, meter)
+    let observability_guard = ObservabilityGuard::default();
+    let application = Application::build(configuration, observability_guard.meter.clone())
         .await
         .expect("Failed to build the app");
     let address = format!("http://127.0.0.1:{}", application.port());
+    // Launch the application as a background task
     let _ = tokio::spawn(application.run_until_stopped());
     TestApp { address, db_pool }
 }

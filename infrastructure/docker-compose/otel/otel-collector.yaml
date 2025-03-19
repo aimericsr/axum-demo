@@ -3,6 +3,9 @@ receivers:
     protocols:
       grpc:
         endpoint: otel-collector:4317
+  haproxy:
+    endpoint: http://proxy:8404/stats
+    metrics:
   docker_stats:
   hostmetrics:
     collection_interval: 10s
@@ -103,7 +106,7 @@ service:
   extensions: [ health_check, pprof, zpages, basicauth/grafana_cloud ]
   pipelines:
     metrics:
-      receivers: [ otlp, postgresql, docker_stats, hostmetrics, prometheus ]
+      receivers: [ otlp, haproxy, postgresql, docker_stats, hostmetrics, prometheus ]
       processors: [ resourcedetection/docker, resourcedetection/system, batch ]
       exporters: [ otlphttp/prometheus ]
     traces:

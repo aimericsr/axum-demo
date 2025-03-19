@@ -15,9 +15,6 @@ path = "src/lib.rs"
 name = "axum-demo"
 path = "src/main.rs"
 
-[profile.release]
-# strip = "symbols"
-
 [dependencies]
 # -- Http api
 tokio = { version = "1", features = ["signal", "rt-multi-thread"] }
@@ -29,10 +26,10 @@ tower = { version = "0.5", features = ["limit", "timeout"]}
 tower-http = { version = "0.6", features = ["fs", "timeout", "cors", "trace"] }
 tower-cookies = "0.11"
 tower_governor = "0.6"
-hyper = "1"
 http = "1"
 futures = "0.3"
-reqwest = { version = "0.12.12", features = ["json"]}
+hyper = "1"
+reqwest = { version = "0.12", features = ["json"]}
 # -- Error
 thiserror = "2"
 # -- Serde
@@ -82,9 +79,6 @@ tracing-appender = "0.2.3"
 
 [dev-dependencies]
 anyhow = "1"
-
-# [lints.rust]
-# unsafe_code = "forbid"
 
 [lints.clippy]
 cast_lossless = "deny"

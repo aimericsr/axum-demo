@@ -108,6 +108,28 @@ With that, we can correlate application traces with prometeuses metrics from kub
 - [Helm](https://helm.sh/docs/intro/install/)
 - [k6](https://k6.io/docs/get-started/installation/)
 - [cmctl](https://cert-manager.io/docs/reference/cmctl/#installation)
+- [opensl](https://openssl-library.org/source/)
+
+## Create self-signed certificate
+```sh
+# For all platforms
+mkdir -p ~/ssl && cd ~/ssl
+openssl req -x509 -out my-app.crt -keyout my-app.key \
+  -newkey rsa:2048 -nodes -sha256 \
+  -subj '/CN=my-app' -extensions EXT -config <( \
+   printf "[dn]\nCN=my-app\n[req]\ndistinguished_name = dn\n[EXT]\nsubjectAltName=DNS:my-app\nkeyUsage=digitalSignature\nextendedKeyUsage=serverAuth")
+cat my-app.crt my-app.key > my-app.pem
+
+# Then add the certs to you system store and DNS resolver (system dependant)
+# Ex: MacOS
+echo "127.0.0.1 my-app" >> /etc/hosts
+# Add cert but not trusted
+sudo security add-certificates -k /Library/Keychains/System.keychain ~/ssl/my-app.crt   
+# Add trusted cert, password is needed
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ~/ssl/my-app.crt
+
+curl -v -L my-app http://my-app/health/ready
+```
 
 ## Starting the needed services
 
@@ -130,6 +152,10 @@ cargo doc --document-private-items --open
 ## Project Conventions
 
 function test name : test*[function_name]*[ok/err]\_[case_tested]
+
+Prefix PR names: 
+docs, fix, feat, ci, chore, perf, refactor, test
+
 
 ## Rust
 

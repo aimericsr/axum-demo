@@ -1,8 +1,10 @@
-use super::get_ressources;
-use crate::config::Tracing;
-use opentelemetry::{KeyValue, metrics::Meter};
+use crate::config::Config;
 
-pub fn init_metrics(otel: &Tracing) -> Meter {
+use super::get_ressources;
+use opentelemetry::{KeyValue, metrics::Meter};
+use opentelemetry_sdk::metrics::SdkMeterProvider;
+
+pub fn init_metrics(_conf: &Config) -> (SdkMeterProvider, Meter) {
     //let exporter = opentelemetry_stdout::MetricExporter::default();
 
     let exporter = opentelemetry_otlp::MetricExporter::builder()
@@ -15,20 +17,20 @@ pub fn init_metrics(otel: &Tracing) -> Meter {
         .with_interval(std::time::Duration::from_secs(3))
         .build();
 
-    let ressources = get_ressources(otel);
+    let ressources = get_ressources();
 
     let provider = opentelemetry_sdk::metrics::SdkMeterProvider::builder()
         .with_reader(reader.clone())
         .with_resource(ressources)
         .build();
 
-    opentelemetry::global::set_meter_provider(provider);
+    opentelemetry::global::set_meter_provider(provider.clone());
 
     let meter = opentelemetry::global::meter("axum_demo");
 
     init_tokio_metrics(&meter);
 
-    meter
+    (provider, meter)
 }
 
 fn init_tokio_metrics(meter: &Meter) {
