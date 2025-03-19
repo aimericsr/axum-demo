@@ -1,12 +1,11 @@
 FROM rust:1.85-slim-bookworm AS chef
 RUN apt update && apt install -y pkg-config libssl-dev wget
 RUN cargo install cargo-watch
-#RUN cargo install bacon
 WORKDIR /app
 COPY . .
 RUN cargo build 
-#ENTRYPOINT ["bacon", "run"]
 ENTRYPOINT ["cargo", "watch", "-w", "src", "-x", "run"]
+#ENTRYPOINT ["cargo", "run", "target/debug/axum-demo"]
 
 # for cli like : lscpu, readelf, ps, arp
 # RUN apt install -y strace procps htop binutils net-tools

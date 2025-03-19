@@ -26,9 +26,9 @@ tower = { version = "0.5", features = ["limit", "timeout"]}
 tower-http = { version = "0.6", features = ["fs", "timeout", "cors", "trace"] }
 tower-cookies = "0.11"
 tower_governor = "0.6"
-hyper = "1"
 http = "1"
 futures = "0.3"
+hyper = "1"
 reqwest = { version = "0.12", features = ["json"]}
 # -- Error
 thiserror = "2"

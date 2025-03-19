@@ -1,7 +1,0 @@
-# When updating this, also update:
-# - .github/workflows/audit-workflow.yaml
-# - .github/workflows/test-lint-workflow.yaml
-# - Cargo.toml
-# - Dockerfile / Dockerfile.dev
-[toolchain]
-channel = "1.85"

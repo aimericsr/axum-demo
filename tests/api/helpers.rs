@@ -2,7 +2,7 @@ use axum_demo::config::Postgres as PostgresConfig;
 use axum_demo::observability::ObservabilityGuard;
 use axum_demo::{config::get_configuration, startup::Application};
 use secrecy::ExposeSecret;
-use sqlx::{Connection, Executor, PgConnection, PgPool, postgres::PgConnectOptions};
+use sqlx::{postgres::PgConnectOptions, Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 
 pub struct TestApp {

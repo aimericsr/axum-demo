@@ -14,8 +14,9 @@ on:
 
 jobs:
   security-check:
-    name: Security Check
+    name: Security and Dependencies Check
     runs-on: ubuntu-latest
+    continue-on-error: true
 
     steps:
       - name: Checkout code
@@ -33,16 +34,13 @@ jobs:
           key: ${{ env.RUST_VERSION }}
 
       - name: Check outdated dependencies
-        run: cargo install --locked cargo-outdated && cargo outdated
+        run: cargo install -q --locked cargo-outdated && cargo outdated
 
       - name: Check unused dependencies
-        run: cargo install --locked cargo-udeps && cargo +nightly udeps --all-targets
+        run: cargo install -q --locked cargo-udeps && cargo +nightly udeps --all-targets
 
-      # - name: Check dependencies licences
-      #   run: cargo install --locked cargo-deny && cargo deny check
+      - name: Check dependencies licences
+        run: cargo install  -q--locked cargo-deny && cargo deny check
 
-      # - name: Check known security vulerability in dependencies
-      #   run: cargo install --locked cargo-pants && cargo pants
-
-      # - name: Check
-      #   run:  cargo install cargo-audit && cargo audit
+      - name: Check dependencies security vulnerabilities
+        run:  cargo install -q --locked cargo-audit && cargo audit

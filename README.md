@@ -153,6 +153,10 @@ cargo doc --document-private-items --open
 
 function test name : test*[function_name]*[ok/err]\_[case_tested]
 
+Prefix PR names: 
+docs, fix, feat, ci, chore, perf, refactor, test
+
+
 ## Rust
 
 ```sh

@@ -3,9 +3,9 @@ set -e
 
 # to run this script : sudo bash init.sh
 
-# echo "Updating package list..."
-# apt-mark hold google-cloud-cli 
-# apt update && apt upgrade -y
+echo "Updating package list..."
+apt update  || true
+apt upgrade -y
 
 echo "Installing necessary packages for Docker ..."
 apt install ca-certificates curl -y
@@ -29,11 +29,11 @@ usermod -aG docker $(whoami)
 systemctl enable docker.service
 systemctl enable containerd.service
 
+apt install openssl git -y
+
 # echo "Remove existing docker installation..."
 # for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do apt purge $pkg; done
 # rm -rf /var/lib/docker
 # rm -rf /var/lib/containerd
 # rm /etc/apt/sources.list.d/docker.list
 # rm /etc/apt/keyrings/docker.asc
-
-apt install openssl git -y
