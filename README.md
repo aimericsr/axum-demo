@@ -113,22 +113,28 @@ With that, we can correlate application traces with prometeuses metrics from kub
 ## Create self-signed certificate
 ```sh
 # For all platforms
-mkdir -p ~/ssl && cd ~/ssl
-openssl req -x509 -out my-app.crt -keyout my-app.key \
+mkdir -p  ~/dev-ssl && cd ~/dev-ssl
+openssl req -x509 -out my-app.local.crt -keyout my-app.local.key \
   -newkey rsa:2048 -nodes -sha256 \
-  -subj '/CN=my-app' -extensions EXT -config <( \
-   printf "[dn]\nCN=my-app\n[req]\ndistinguished_name = dn\n[EXT]\nsubjectAltName=DNS:my-app\nkeyUsage=digitalSignature\nextendedKeyUsage=serverAuth")
-cat my-app.crt my-app.key > my-app.pem
+  -subj '/CN=my-app.local' -extensions EXT -config <( \
+   printf "[dn]\nCN=my-app.local\n[req]\ndistinguished_name = dn\n[EXT]\nsubjectAltName=DNS:my-app.local\nkeyUsage=digitalSignature\nextendedKeyUsage=serverAuth")
 
 # Then add the certs to you system store and DNS resolver (system dependant)
 # Ex: MacOS
-echo "127.0.0.1 my-app" >> /etc/hosts
-# Add cert but not trusted
-sudo security add-certificates -k /Library/Keychains/System.keychain ~/ssl/my-app.crt   
-# Add trusted cert, password is needed
-sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ~/ssl/my-app.crt
+sudo sh -c "echo '127.0.0.1 my-app.local' >> /etc/hosts"
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ~/dev-ssl/my-app.local.crt  
 
-curl -v -L my-app http://my-app/health/ready
+curl -v -L my-app http://my-app.local/health/ready
+```
+
+## Create prod cert
+You first 
+```sh
+apt install certbot
+certbot certonly --standalone --noninteractive --agree-tos  -m your-email@gmail.com -d your-domain
+certbot certonly --webroot --noninteractive --agree-tos  -m your-email@gmail.com -d your-domain
+certbot renew 
+cat example.com.crt example.com.key > example.com.pem
 ```
 
 ## Starting the needed services

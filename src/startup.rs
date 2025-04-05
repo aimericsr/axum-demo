@@ -148,8 +148,8 @@ fn routes(mm: ModelManager, meter: Meter) -> Router {
     };
 
     let logger = OtelLoggerLayer::default()
-        .with_filter(Arc::new(|_req: &Parts| true))
-        .with_span_attributes(Arc::new(|_req: &Parts| vec![("MY_APP", "axum")]));
+        .with_filter(|_req: &Parts| true)
+        .with_span_attributes(|_req: &Parts| vec![("my_app", "axum")]);
 
     // Build the main Router
     Router::new()

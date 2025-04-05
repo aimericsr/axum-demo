@@ -1,23 +1,31 @@
 services:
-  # Proxy
   proxy: 
-    profiles: ["dev"]
-    image: haproxy:3.0-bookworm
-    # entrypoint: ["/bin/sh", "-c", "sleep 1000"]
+    profiles: ["dev", "proxy"]
+    image: traefik:v3.3
+    healthcheck:
+      test: 
+        - CMD
+        - traefik
+        - healthcheck
     ports:
       - 80:80
       - 443:443
+      - 8080:8080
     volumes:
-      - ./infrastructure/docker-compose/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-      - ${HOME}/ssl/my-app.pem:/etc/ssl/my-app.pem:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./infrastructure/docker-compose/traefik/traefik.yaml:/etc/traefik/traefik.yaml
+      - ~/dev-ssl:/certs:ro
 
-  # Backend
   web:
     profiles: ["prod", "dev"]
     image: aimeric/axum-demo:0.0.1
     # image: axum-demo
     # build: 
     #   dockerfile: Dockerfile.dev
+    labels:
+      - "traefik.http.routers.web.rule=Host(`my-app.local`) && PathPrefix(`/app`)"
+      #- "traefik.http.middlewares.web-rewritepath.replacepathregex=^/app/(.*) /$1"
+      - "traefik.http.services.web.loadbalancer.server.port=8080"
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8080/health/live || exit 1
       interval: 30s
@@ -37,7 +45,6 @@ services:
       db:
         condition: service_healthy
 
-  # Mandatory Services
   db:
     profiles: ["dev", "prod"]
     image: postgres:15
@@ -55,7 +62,6 @@ services:
     volumes:
       - ./infrastructure/docker-compose/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
-  # Telemetry Components
   otel-collector:
     profiles: ["dev", "prod"]
     image: otel/opentelemetry-collector-contrib:0.119.0
@@ -77,8 +83,13 @@ services:
 
   # Ports used : 1234, 9090
   prometheus:
-    profiles: ["dev", "prod"]
+    profiles: ["dev", "prod", "proxy"]
     image: prom/prometheus:v3.1.0
+    labels:
+      - "traefik.http.routers.prometheus.rule=Host(`my-app.local`) && PathPrefix(`/prometheus`)"
+      - "traefik.http.routers.prometheus.middlewares=prometheus-stripprefix"
+      - "traefik.http.middlewares.prometheus-stripprefix.stripprefix.prefixes=/prometheus"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
     command:
       - --web.enable-otlp-receiver
       - --web.enable-remote-write-receiver
@@ -92,20 +103,29 @@ services:
   jaeger:
     profiles: ["dev", "prod"]
     image: jaegertracing/all-in-one:1.66.0
+    labels:
+      - "traefik.http.routers.jaeger.rule=Host(`my-app.local`) && PathPrefix(`/jaeger`)"
+      - "traefik.http.middlewares.web-rewritepath.replacepathregex=^/jaeger/(.*) /$1"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=16686"
     environment:
       QUERY_BASE_PATH: "/my-app/jaeger"
 
   # Port used : 3000
   grafana:
-    profiles: ["dev", "prod"]
+    profiles: ["proxy", "prod"]
     image: grafana/grafana:11.5.1
-    
+    labels:
+      - "traefik.http.routers.grafana.rule=Host(`my-app.local`) && PathPrefix(`/grafana`)"
+      - "traefik.http.routers.grafana.middlewares=grafana-stripprefix"
+      - "traefik.http.middlewares.grafana-stripprefix.stripprefix.prefixes=/grafana/"
+      - "traefik.http.routers.grafana.service=grafana-port"
+      - "traefik.http.services.grafana-port.loadbalancer.server.port=3000"
     environment:
       GF_USERS_DEFAULT_THEME: "light"
       GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_BASIC_ENABLED: "false"
-      GF_SERVER_ROOT_URL: "https://my-app/grafana"
+      GF_SERVER_ROOT_URL: "https://my-app.local/grafana"
     volumes:
       - ./infrastructure/docker-compose/grafana:/etc/grafana/provisioning:ro
 

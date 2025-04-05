@@ -36,4 +36,4 @@ systemctl enable containerd.service
 # rm /etc/apt/sources.list.d/docker.list
 # rm /etc/apt/keyrings/docker.asc
 
-apt install openssl git -y
+apt install (openssl) git -y
