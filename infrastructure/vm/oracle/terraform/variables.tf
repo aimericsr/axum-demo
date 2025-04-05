@@ -33,3 +33,9 @@ variable "root_compartment_id" {
   description = "The root compartment id"
   default     = "ocid1.tenancy.oc1..aaaaaaaa2nimi5bnhsi5zoyxtbtglkcumccjfmkc5ajsoftlrd4m7krhtsda"
 }
+
+variable "image_id" {
+  type        = string
+  description = "The image id for VMs"
+  default     = "ocid1.tenancy.oc1..aaaaaaaa2nimi5bnhsi5zoyxtbtglkcumccjfmkc5ajsoftlrd4m7krhtsda"
+}
