@@ -4,9 +4,8 @@ resource "oci_core_security_list" "public_sl" {
   display_name   = "public_sl"
 
   ingress_security_rules {
-    protocol    = "6" # TCP
-    source      = "0.0.0.0/0"
-    source_type = "CIDR_BLOCK"
+    protocol = "6" # TCP
+    source   = "0.0.0.0/0"
 
     tcp_options {
       min = 22
@@ -15,9 +14,8 @@ resource "oci_core_security_list" "public_sl" {
   }
 
   ingress_security_rules {
-    protocol    = "6" # TCP
-    source      = "0.0.0.0/0"
-    source_type = "CIDR_BLOCK"
+    protocol = "6" # TCP
+    source   = "0.0.0.0/0"
 
     tcp_options {
       min = 80
@@ -26,9 +24,8 @@ resource "oci_core_security_list" "public_sl" {
   }
 
   ingress_security_rules {
-    protocol    = "6" # TCP
-    source      = "0.0.0.0/0"
-    source_type = "CIDR_BLOCK"
+    protocol = "6" # TCP
+    source   = "0.0.0.0/0"
 
     tcp_options {
       min = 443
@@ -37,20 +34,8 @@ resource "oci_core_security_list" "public_sl" {
   }
 
   ingress_security_rules {
-    protocol    = "1" # ICMP
-    source      = "0.0.0.0/0"
-    source_type = "CIDR_BLOCK"
-
-    icmp_options {
-      type = 8 # Echo Request (ping)
-      code = 0 # Any code
-    }
-  }
-
-  ingress_security_rules {
-    protocol    = "6" # TCP
-    source      = "0.0.0.0/0"
-    source_type = "CIDR_BLOCK"
+    protocol = "6" # TCP
+    source   = "0.0.0.0/0"
 
     tcp_options {
       min = 6443
@@ -58,26 +43,28 @@ resource "oci_core_security_list" "public_sl" {
     }
   }
 
-  egress_security_rules {
-    protocol         = "all"
-    destination      = "0.0.0.0/0"
-    destination_type = "CIDR_BLOCK"
-  }
-}
-
-resource "oci_core_security_list" "private_sl" {
-  compartment_id = oci_identity_compartment.dev.id
-  vcn_id         = oci_core_vcn.main.id
-  display_name   = "private_sl"
-
-  ingress_security_rules {
-    protocol    = "6" # TCP
-    source      = "10.0.1.0/24"
-    source_type = "CIDR_BLOCK"
+    ingress_security_rules {
+    protocol = "6" # TCP
+    source   = "10.0.1.0/24"
 
     tcp_options {
       min = 2379
       max = 2380
     }
+  }
+
+  ingress_security_rules {
+    protocol = "17" # UDP
+    source   = "10.0.1.0/24"
+
+    udp_options {
+      min = 8472
+      max = 8472
+    }
+  }
+
+  egress_security_rules {
+    destination = "0.0.0.0/0"
+    protocol    = "all"
   }
 }

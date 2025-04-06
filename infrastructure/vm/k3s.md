@@ -1,14 +1,9 @@
 
-# Modify default iptables rules to allow agent to registered against the control plane
-sudo vi /etc/iptables/rules.v4
--A INPUT -p tcp -m state --state NEW -m tcp --dport 2379 -j ACCEPT
--A INPUT -p tcp -m state --state NEW -m tcp --dport 2380 -j ACCEPT
--A INPUT -p tcp -m state --state NEW -m tcp --dport 6443 -j ACCEPT
+
+
 
 # Issue
 https://github.com/tailscale/tailscale/issues/13863
-
-
 
 sudo iptables-restore < /etc/iptables/rules.v4
 
@@ -28,22 +23,17 @@ For the clean install :
 
 curl -sfL https://get.k3s.io | sh -s - server \
     --cluster-init \
-    --tls-san=<LB_IP> 
-    
-   # \
-   # --etcd-s3 \
-   # --etcd-s3-bucket=<S3-BUCKET-NAME> \
-   # --etcd-s3-access-key=<S3-ACCESS-KEY> \
-   # --etcd-s3-secret-key=<S3-SECRET-KEY>
+    --tls-san=<LB_IP> \
+    --etcd-s3 \
+    --etcd-s3-endpoint=<S3-BUCKET-NAME> \
+    --etcd-s3-bucket=<S3-BUCKET-NAME> \
+    --etcd-s3-access-key=<S3-ACCESS-KEY> \
+    --etcd-s3-secret-key=<S3-SECRET-KEY>
 
 curl -sfL https://get.k3s.io | K3S_TOKEN=<SECRET> sh -s - server \
     --server https://<IP_OR_DNS_SERVER1>:6443 \
     --tls-san=<LB_IP>
 
-
-curl -sfL https://get.k3s.io | K3S_TOKEN=<df> sh -s - server \
-    --server https://10.0.1.30:6443 \
-    --tls-san=158.178.200.24
 
 Add this commands if you want to restore etcd database from S3 file : 
   --cluster-reset \
@@ -61,7 +51,18 @@ kubectl config use default
 kubectl config get-contexts
 
 mkdir $HOME/snapchot
-sudo k3s etcd-snapshot save --data-dir $HOME/snapchot
+
+sudo k3s etcd-snapshot save --etcd-snapshot-dir $HOME
+
+k3s etcd-snapshot save \
+  --s3 \
+  --s3-bucket=<S3-BUCKET-NAME> \
+  --etcd-s3-endpoint=<S3-BUCKET-ENDPOINT>
+  --s3-access-key=<S3-ACCESS-KEY> \
+  --s3-secret-key=<S3-SECRET-KEY>
+
+ax70azibgchm.compat.objectstorage.eu-paris-1.oraclecloud.com
+
 
 https://web.archive.org/web/20240726111518/https://prog.world/is-storage-speed-suitable-for-etcd-ask-fio/
 sudo apt install -y fio

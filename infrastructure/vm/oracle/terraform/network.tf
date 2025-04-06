@@ -11,7 +11,7 @@ resource "oci_core_subnet" "dev" {
   display_name      = "dev"
   dns_label         = "subnetdev"
   route_table_id    = oci_core_route_table.public_rt.id
-  security_list_ids = [oci_core_security_list.public_sl.id, oci_core_security_list.private_sl.id]
+  security_list_ids = [oci_core_security_list.public_sl.id]
   compartment_id    = oci_identity_compartment.dev.id
 }
 
