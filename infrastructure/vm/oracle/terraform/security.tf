@@ -4,6 +4,15 @@ resource "oci_core_security_list" "public_sl" {
   display_name   = "public_sl"
 
   ingress_security_rules {
+    protocol = "1" # ICMP
+    source   = "0.0.0.0/0"
+    icmp_options {
+      type = 8
+      code = 0
+    }
+  }
+
+  ingress_security_rules {
     protocol = "6" # TCP
     source   = "0.0.0.0/0"
 
@@ -43,13 +52,24 @@ resource "oci_core_security_list" "public_sl" {
     }
   }
 
-    ingress_security_rules {
+  # Inside Network
+  ingress_security_rules {
     protocol = "6" # TCP
     source   = "10.0.1.0/24"
 
     tcp_options {
       min = 2379
       max = 2380
+    }
+  }
+
+  ingress_security_rules {
+    protocol = "6" # TCP
+    source   = "10.0.1.0/24"
+
+    tcp_options {
+      min = 4240
+      max = 4240
     }
   }
 

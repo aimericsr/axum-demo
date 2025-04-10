@@ -3,8 +3,8 @@ resource "oci_network_load_balancer_network_load_balancer" "example_nlb" {
   compartment_id = oci_identity_compartment.dev.id
   subnet_id      = oci_core_subnet.dev.id
 
-  display_name   = "kubernetes-cluster"
-  is_private     = false
+  display_name                   = "kubernetes-cluster"
+  is_private                     = false
   is_preserve_source_destination = false
 }
 
@@ -14,6 +14,7 @@ resource "oci_network_load_balancer_listener" "listener_http" {
   protocol                 = "TCP"
   port                     = 80
   default_backend_set_name = oci_network_load_balancer_backend_set.http_backend_set.name
+  is_ppv2enabled           = false
 }
 
 resource "oci_network_load_balancer_listener" "listener_https" {
@@ -22,6 +23,7 @@ resource "oci_network_load_balancer_listener" "listener_https" {
   protocol                 = "TCP"
   port                     = 443
   default_backend_set_name = oci_network_load_balancer_backend_set.https_backend_set.name
+  is_ppv2enabled           = false
 }
 
 resource "oci_network_load_balancer_listener" "listener_k3s" {
@@ -30,12 +32,13 @@ resource "oci_network_load_balancer_listener" "listener_k3s" {
   protocol                 = "TCP"
   port                     = 6443
   default_backend_set_name = oci_network_load_balancer_backend_set.k3s_backend_set.name
+  is_ppv2enabled           = false
 }
 
 resource "oci_network_load_balancer_backend_set" "http_backend_set" {
-  name                       = "http_backend_set"
-  network_load_balancer_id   = oci_network_load_balancer_network_load_balancer.example_nlb.id
-  policy                     = "FIVE_TUPLE"
+  name                     = "http_backend_set"
+  network_load_balancer_id = oci_network_load_balancer_network_load_balancer.example_nlb.id
+  policy                   = "FIVE_TUPLE"
 
   health_checker {
     port     = 80
@@ -44,9 +47,9 @@ resource "oci_network_load_balancer_backend_set" "http_backend_set" {
 }
 
 resource "oci_network_load_balancer_backend_set" "https_backend_set" {
-  name                       = "https_backend_set"
-  network_load_balancer_id   = oci_network_load_balancer_network_load_balancer.example_nlb.id
-  policy                     = "FIVE_TUPLE"
+  name                     = "https_backend_set"
+  network_load_balancer_id = oci_network_load_balancer_network_load_balancer.example_nlb.id
+  policy                   = "FIVE_TUPLE"
 
   health_checker {
     port     = 443
@@ -55,9 +58,9 @@ resource "oci_network_load_balancer_backend_set" "https_backend_set" {
 }
 
 resource "oci_network_load_balancer_backend_set" "k3s_backend_set" {
-  name                       = "k8s_backend_set"
-  network_load_balancer_id   = oci_network_load_balancer_network_load_balancer.example_nlb.id
-  policy                     = "FIVE_TUPLE"
+  name                     = "k8s_backend_set"
+  network_load_balancer_id = oci_network_load_balancer_network_load_balancer.example_nlb.id
+  policy                   = "FIVE_TUPLE"
 
   health_checker {
     port     = 6443

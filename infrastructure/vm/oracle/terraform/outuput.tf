@@ -26,3 +26,12 @@ output "s3_compatible_endpoint" {
 output "s3_compatible_bucket_name" {
   value = oci_objectstorage_bucket.test_bucket.name
 }
+
+output "compartment_id" {
+  value = oci_identity_compartment.dev.id
+}
+
+
+output "vcn_id" {
+  value = oci_core_vcn.main.id
+}

@@ -4,8 +4,6 @@ resource "oci_identity_compartment" "dev" {
   description    = "VCN for dev projects"
   enable_delete  = true
 }
-
-
 # Credit : 245.70$
 
 
