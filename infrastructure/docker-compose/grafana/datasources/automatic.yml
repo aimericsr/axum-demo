@@ -4,9 +4,34 @@ datasources:
 - name: Prometheus
   type: prometheus
   access: proxy
+  orgId: 1
+  uid: prometheus
   url: http://prometheus:9090
+  isDefault: true
+  jsonData:
+    httpMethod: GET
+    
 - name: Tempo
   type: tempo
   access: proxy
+  orgId: 1
+  uid: tempo
   url: http://tempo:3200
+  isDefault: false
+  jsonData:
+    httpMethod: GET
+    serviceMap:
+      datasourceUid: 'prometheus'
+    nodeGraph:
+        enabled: true
+    streamingEnabled:
+        search: true
+    tracesToMetrics:
+        datasourceUid: 'prometheus'
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '-1h'
+        tags: [{ key: 'service.name', value: 'service' }, { key: 'job' }]
+        queries:
+          - name: 'Sample query'
+            query: 'sum(rate(traces_spanmetrics_latency_bucket{$$__tags}[5m]))'
 

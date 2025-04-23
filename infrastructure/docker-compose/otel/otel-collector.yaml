@@ -24,16 +24,16 @@ receivers:
     password: secure_password
     databases:
     - app_db
-    collection_interval: 10s
+    collection_interval: 30s
     tls:
       insecure: true
   prometheus:
     config:
       scrape_configs:
       - job_name: 'otel-collector'
-        scrape_interval: 5s
+        scrape_interval: 30s
         static_configs:
-        - targets: [ 'otel-collector:8888' ]
+        - targets: [ 'localhost:8888' ]
 
 processors:
   resourcedetection/env:
@@ -58,49 +58,28 @@ exporters:
     endpoint: tempo:4317
     tls:
       insecure: true
-  otlphttp/prometheus:
-    endpoint: prometheus:9090
+  prometheusremotewrite:
+    endpoint: http://prometheus:9090/api/v1/write
     tls:
       insecure: true
-  otlphttp/grafana_cloud:
-    endpoint: ${env:GRAFANA_CLOUD_OTLP_ENDPOINT}
-    auth:
-      authenticator: basicauth/grafana_cloud
+  otlphttp/prometheus:
+    endpoint: http://prometheus:9090/api/v1/otlp/v1/metrics
+    tls:
+      insecure: true
 
 extensions:
-  basicauth/grafana_cloud:
-    client_auth:
-      username: ${env:GRAFANA_CLOUD_INSTANCE_ID}
-      password: ${env:GRAFANA_CLOUD_API_KEY}
   health_check:
-    endpoint: otel-collector:13133
   pprof:
   zpages:
 
 
 service:
-  telemetry:
-    logs:
-      level: INFO
-    metrics:
-      level: normal
-      readers:
-      - pull:
-          exporter:
-            prometheus:
-              host: otel-collector
-              port: 8888
-      # - periodic:
-      #     exporter:
-      #       otlp:
-      #         protocol: http/protobuf
-      #         endpoint: http://prometheus:9090/api/v1/otlp
-  extensions: [ health_check, pprof, zpages, basicauth/grafana_cloud ]
+  extensions: [ health_check, pprof, zpages ]
   pipelines:
     metrics:
-      receivers: [ otlp, postgresql, docker_stats, hostmetrics, prometheus ]
+      receivers: [ otlp, postgresql, prometheus ]
       processors: [ resourcedetection/docker, resourcedetection/system, batch ]
-      exporters: [ otlphttp/prometheus ]
+      exporters: [ prometheusremotewrite ]
     traces:
       receivers: [ otlp ]
       processors: [ resourcedetection/docker, resourcedetection/system, batch ]
