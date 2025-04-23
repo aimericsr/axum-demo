@@ -3,9 +3,6 @@ receivers:
     protocols:
       grpc:
         endpoint: otel-collector:4317
-  haproxy:
-    endpoint: http://proxy:8404/stats
-    metrics:
   docker_stats:
   hostmetrics:
     collection_interval: 10s
@@ -57,17 +54,12 @@ processors:
 exporters:
   debug:
     verbosity: detailed
-  otlp/jaeger:
-    endpoint: jaeger:4317
+  otlp/tempo:
+    endpoint: tempo:4317
     tls:
       insecure: true
   otlphttp/prometheus:
-    endpoint: http://prometheus:9090/api/v1/otlp
-    compression: none
-    tls:
-      insecure: true
-  prometheusremotewrite:
-    endpoint: http://prometheus:9090/api/v1/write
+    endpoint: prometheus:9090
     tls:
       insecure: true
   otlphttp/grafana_cloud:
@@ -106,10 +98,10 @@ service:
   extensions: [ health_check, pprof, zpages, basicauth/grafana_cloud ]
   pipelines:
     metrics:
-      receivers: [ otlp, haproxy, postgresql, docker_stats, hostmetrics, prometheus ]
+      receivers: [ otlp, postgresql, docker_stats, hostmetrics, prometheus ]
       processors: [ resourcedetection/docker, resourcedetection/system, batch ]
       exporters: [ otlphttp/prometheus ]
     traces:
       receivers: [ otlp ]
       processors: [ resourcedetection/docker, resourcedetection/system, batch ]
-      exporters: [ otlp/jaeger ]
+      exporters: [ otlp/tempo ]
