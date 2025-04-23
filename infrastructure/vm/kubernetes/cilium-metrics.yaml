@@ -1,0 +1,48 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: cilium-metrics-monitor
+  namespace: monitoring
+  labels:
+    serviceMonitorSelector: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: cilium 
+  endpoints:
+  - port: 9962      
+    interval: 30s
+    scheme: http
+    targetPort: 9962
+    relabelings:
+      - action: replace
+        sourceLabels: [__meta_kubernetes_pod_name]
+        targetLabel: pod
+      - action: replace
+        sourceLabels: [__meta_kubernetes_pod_node_name]
+        targetLabel: instance
+  - port: 9964       
+    interval: 30s
+    scheme: http
+    targetPort: 9964
+    relabelings:
+      - action: replace
+        sourceLabels: [__meta_kubernetes_pod_name]
+        targetLabel: pod
+      - action: replace
+        sourceLabels: [__meta_kubernetes_pod_node_name]
+        targetLabel: instance
+  - port: 9965       
+    interval: 30s
+    scheme: http
+    targetPort: 9965
+    relabelings:
+      - action: replace
+        sourceLabels: [__meta_kubernetes_pod_name]
+        targetLabel: pod
+      - action: replace
+        sourceLabels: [__meta_kubernetes_pod_node_name]
+        targetLabel: instance
+  namespaceSelector:
+    matchNames:
+      - kube-system

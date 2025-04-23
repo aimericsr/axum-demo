@@ -12,6 +12,13 @@ output "k3s_servers_public_ips" {
   ]
 }
 
+output "k3s_ocids" {
+  value = [
+    for instance in data.oci_core_instance.k3s_servers_instances_ips :
+    instance.instance_id
+  ]
+}
+
 output "k3s_lb_public_ip" {
   value = [
     for ip in oci_network_load_balancer_network_load_balancer.example_nlb.ip_addresses :
@@ -35,3 +42,8 @@ output "compartment_id" {
 output "vcn_id" {
   value = oci_core_vcn.main.id
 }
+
+output "ads" {
+  value = data.oci_identity_availability_domains.ads.availability_domains[0].name
+}
+

@@ -129,6 +129,17 @@ services:
     volumes:
       - ./infrastructure/docker-compose/grafana:/etc/grafana/provisioning:ro
 
+  tempo:
+    profiles: ["proxy", "prod"]
+    image: grafana/tempo:2.7.2
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./infrastructure/docker-compose/tempo/tempo.yaml:/etc/tempo.yaml
+      - ./tempo-data:/var/tempo
+    ports:
+      - 3200:3200
+      - 4317:4317
+
   # Tests
   k6:
     profiles: ["test"]

@@ -56,7 +56,7 @@ opentelemetry_sdk = { version = "0.29", features = ["testing"]}
 opentelemetry-otlp = { version = "0.29", features = ["grpc-tonic"] }
 opentelemetry-stdout = "0.29"
 opentelemetry-semantic-conventions = "0.29"
-opentelemetry-resource-detectors = "0.7"
+opentelemetry-resource-detectors = "0.8"
 tracing-opentelemetry = "0.30"
 tower-otel = { git = "https://github.com/aimericsr/tower-otel" }
 #tower-otel = { path = "../tower-otel" }

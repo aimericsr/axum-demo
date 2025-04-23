@@ -90,14 +90,13 @@ pub fn init_observability(config: &Config) -> ObservabilityGuard {
 fn get_ressources() -> Resource {
     let ressources = Resource::builder();
 
-    // let detectors = ressources.with_detectors(&[
-    //     Box::new(OsResourceDetector),
-    //     Box::new(ProcessResourceDetector),
-    //     Box::<HostResourceDetector>::default(),
-    // ]);
+    let detectors = ressources.with_detectors(&[
+        Box::new(OsResourceDetector),
+        Box::new(ProcessResourceDetector),
+        Box::<HostResourceDetector>::default(),
+    ]);
 
-    //let attributes = detectors.with_attributes([KeyValue::new("service.schema.url", SCHEMA_URL)]);
-    let attributes = ressources.with_attributes([KeyValue::new("service.schema.url", SCHEMA_URL)]);
+    let attributes = detectors.with_attributes([KeyValue::new("service.schema.url", SCHEMA_URL)]);
 
     attributes.build()
 }

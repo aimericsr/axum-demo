@@ -2,17 +2,9 @@ auth:
   region: eu-paris-1
   tenancy: ocid1.tenancy.oc1..aaaaaaaa2nimi5bnhsi5zoyxtbtglkcumccjfmkc5ajsoftlrd4m7krhtsda
   user: ocid1.user.oc1..aaaaaaaai2anfuh4aadc63vceu27mrub7u74n2oyisz7hajetncxu4eiheeq
-  key: |
-    <PRIVATE_KEY>
+  key:
   fingerprint: e7:69:19:16:1c:2e:ac:80:2e:c4:97:eb:61:4a:0a:63
-
   useInstancePrincipals: false
-
 compartment: ocid1.compartment.oc1..aaaaaaaa2367n6viggezcqy6db3k3dmojhjxuft262ezobuvdgkxsiudcmca
-
 vcn: ocid1.vcn.oc1.eu-paris-1.amaaaaaa5cso7saadr4xfx5uqbd5jhy22tundv57ri7nut6i3lgg2qhn77fa
-
-
-# yq eval '.auth.key |= strload "~/.oci/id_rsa.pem"' -i storage.yaml
-
-
+# yq eval '.auth.key |= load_str("/Users/aimericsorin/.oci/id_rsa.pem")' -i provider-config-example.yaml
