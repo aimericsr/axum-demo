@@ -9,7 +9,7 @@ datasources:
   url: http://prometheus:9090
   isDefault: true
   jsonData:
-    httpMethod: GET
+    httpMethod: POST
     
 - name: Tempo
   type: tempo
@@ -19,13 +19,14 @@ datasources:
   url: http://tempo:3200
   isDefault: false
   jsonData:
-    httpMethod: GET
+    httpMethod: POST
     serviceMap:
       datasourceUid: 'prometheus'
     nodeGraph:
         enabled: true
     streamingEnabled:
         search: true
+        metrics: true
     tracesToMetrics:
         datasourceUid: 'prometheus'
         spanStartTimeShift: '1h'

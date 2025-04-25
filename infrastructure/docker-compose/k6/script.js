@@ -6,25 +6,26 @@ import { check, group, sleep } from "k6";
 export const options = {
   stages: [
     { duration: "15s", target: 300 },
-    { duration: "30s", target: 600 },
+    { duration: "15s", target: 600 },
     { duration: "10s", target: 0 },
   ],
   thresholds: {
     http_req_duration: ["p(95)<100", "p(90)<80"],
     http_req_failed: ["rate<0.01"],
   },
-  tlsAuth: [
-    {
-      cert: open(`${__ENV.HOME}/ssl/my-app.crt`),
-      key: open(`${__ENV.HOME}/ssl/my-app.key`),
-    },
-  ],
+  // tlsAuth: [
+  //   {
+  //     cert: open(`${__ENV.HOME}/ssl/my-app.crt`),
+  //     key: open(`${__ENV.HOME}/ssl/my-app.key`),
+  //   },
+  // ],
 };
 
 // k6 run infrastructure/docker-compose/k6/script.js
 // Default user worflow
 export default function () {
-  const BASE_URL = "https://my-app";
+  //const BASE_URL = "https://my-app";
+  const BASE_URL = "http://host.docker.internal:8080";
 
   group("typical user workflow", function () {
     group("health check general", function () {

@@ -41,7 +41,7 @@ services:
 
   otel-collector:
     profiles: ["dev"]
-    image: otel/opentelemetry-collector-contrib:0.119.0
+    image: otel/opentelemetry-collector-contrib:0.123.0
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:13133 || exit 1
     volumes:
@@ -56,6 +56,8 @@ services:
   prometheus:
     profiles: ["dev"]
     image: prom/prometheus:v3.3.0
+    # need to have access to prometheus/data named volumes
+    user: root 
     ports:
       - 1234:1234
       - 9090:9090
@@ -66,10 +68,11 @@ services:
       - "--enable-feature=native-histograms"
     volumes:
       - ./infrastructure/docker-compose/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus/data
 
   grafana:
     profiles: ["dev"]
-    image: grafana/grafana:11.4.4
+    image: grafana/grafana:11.6.1
     ports:
       - 3000:3000
     environment:
@@ -78,7 +81,8 @@ services:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_BASIC_ENABLED: "false"
     volumes:
-      - ./infrastructure/docker-compose/grafana:/etc/grafana/provisioning:ro
+      - ./infrastructure/docker-compose/grafana:/etc/grafana:ro
+      - grafana-data:/var/lib/grafana
 
   tempo:
     profiles: ["dev"]
@@ -86,22 +90,33 @@ services:
     command: [ "-config.file=/etc/tempo.yaml" ]
     volumes:
       - ./infrastructure/docker-compose/tempo/tempo.yaml:/etc/tempo.yaml
+      - tempo-data:/var/tempo
     ports:
       - 3200:3200
 
   k6:
-    profiles: ["test"]
-    image: grafana/k6:0.58
+    profiles: ["load-test"]
+    image: grafana/k6:0.58.0
     volumes:
       - ./infrastructure/docker-compose/k6:/home/k6
-    user:
-      root
-    entrypoint: ["/bin/sh", "-c"]
-    command: ["k6 run ${K6_FILE:-script.js}"]
+    #command: run --tag testid=health-check5 -o experimental-prometheus-rw ${K6_FILE:-script.js}
+    user: root
+    entrypoint: [ "/bin/sh" ]
+    # command: 
+    #   - | 
+    #     apk add uuidgen;
+    #     TEST_ID=$(uuidgen -t);
+    #     echo "Generated tag: $TEST_ID";
+    #     echo $TEST_ID;
+    #     # apk add uuidgen;
+    #     # TEST_ID="testid=$(uuidgen | cut -d"-" -f1)";
+    #     # echo "Generated tag: $TEST_ID";
+    #     # k6 run --tag "$TEST_ID" -o experimental-prometheus-rw script.js;
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      K6_PROMETHEUS_RW_SERVER_URL: "http://prometheus:9090/api/v1/write"
-      K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: "true"
-      K6_FILE: ${K6_FILE:-script.js}
+      K6_PROMETHEUS_RW_SERVER_URL: http://prometheus:9090/api/v1/write
+      K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: true
 
   # proxy: 
   #   profiles: ["dev", "proxy"]
@@ -119,3 +134,8 @@ services:
   #     - /var/run/docker.sock:/var/run/docker.sock:ro
   #     - ./infrastructure/docker-compose/traefik/traefik.yaml:/etc/traefik/traefik.yaml
   #     - ~/dev-ssl:/certs:ro
+
+volumes:
+  grafana-data:
+  tempo-data:
+  prometheus-data:

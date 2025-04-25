@@ -461,7 +461,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(k6_http_reqs_total{testid=~\"$testid\", expected_response=\"true\"})",
+          "expr": "sum(k6_http_reqs_total{testid=~\"$testid\", expected_response=\"false\"})",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -2054,7 +2054,7 @@
   "timezone": "",
   "title": "k6 Prometheus (Native Histograms)",
   "uid": "a3b2aaa8-bb66-4008-a1d8-16c49afedbf0",
-  "version": 3,
+  "version": 1,
   "weekStart": "",
   "gnetId": 18030
 }

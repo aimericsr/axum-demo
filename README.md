@@ -175,7 +175,7 @@ cargo install --version=0.7.2 sqlx-cli --no-default-features --features postgres
 ## Run load
 
 ```sh
-docker-compose --profile load-test run k6 run -o experimental-prometheus-rw /scripts/script.js
+docker-compose --profile load-test run --remove-orphans k6
 ```
 
 ## Minikube
