@@ -76,6 +76,7 @@ regex = "1"
 dotenvy = "0.15"
 redact = { version = "0.1", features = ["serde"] }
 tracing-appender = "0.2.3"
+opentelemetry-appender-tracing = "0.29.1"
 
 [dev-dependencies]
 anyhow = "1"

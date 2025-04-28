@@ -10,11 +10,14 @@
     a timeout to try to export all remaing to remote endpoint before the app is exited.
 */
 
+/// Handle sending logs to different destinations using the OTEL format (stdout and via the netowork)
+mod logs;
 /// Handle sending metrics to different destinations using the OTEL format (stdout and via the netowork)
 mod metrics;
 /// Handle sending traces to different destinations using the OTEL format (stdout and via the netowork)
 mod traces;
 
+use logs::logs_layer;
 use opentelemetry::{KeyValue, metrics::Meter};
 use opentelemetry_resource_detectors::{
     HostResourceDetector, OsResourceDetector, ProcessResourceDetector,
@@ -77,6 +80,8 @@ impl ObservabilityGuard {
 
 pub fn init_observability(config: &Config) -> ObservabilityGuard {
     let (meter_provider, meter) = metrics::init_metrics(config);
+
+    //let logs_layer = logs_layer(config);
 
     let (file_guard, tracer_provider) = traces::init_traces(config);
     ObservabilityGuard {
