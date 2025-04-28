@@ -2,9 +2,9 @@ data "oci_objectstorage_namespace" "namespace" {
   compartment_id = oci_identity_compartment.dev.id
 }
 
-resource "oci_objectstorage_bucket" "test_bucket" {
+resource "oci_objectstorage_bucket" "etcd_backup" {
   compartment_id = oci_identity_compartment.dev.id
-  name           = "etcd"
+  name           = "etcd-backup"
   namespace      = data.oci_objectstorage_namespace.namespace.namespace
   access_type    = "NoPublicAccess"
   storage_tier   = "Standard"
@@ -55,7 +55,7 @@ resource "oci_objectstorage_bucket" "tempo" {
 
 resource "oci_objectstorage_bucket" "vcn_logs" {
   compartment_id = oci_identity_compartment.dev.id
-  name           = "vcn_logs"
+  name           = "vcn-logs"
   namespace      = data.oci_objectstorage_namespace.namespace.namespace
   access_type    = "NoPublicAccess"
   storage_tier   = "Standard"

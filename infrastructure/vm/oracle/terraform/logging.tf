@@ -7,12 +7,12 @@ resource "oci_logging_log_group" "main-vcn" {
 }
 
 resource "oci_logging_log" "main-vcn" {
-  display_name = "main-vcn"
-  log_group_id = oci_logging_log_group.main-vcn.id
-  log_type     = "SERVICE"
+  display_name       = "main-vcn"
+  log_group_id       = oci_logging_log_group.main-vcn.id
+  log_type           = "SERVICE"
   is_enabled         = true
   retention_duration = 30
-  
+
   configuration {
     source {
       category    = "vcn"
@@ -39,7 +39,7 @@ resource "oci_sch_service_connector" "vcn_flowlogs_to_s3" {
 
   target {
     kind   = "objectStorage"
-    bucket =  oci_objectstorage_bucket.vcn_logs.name
+    bucket = oci_objectstorage_bucket.vcn_logs.name
   }
 
   # tasks {
