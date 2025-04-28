@@ -2,19 +2,49 @@ global:
   scrape_interval: 30s 
 
 scrape_configs:
-  - job_name: 'prometheus'
-    static_configs:
-      - targets: [ 'prometheus:9090' ]
-  - job_name: 'tempo'
-    static_configs:
-      - targets: [ 'tempo:3200' ]
   - job_name: 'grafana'
     static_configs:
       - targets: [ 'grafana:3000' ]
+  - job_name: 'loki'
+    static_configs:
+      - targets: [ 'loki:3100' ]
+  - job_name: 'tempo'
+    static_configs:
+      - targets: [ 'tempo:3200' ]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: cluster
+        replacement: "default-cluster"
+      - source_labels: [__address__]
+        target_label: namespace
+        replacement: "default-namespace"
+      - source_labels: [__address__]
+        target_label: component
+        replacement: "loki"
+  - job_name: postgres
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: release
+        replacement: "dev-db"
+      - source_labels: [__address__]
+        target_label: namespace
+        replacement: "default-namespace"
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: [ 'prometheus:9090' ]
 
 storage:
   tsdb:
     out_of_order_time_window: 30m
+  exemplars:
+    max_exemplars: 1000
+
+tracing:
+  endpoint: otel-collector:4317
+  sampling_fraction: 1
+  insecure: true
 
 otlp:
   promote_resource_attributes:

@@ -5,36 +5,49 @@ apiVersion: 1
 providers:
   # https://grafana.com/grafana/dashboards/3662-prometheus-2-0-overview/
   # sed -i '' 's/\${DS_THEMIS}/prometheus/g' prometheus/3662_rev2.json
-  - name: 'prometheus'
-    folder: 'prometheus'
+  - name: prometheus
+    folder: prometheus
     type: file
     disableDeletion: false
     updateIntervalSeconds: 60
     allowUiUpdates: false
     options:
-      path: /etc/grafana/provisioning/dashboards
+      path: /etc/grafana/provisioning/dashboards/prometheus
 
   # https://github.com/grafana/tempo/tree/main/operations/tempo-mixin-compiled/dashboards
   # sed -i '' 's/\$logsds/prometheus/g' tempo/tempo-operational.json
   # sed -i '' 's/\$ds/prometheus/g' tempo/tempo-operational.json
-  - name: 'tempo'
-    folder: 'tempo'
+  - name: tempo
+    folder: tempo
     type: file
     disableDeletion: false
     updateIntervalSeconds: 60
     allowUiUpdates: false
     options:
-      path: /etc/grafana/provisioning/dashboards
+      path: /etc/grafana/provisioning/dashboards/tempo
 
   # https://grafana.com/grafana/dashboards/19665-k6-prometheus/
   # https://grafana.com/grafana/dashboards/18030-k6-prometheus-native-histograms/
   # sed -i '' 's/\${DS_PROMETHEUS}/prometheus/g' k6/18030_rev8.json
   # sed -i '' 's/\${DS_PROMETHEUS}/prometheus/g' k6/19665_rev3.json
-  - name: 'k6'
-    folder: 'k6'
+  - name: k6
+    folder: k6
     type: file
     disableDeletion: false
     updateIntervalSeconds: 60
     allowUiUpdates: false
     options:
-      path: /etc/grafana/provisioning/dashboards
+      path: /etc/grafana/provisioning/dashboards/k6
+
+  # https://grafana.com/grafana/dashboards/9628-postgresql-database/
+  # sed -i '' 's/\${DS_PROMETHEUS}/prometheus/g' postgres/9628_rev8.json
+  - name: postgres
+    folder: postgres
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 60
+    allowUiUpdates: false
+    options:
+      path: /etc/grafana/provisioning/dashboards/postgres
+
+

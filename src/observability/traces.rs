@@ -1,4 +1,5 @@
 use super::get_ressources;
+use super::logs::logs_layer;
 use crate::config::{Config, Env, Tracing};
 use opentelemetry::trace::TracerProvider as TraceProviderOtel;
 use opentelemetry_sdk::propagation::TraceContextPropagator;

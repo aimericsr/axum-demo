@@ -230,16 +230,6 @@ sequenceDiagram
   LB -->>- Client: DNAT
 ```
 
-
-default via 10.0.1.1 dev enp0s6 proto dhcp src 10.0.1.158 metric 100 
-default via 10.0.1.1 dev enp0s6 proto dhcp src 10.0.1.158 metric 1002 mtu 9000 
-10.0.1.0/24 dev enp0s6 proto dhcp scope link src 10.0.1.158 metric 1002 mtu 9000 
-10.0.1.1 dev enp0s6 proto dhcp scope link src 10.0.1.158 metric 100 
-169.254.0.0/16 dev enp0s6 proto dhcp scope link src 10.0.1.158 metric 100 
-169.254.0.0/16 dev enp0s6 proto dhcp scope link src 10.0.1.158 metric 1002 mtu 9000 
-169.254.169.254 dev enp0s6 proto dhcp scope link src 10.0.1.158 metric 100 
-
-
 ```mermaid
 graph LR
     A[User] --> B[Public L4 Load Balancer]

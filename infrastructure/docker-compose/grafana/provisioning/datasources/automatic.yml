@@ -10,6 +10,14 @@ datasources:
   isDefault: true
   jsonData:
     httpMethod: POST
+
+- name: Loki
+  type: loki
+  access: proxy
+  orgId: 1
+  uid: loki
+  url: http://loki:3100
+  isDefault: false
     
 - name: Tempo
   type: tempo
