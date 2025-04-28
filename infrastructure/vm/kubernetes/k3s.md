@@ -17,8 +17,12 @@ curl -sfL https://get.k3s.io | sh -s - server \
     --kube-scheduler-arg="bind-address=0.0.0.0"	\
     --kube-controller-manager-arg="bind-address=0.0.0.0" \
     --kube-proxy-arg="metrics-bind-address=0.0.0.0" \
+    --node-label="" \
     --etcd-s3 \
     --etcd-s3-config-secret=k3s-etcd-snapshot-s3-config
+
+    # Set label so Oracle CCM will run
+    kubectl label nodes <NODE> node-role.kubernetes.io/control-plane= --overwrite
 
     # Token for adding other node to the cluster
     sudo cat /var/lib/rancher/k3s/server/token
