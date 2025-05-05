@@ -56,7 +56,7 @@ resource "oci_core_security_list" "public_sl" {
   # etcd server/client/metrics
   ingress_security_rules {
     protocol = "6" # TCP
-    source   = "10.0.1.0/24"
+    source   = local.dev_subnet_cidr_block
 
     tcp_options {
       min = 2379
@@ -67,7 +67,7 @@ resource "oci_core_security_list" "public_sl" {
   # cilium health
   ingress_security_rules {
     protocol = "6" # TCP
-    source   = "10.0.1.0/24"
+    source   = local.dev_subnet_cidr_block
 
     tcp_options {
       min = 4240
@@ -78,7 +78,7 @@ resource "oci_core_security_list" "public_sl" {
   # Hubble metrics
   ingress_security_rules {
     protocol = "6" # TCP
-    source   = "10.0.1.0/24"
+    source   = local.dev_subnet_cidr_block
 
     tcp_options {
       min = 4244
@@ -89,7 +89,7 @@ resource "oci_core_security_list" "public_sl" {
   # VXLAN 
   ingress_security_rules {
     protocol = "17" # UDP
-    source   = "10.0.1.0/24"
+    source   = local.dev_subnet_cidr_block
 
     udp_options {
       min = 8472
@@ -100,7 +100,7 @@ resource "oci_core_security_list" "public_sl" {
   # Node metrics 
   ingress_security_rules {
     protocol = "6" # TCP
-    source   = "10.0.1.0/24"
+    source   = local.dev_subnet_cidr_block
 
     tcp_options {
       min = 9100
@@ -114,7 +114,7 @@ resource "oci_core_security_list" "public_sl" {
   # 9965 : Hubble
   ingress_security_rules {
     protocol = "6" # TCP
-    source   = "10.0.1.0/24"
+    source   = local.dev_subnet_cidr_block
 
     tcp_options {
       min = 9962
@@ -125,7 +125,7 @@ resource "oci_core_security_list" "public_sl" {
   # kube-proxy and kubelet metrics
   ingress_security_rules {
     protocol = "6" # TCP
-    source   = "10.0.1.0/24"
+    source   = local.dev_subnet_cidr_block
 
     tcp_options {
       min = 10249
@@ -136,7 +136,7 @@ resource "oci_core_security_list" "public_sl" {
   # controller-manager metrics
   ingress_security_rules {
     protocol = "6" # TCP
-    source   = "10.0.1.0/24"
+    source   = local.dev_subnet_cidr_block
 
     tcp_options {
       min = 10257
@@ -147,7 +147,7 @@ resource "oci_core_security_list" "public_sl" {
   # scheduler metrics
   ingress_security_rules {
     protocol = "6" # TCP
-    source   = "10.0.1.0/24"
+    source   = local.dev_subnet_cidr_block
 
     tcp_options {
       min = 10259
@@ -158,7 +158,7 @@ resource "oci_core_security_list" "public_sl" {
   # Node Ports
   ingress_security_rules {
     protocol = "6" # TCP
-    source   = "10.0.1.0/24"
+    source   = local.dev_subnet_cidr_block
 
     tcp_options {
       min = 30000
@@ -170,4 +170,8 @@ resource "oci_core_security_list" "public_sl" {
     destination = "0.0.0.0/0"
     protocol    = "all"
   }
+}
+
+locals {
+  dev_subnet_cidr_block = "10.0.1.0/24"
 }

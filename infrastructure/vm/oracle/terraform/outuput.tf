@@ -19,13 +19,19 @@ output "k3s_ocids" {
   ]
 }
 
-output "k3s_lb_public_ip" {
+output "k3s_admin_lb_public_ip" {
   value = [
-    for ip in oci_network_load_balancer_network_load_balancer.k3s_lb.ip_addresses :
+    for ip in oci_network_load_balancer_network_load_balancer.k3s_admin_lb.ip_addresses :
     ip.ip_address if ip.is_public
   ][0]
 }
 
+output "k3s_apps_lb_public_ip" {
+  value = [
+    for ip in oci_network_load_balancer_network_load_balancer.k3s_apps_lb.ip_addresses :
+    ip.ip_address if ip.is_public
+  ][0]
+}
 
 output "etcd_backdup_s3_compatible_endpoint" {
   value = "${data.oci_objectstorage_namespace.namespace.namespace}.compat.objectstorage.${var.region}.oraclecloud.com"

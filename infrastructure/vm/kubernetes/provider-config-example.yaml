@@ -12,6 +12,4 @@ loadBalancer:
   subnet2: ocid1.subnet.oc1.eu-paris-1.aaaaaaaamtumlr27heicwv6ld45o4ikevbfvmj23257nqutw5b37e35tcknq
   securityListManagementMode: All
 # yq eval '.auth.key |= load_str("/Users/aimericsorin/.oci/id_rsa.pem")' -i provider-config-example.yaml
-# kubectl  create secret generic oci-cloud-controller-manager \ 
-#     -n kube-system                                           \
-#     --from-file=cloud-provider.yaml=provider-config-example.yaml
+# kubectl create secret generic oci-cloud-controller-manager -n kube-system --from-file=cloud-provider.yaml=provider-config-example.yaml

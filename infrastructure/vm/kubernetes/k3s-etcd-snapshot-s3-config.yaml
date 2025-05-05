@@ -6,6 +6,8 @@ metadata:
 type: etcd.k3s.cattle.io/s3-config-secret
 stringData:
   etcd-s3-endpoint: "ax70azibgchm.compat.objectstorage.eu-paris-1.oraclecloud.com"
-  etcd-s3-bucket: "etcd"
+  etcd-s3-bucket: "etcd-backup"
   etcd-s3-access-key: "AWS_ACCESS_KEY_ID"
   etcd-s3-secret-key: "AWS_SECRET_ACCESS_KEY"
+
+# kubectl apply -f k3s-etcd-snapshot-s3-config.yaml

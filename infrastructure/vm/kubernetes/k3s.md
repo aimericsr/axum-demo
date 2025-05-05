@@ -10,17 +10,19 @@ curl -sfL https://get.k3s.io | sh -s - server \
     --disable-cloud-controller \
     --disable=servicelb \
     --disable=traefik \
-    --etcd-expose-metrics \
     --kube-controller-manager-arg="cloud-provider=external" \
     --kubelet-arg="cloud-provider=external" \
     --kubelet-arg="provider-id=<INSTANCE_ID>" \
+    --etcd-s3 \
+    --etcd-s3-config-secret=k3s-etcd-snapshot-s3-config \
+    --etcd-expose-metrics \
     --kube-scheduler-arg="bind-address=0.0.0.0"	\
     --kube-controller-manager-arg="bind-address=0.0.0.0" \
-    --kube-proxy-arg="metrics-bind-address=0.0.0.0" \
-    --node-label="" \
-    --etcd-s3 \
-    --etcd-s3-config-secret=k3s-etcd-snapshot-s3-config
+    --kube-proxy-arg="metrics-bind-address=0.0.0.0"
 
+    # Make ubuntu user able to connect to cluster
+    mkdir -p ~/.kube && sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config && sudo chown $(id -u):$(id -g) ~/.kube/config
+    export KUBECONFIG=~/.kube/config
     # Set label so Oracle CCM will run
     kubectl label nodes <NODE> node-role.kubernetes.io/control-plane= --overwrite
 
@@ -28,9 +30,7 @@ curl -sfL https://get.k3s.io | sh -s - server \
     sudo cat /var/lib/rancher/k3s/server/token
     # File for connecting to the cluster
     sudo cat /etc/rancher/k3s/k3s.yaml
-    # Make ubuntu user able to connect to cluster
-    mkdir -p ~/.kube && sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config && sudo chown $(id -u):$(id -g) ~/.kube/config
-    export KUBECONFIG=~/.kube/config
+  
 
     # Set S3 auth info for automated backups
     kubectl apply -f k3s-etcd-snapshot-s3-config
@@ -63,6 +63,10 @@ sudo ip link delete cilium_vxlan
 sudo iptables-save | grep -iv cilium | sudo iptables-restore 
 sudo ip6tables-save | grep -iv cilium | sudo ip6tables-restore 
 /usr/local/bin/k3s-uninstall.sh
+
+
+Job for k3s.service failed because the control process exited with error code.
+See "systemctl status k3s.service" and "journalctl -xeu k3s.service" for details.
 
 
 
@@ -101,6 +105,23 @@ helm upgrade --install cilium cilium \
 kubectl port-forward -n kube-system svc/hubble-ui 12000:80
 
 
+# CCM and CSI
+https://github.com/oracle/oci-cloud-controller-manager
+https://github.com/oracle/oci-cloud-controller-manager/blob/master/container-storage-interface.md
+
+## Remove stuck PVC and PV
+kubectl -n monitoring patch pvc prometheus-prometheus-kube-prometheus-prometheus-db-prometheus-prometheus-kube-prometheus-prometheus-0 \
+  -p '{"metadata":{"finalizers":null}}' --type=merge
+kubectl patch pv csi-73af9de5-71fa-491d-b2d5-051c9f762061 -p '{"metadata":{"finalizers":null}}' --type=merge
+
+
+
+## Change the default cluster storageclass : 
+kubectl patch storageclass local-path -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "false"}}}'
+kubectl patch storageclass oci-bv -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "true"}}}'
+
+
+
 ## Kubernetes Dashboard
 helm upgrade --install kubernetes-dashboard kubernetes-dashboard \
   --repo https://kubernetes.github.io/dashboard \
@@ -113,14 +134,13 @@ https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/cre
 kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard-kong-proxy 8443:443
 
 ## Cert manager
-helm repo add https://charts.jetstack.io
+helm repo add jetstack https://charts.jetstack.io
 helm repo update
-helm upgrade --install cert-manager cert-manager \
+helm upgrade --install cert-manager jetstack/cert-manager \
   --version v1.17.1 \
-  --namespace cert-manager \
   --create-namespace \
-  --set crds.enabled=true
-
+  --namespace cert-manager \
+  -f ../../kubernetes/helm/cert-manager/values.yaml
 
 # Opentelemetry
 helm repo add https://open-telemetry.github.io/opentelemetry-helm-charts
@@ -131,33 +151,27 @@ helm upgrade --install opentelemetry-operator opentelemetry-operator \
   -f infrastructure/kubernetes/helm/opentelemetry-operator/values.yaml
 
 
-# Storage Class
-https://github.com/oracle/oci-cloud-controller-manager/blob/bb196921c90762354c5bd7d6fe1c137820af7197/container-storage-interface.md
+# Tempo
+```sh
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+helm install tempo grafana/tempo-distributed \
+  --version 1.38.2 \
+  --namespace=monitoring \
+  --create-namespace \
+  -f ../../kubernetes/helm/tempo/values.yaml
 
-change oci-csi-controller-driver.yaml:
-modify : node-role.kubernetes.io/control-plane: "" to node-role.kubernetes.io/control-plane: "true"
+helm upgrade tempo grafana/tempo-distributed -n monitoring \
+  --version 1.38.2 \
+  -f ../../kubernetes/helm/tempo/values.yaml
 
-https://github.com/oracle/oci-cloud-controller-manager/pull/477/files
+helm uninstall prometheus -n monitoring
+```
 
-pec.nodeAffinity.required.nodeSelectorTerms[1].matchExpressions[0].key: failure-domain.beta.kubernetes.io/zone is deprecated since v1.17; use "topology.kubernetes.io/zone" instead
-
-only topology.kubernetes.io/zone
-
-kubectl  create secret generic oci-volume-provisioner \
-  -n kube-system \
-  --from-file=config.yaml=cloud-provider-example.yaml
-
-To remove PV (https://github.com/kubernetes-csi/external-provisioner/issues/1217): 
-kubectl patch pv <CSI_NAME> -p '{"metadata":{"finalizers":null}}'
-
-## Change the default cluster className : 
-
-kubectl patch storageclass local-path -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "false"}}}'
-kubectl patch storageclass oci-bv -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "true"}}}'
 
 # Install Prometheus to scrape kubernetes engine metrics, install also Grafana with build-in dashboard
 ```sh
-helm repo add https://prometheus-community.github.io/helm-charts
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 helm install prometheus prometheus-community/kube-prometheus-stack \
   --version 70.4.2 \
@@ -169,7 +183,13 @@ helm upgrade prometheus prometheus-community/kube-prometheus-stack -n monitoring
   --version 70.4.2 \
   -f ../../kubernetes/helm/kube-prometheus-stack/values.yaml
 
-kubectl port-forward svc/prometheus-operated -n monitoring 9090:9090
+helm uninstall prometheus -n monitoring
+
+kubectl -n monitoring port-forward svc/prometheus-grafana 3000:80
+
+kubectl -n monitoring port-forward svc/prometheus-kube-prometheus-prometheus 9090
+
+kubectl -n monitoring port-forward svc/prometheus-kube-prometheus-alertmanager 9093
 ```
 
 # Tempo 

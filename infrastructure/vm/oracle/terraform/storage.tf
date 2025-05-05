@@ -69,3 +69,4 @@ resource "oci_objectstorage_bucket" "vcn_logs" {
     }
   }
 }
+

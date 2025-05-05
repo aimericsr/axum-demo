@@ -84,7 +84,7 @@ resource "oci_core_instance" "k3s_control_plane_3" {
     source_id               = local.image_id
     boot_volume_size_in_gbs = 50
   }
-  
+
   preserve_boot_volume = false
 }
 

@@ -1,0 +1,72 @@
+ingester:
+  replicas: 3
+  config:
+    max_block_duration: 30m          
+
+metricsGenerator:
+  enabled: true
+  replicas: 2
+  config:
+    storage:
+      path: /var/tempo/generator/wal
+      remote_write: [ http://prometheus-kube-prometheus-prometheus.monitoring:9090/api/v1/write ]
+    traces_storage:
+      path: /var/tempo/generator/traces
+
+distributor:
+  replicas: 2
+
+compactor:
+  replicas: 2
+  config:
+    compaction:
+      block_retention: 48h
+      compaction_window: 1h
+
+querier:
+  replicas: 2
+
+queryFrontend:
+  query:
+    enabled: false
+
+multitenancyEnabled: false
+
+traces:
+  otlp:
+    grpc:
+      enabled: true
+      receiverConfig: {}
+
+storage:
+  trace:
+    backend: s3                        
+    s3:
+      bucket: tempo           
+      endpoint: ax70azibgchm.compat.objectstorage.eu-paris-1.oraclecloud.com
+      access_key: admin
+      secret_key: password
+
+overrides:
+  defaults:
+    metrics_generator:
+      processors: [service-graphs, span-metrics, local-blocks] 
+      generate_native_histograms: both
+
+server:
+  http_listen_port: 3200
+  logLevel: info
+
+memcached:
+  enabled: true
+  replicas: 2
+
+memcachedExporter:
+  enabled: true
+
+metaMonitoring:
+  serviceMonitor:
+    enabled: true
+
+minio:
+  enabled: false

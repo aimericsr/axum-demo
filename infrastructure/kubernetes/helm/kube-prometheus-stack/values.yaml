@@ -1,27 +1,100 @@
-grafana:
-  adminUser: admin
-  adminPassword: admin
-
 kubeControllerManager:
   endpoints:
-    - 10.0.1.158
-    - 10.0.1.143
-    - 10.0.1.190
-
-kubeEtcd:
-  endpoints: 
-    - 10.0.1.158
-    - 10.0.1.143
-    - 10.0.1.190
-
+    - 10.0.1.112
+    - 10.0.1.28
+    - 10.0.1.44
+  service:
+    port: 10257
+    targetPort: 10257
 kubeScheduler:
-  endpoints: 
-    - 10.0.1.158
-    - 10.0.1.143
-    - 10.0.1.190
-
+  endpoints:
+    - 10.0.1.112
+    - 10.0.1.28
+    - 10.0.1.44
+  service:
+    port: 10259
+    targetPort: 10259
+kubeEtcd:
+  endpoints:
+    - 10.0.1.112
+    - 10.0.1.28
+    - 10.0.1.44
+  service:
+    port: 2381
+    targetPort: 2381
 kubeProxy:
-  endpoints: 
-    - 10.0.1.158
-    - 10.0.1.143
-    - 10.0.1.190
+  endpoints:
+    - 10.0.1.112
+    - 10.0.1.28
+    - 10.0.1.44
+  service:
+    port: 10249
+    targetPort: 10249
+
+alertmanager:
+  alertmanagerSpec:
+    storage: {}
+      # volumeClaimTemplate:
+      #   spec:
+      #     storageClassName: oci-bv
+      #     accessModes: ["ReadWriteOnce"]
+      #     resources:
+      #       requests:
+      #         storage: 50Gi
+
+prometheus: 
+  prometheusSpec:
+    retention: 2d
+    tsdb:
+      outOfOrderTimeWindow: 30m
+    storageSpec:
+      volumeClaimTemplate:
+       spec:
+         storageClassName: oci-bv
+         accessModes: ["ReadWriteOnce"]
+         resources:
+           requests:
+             storage: 50Gi
+
+grafana:
+  persistence:
+    enabled: false
+    type: pvc
+    storageClassName: "oci-bv"
+    accessModes:
+      - ReadWriteOnce
+    size: 50Gi
+
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      access: proxy
+      orgId: 1
+      uid: loki
+      url: http://loki.monitoring.svc.cluster.local:3100
+      isDefault: false
+        
+    - name: Tempo
+      type: tempo
+      access: proxy
+      orgId: 1
+      uid: tempo
+      url: http://tempo.monitoring.svc.cluster.local:3200
+      isDefault: false
+      jsonData:
+        httpMethod: POST
+        serviceMap:
+          datasourceUid: 'prometheus'
+        nodeGraph:
+            enabled: true
+        streamingEnabled:
+            search: true
+            metrics: true
+        tracesToMetrics:
+            datasourceUid: 'prometheus'
+            spanStartTimeShift: '1h'
+            spanEndTimeShift: '-1h'
+            tags: [{ key: 'service.name', value: 'service' }, { key: 'job' }]
+            queries:
+              - name: 'Sample query'
+                query: 'sum(rate(traces_spanmetrics_latency_bucket{$$__tags}[5m]))'
