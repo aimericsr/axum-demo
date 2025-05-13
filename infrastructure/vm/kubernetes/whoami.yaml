@@ -1,87 +1,169 @@
-# apiVersion: apps/v1
-# kind: Deployment
-# metadata:
-#   name: whoami
-#   labels:
-#     app: whoami
-# spec:
-#   replicas: 3
-#   selector:
-#     matchLabels:
-#       app: whoami
-#   template:
-#     metadata:
-#       labels:
-#         app: whoami
-#     spec:
-#       containers:
-#         - name: whoami
-#           image: traefik/whoami
-#           ports:
-#             - containerPort: 80
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: whoami
-#   labels:
-#     app: whoami
-# spec:
-#   type: LoadBalancer
-#   ports:
-#     - port: 80
-#       targetPort: 80
-#   selector:
-#     app: whoami
-# # ---
-# # apiVersion: networking.k8s.io/v1
-# # kind: Ingress
-# # metadata:
-# #   name: whoami-ingress
-# # spec:
-# #   ingressClassName: traefik
-# #   rules:
-# #     - host: whoami.aimericsorin
-# #       http:
-# #         paths:
-# #           - path: /
-# #             pathType: Prefix
-# #             backend:
-# #               service:
-# #                 name: whoami
-# #                 port:
-# #                   number: 80
-
-
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-deployment
+  name: whoami
+  labels:
+    app: whoami
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
-      app: nginx
+      app: whoami
+  template:
+    metadata:
+      labels:
+        app: whoami
     spec:
       containers:
-      - name: nginx
-        image: nginx
-        ports:
-        - containerPort: 80
+        - name: whoami
+          image: traefik/whoami
+          ports:
+            - containerPort: 80
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: nginx-service
-  annotations:
-    oci-network-load-balancer.oraclecloud.com/security-list-management-mode: "All"
-    oci.oraclecloud.com/load-balancer-type: nlb
+  name: whoami
+  labels:
+    app: whoami
 spec:
-  selector:
-    app: nginx
-  type: LoadBalancer
+  type: ClusterIP
   ports:
-  - name: http
-    port: 80
-    targetPort: 80
+    - port: 80
+      targetPort: 80
+  selector:
+    app: whoami
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: whoami-ingress
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+      - aimericsorin.me 
+    secretName: traefik-cert-prod
+  - hosts:
+      - www.aimericsorin.me 
+    secretName: traefik-cert-prod
+  rules:
+    - host: aimericsorin.me 
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: whoami
+                port:
+                  number: 80
+    - host: www.aimericsorin.me 
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: whoami
+                port:
+                  number: 80
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    email: aimeric.sorin@gmail.com
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-issuer-account-key
+    solvers:
+      - http01:
+          ingress:
+            serviceType: ClusterIP
+            ingressClassName: traefik
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    email: aimeric.sorin@gmail.com
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-issuer-account-key
+    solvers:
+      - http01:
+          ingress:
+            serviceType: ClusterIP
+            ingressClassName: traefik
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: traefik-cert-staging
+  namespace: default
+spec:
+  secretName: traefik-cert-staging
+  duration: 2160h # 90d
+  renewBefore: 360h # 15d
+  dnsNames:
+    - aimericsorin.me 
+    - www.aimericsorin.me
+    #- api.aimericsorin.me
+  issuerRef:
+    kind: Issuer
+    name: letsencrypt-staging
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: traefik-cert-prod
+  namespace: default
+spec:
+  secretName: traefik-cert-prod
+  duration: 2160h # 90d
+  renewBefore: 360h # 15d
+  dnsNames:
+    - aimericsorin.me 
+    - www.aimericsorin.me
+    #- api.aimericsorin.me
+  issuerRef:
+    kind: Issuer
+    name: letsencrypt-prod
+
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: nginx-deployment
+# spec:
+#   replicas: 2
+#   selector:
+#     matchLabels:
+#       app: nginx
+#     spec:
+#       containers:
+#       - name: nginx
+#         image: nginx
+#         ports:
+#         - containerPort: 80
+# ---
+# kind: Service
+# apiVersion: v1
+# metadata:
+#   name: nginx-service
+#   annotations:
+#     oci-network-load-balancer.oraclecloud.com/security-list-management-mode: "All"
+#     oci.oraclecloud.com/load-balancer-type: nlb
+# spec:
+#   selector:
+#     app: nginx
+#   type: LoadBalancer
+#   ports:
+#   - name: http
+#     port: 80
+#     targetPort: 80

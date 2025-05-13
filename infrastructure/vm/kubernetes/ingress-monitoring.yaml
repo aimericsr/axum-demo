@@ -1,0 +1,167 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: monitoring-stack-gateway
+  namespace: monitoring  
+spec:
+  gatewayClassName: traefik  
+  listeners:
+    - name: https
+      hostname: aimericsorin.me
+      port: 8443         
+      protocol: HTTPS
+      tls:
+        mode: Terminate 
+        certificateRefs:
+        - kind: Secret
+          group: ""
+          name: monitoring-stack-cert-prod
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: monitoring-stack-route
+  namespace: monitoring
+spec:
+  parentRefs:
+    - name: monitoring-stack-gateway
+      namespace: monitoring
+  hostnames:
+    - aimericsorin.me
+  rules:
+
+    # Loki
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /loki
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: require-api-key  
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: loki-gateway
+          port: 80
+
+    # Tempo Read Path
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /tempo-read
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: require-api-key  
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: tempo-query-frontend
+          port: 3100
+
+    # Tempo Write Path
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /tempo-write
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: require-api-key  
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: tempo-distributor
+          port: 3100
+
+    # Prometheus
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /prometheus
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: require-api-key  
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: prometheus-kube-prometheus-prometheus
+          port: 9090
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: require-api-key
+  namespace: monitoring
+spec:
+  basicAuth:
+    secret: basic-auth-secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: basic-auth-secret
+  namespace: monitoring
+type: kubernetes.io/basic-auth
+data:
+  username: bW9uaXRvcmluZy1hZG1pbg== 
+  password: ZGRrc2pmNDQ1ZHNmaw== 
+---
+# echo -n "monitoring-admin" | base64
+# echo -n "ddksjf445dsfk" | base64
+# echo -n "monitoring-admin:ddksjf445dsfk" | base64
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-prod
+  namespace: monitoring
+spec:
+  acme:
+    email: aimeric.sorin@gmail.com
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-issuer-account-key
+    solvers:
+      - http01:
+          ingress:
+            serviceType: ClusterIP
+            ingressClassName: traefik
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: monitoring-stack-cert-prod
+  namespace: monitoring
+spec:
+  secretName: monitoring-stack-cert-prod
+  duration: 2160h # 90d
+  renewBefore: 360h # 15d
+  dnsNames:
+    - aimericsorin.me 
+    - www.aimericsorin.me
+    #- api.aimericsorin.me
+  issuerRef:
+    kind: Issuer
+    name: letsencrypt-prod

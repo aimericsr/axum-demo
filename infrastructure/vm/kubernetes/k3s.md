@@ -1,5 +1,7 @@
 # Install k3s
 
+##### https://kubernetes.io/docs/tasks/administer-cluster/reserve-compute-resources/
+
 ## HA cluster Embedded etcd
 ```sh
 curl -sfL https://get.k3s.io | sh -s - server \
@@ -114,70 +116,21 @@ kubectl -n monitoring patch pvc prometheus-prometheus-kube-prometheus-prometheus
   -p '{"metadata":{"finalizers":null}}' --type=merge
 kubectl patch pv csi-73af9de5-71fa-491d-b2d5-051c9f762061 -p '{"metadata":{"finalizers":null}}' --type=merge
 
-
-
 ## Change the default cluster storageclass : 
 kubectl patch storageclass local-path -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "false"}}}'
 kubectl patch storageclass oci-bv -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "true"}}}'
 
-
-
-## Kubernetes Dashboard
-helm upgrade --install kubernetes-dashboard kubernetes-dashboard \
-  --repo https://kubernetes.github.io/dashboard \
-  --version 7.11.1 \
-  --create-namespace \
-  --namespace monitoring
-  
-https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md
-
-kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard-kong-proxy 8443:443
-
-## Cert manager
-helm repo add jetstack https://charts.jetstack.io
-helm repo update
-helm upgrade --install cert-manager jetstack/cert-manager \
-  --version v1.17.1 \
-  --create-namespace \
-  --namespace cert-manager \
-  -f ../../kubernetes/helm/cert-manager/values.yaml
-
-# Opentelemetry
-helm repo add https://open-telemetry.github.io/opentelemetry-helm-charts
-helm repo update
-helm upgrade --install opentelemetry-operator opentelemetry-operator \
-  --version "0.39.1" \
-  --namespace monitoring
-  -f infrastructure/kubernetes/helm/opentelemetry-operator/values.yaml
-
-
-# Tempo
-```sh
-helm repo add grafana https://grafana.github.io/helm-charts
-helm repo update
-helm install tempo grafana/tempo-distributed \
-  --version 1.38.2 \
-  --namespace=monitoring \
-  --create-namespace \
-  -f ../../kubernetes/helm/tempo/values.yaml
-
-helm upgrade tempo grafana/tempo-distributed -n monitoring \
-  --version 1.38.2 \
-  -f ../../kubernetes/helm/tempo/values.yaml
-
-helm uninstall prometheus -n monitoring
-```
-
-
-# Install Prometheus to scrape kubernetes engine metrics, install also Grafana with build-in dashboard
+# Prometheus and Grafana
 ```sh
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
+
 helm install prometheus prometheus-community/kube-prometheus-stack \
   --version 70.4.2 \
   --namespace=monitoring \
   --create-namespace \
   -f ../../kubernetes/helm/kube-prometheus-stack/values.yaml
+
 
 helm upgrade prometheus prometheus-community/kube-prometheus-stack -n monitoring \
   --version 70.4.2 \
@@ -192,12 +145,99 @@ kubectl -n monitoring port-forward svc/prometheus-kube-prometheus-prometheus 909
 kubectl -n monitoring port-forward svc/prometheus-kube-prometheus-alertmanager 9093
 ```
 
-# Tempo 
-helm repo add repo https://grafana.github.io/helm-charts
+# Tempo
+```sh
+helm repo add grafana https://grafana.github.io/helm-charts
 helm repo update
-helm upgrade --install grafana grafana/tempo-distributed \
-  --version 1.35.0 \
-  --namespace monitoring
+export ACCESS_KEY=
+export SECRET_KEY=
+
+helm install tempo grafana/tempo-distributed \
+  --version 1.38.2 \
+  --namespace=monitoring \
+  --create-namespace \
+  -f ../../kubernetes/helm/tempo-distributed/values.yaml \
+  --set storage.trace.s3.access_key=$ACCESS_KEY \
+  --set storage.trace.s3.secret_key=$SECRET_KEY
+
+helm upgrade tempo grafana/tempo-distributed -n monitoring \
+  --version 1.38.2 \
+  -f ../../kubernetes/helm/tempo-distributed/values.yaml \
+  --set storage.trace.s3.access_key=$ACCESS_KEY \
+  --set storage.trace.s3.secret_key=$SECRET_KEY 
+
+helm uninstall tempo -n monitoring 
+```
+
+# Loki
+```sh
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+export ACCESS_KEY=
+export SECRET_KEY=
+
+helm install loki grafana/loki \
+  --version 6.29.0 \
+  --namespace=monitoring \
+  --create-namespace \
+  -f ../../kubernetes/helm/loki/values.yaml \
+  --set loki.storage.s3.accessKeyId=$ACCESS_KEY \
+  --set loki.storage.s3.secretAccessKey=$SECRET_KEY
+
+helm upgrade loki grafana/loki -n monitoring \
+  --version 6.29.0 \
+  -f ../../kubernetes/helm/loki/values.yaml \
+  --set loki.storage.s3.accessKeyId=$ACCESS_KEY \
+  --set loki.storage.s3.secretAccessKey=$SECRET_KEY 
+
+helm uninstall loki -n monitoring 
+```
+
+# Traefik
+```sh
+helm repo add traefik https://traefik.github.io/charts
+helm repo update
+
+helm install traefik traefik/traefik \
+  --version 35.2.0 \
+  --namespace=traefik \
+  --create-namespace \
+  -f ../../kubernetes/helm/traefik/values.yaml 
+
+helm upgrade traefik traefik/traefik -n traefik \
+  --version 35.2.0 \
+  -f ../../kubernetes/helm/traefik/values.yaml 
+
+helm uninstall traefik -n traefik 
+```
+
+# Cert manager
+```sh
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+helm upgrade --install cert-manager jetstack/cert-manager \
+  --version v1.17.1 \
+  --create-namespace \
+  --namespace cert-manager \
+  -f ../../kubernetes/helm/cert-manager/values.yaml
+```
+
+helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+# Opentelemetry
+```sh
+helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+helm repo update
+
+helm upgrade --install opentelemetry open-telemetry/opentelemetry-collector \
+  --version 0.121.0 \
+  --create-namespace \
+  --namespace monitoring \
+  -f ../../kubernetes/helm/opentelemetry-collector/values.yaml
+
+kubectl -n monitoring port-forward svc/opentelemetry-opentelemetry-collector 4317 
+
+helm uninstall opentelemetry -n monitoring 
+```
 
 # PG Operator
 helm repo add cnpg https://cloudnative-pg.github.io/charts
@@ -206,8 +246,6 @@ helm upgrade --install cnpg  cnpg/cloudnative-pg \
   --version 0.23.2 \
   --namespace cnpg-system \
   --create-namespace
- 
-  
 
 
 # Create postgres exporter to be able to monitor with prometheus

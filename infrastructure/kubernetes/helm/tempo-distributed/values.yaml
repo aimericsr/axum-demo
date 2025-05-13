@@ -1,39 +1,50 @@
+# https://github.com/grafana/tempo/issues/2769
+
 ingester:
-  replicas: 3
+  enabled: true
+  replicas: 1
   config:
-    max_block_duration: 30m          
+    max_block_duration: 30m    
+    replication_factor: 1      
 
 metricsGenerator:
   enabled: true
-  replicas: 2
+  replicas: 1
   config:
     storage:
-      path: /var/tempo/generator/wal
-      remote_write: [ http://prometheus-kube-prometheus-prometheus.monitoring:9090/api/v1/write ]
-    traces_storage:
-      path: /var/tempo/generator/traces
+      remote_write:
+        - url: http://prometheus-kube-prometheus-prometheus.monitoring:9090/api/v1/write
+          send_exemplars: true
 
 distributor:
-  replicas: 2
+  enabled: true
+  replicas: 1
 
 compactor:
-  replicas: 2
+  enabled: true
+  replicas: 1
   config:
     compaction:
-      block_retention: 48h
-      compaction_window: 1h
+      block_retention: 168h # 7d
+      compaction_window: 4h
 
 querier:
-  replicas: 2
+  enabled: true
+  replicas: 1
 
 queryFrontend:
   query:
     enabled: false
+  enabled: true
+  replicas: 1
 
 multitenancyEnabled: false
 
 traces:
   otlp:
+    http:
+      enabled: true
+      receiverConfig: {}
     grpc:
       enabled: true
       receiverConfig: {}
@@ -44,8 +55,8 @@ storage:
     s3:
       bucket: tempo           
       endpoint: ax70azibgchm.compat.objectstorage.eu-paris-1.oraclecloud.com
-      access_key: admin
-      secret_key: password
+      access_key: a
+      secret_key: b
 
 overrides:
   defaults:
@@ -53,13 +64,9 @@ overrides:
       processors: [service-graphs, span-metrics, local-blocks] 
       generate_native_histograms: both
 
-server:
-  http_listen_port: 3200
-  logLevel: info
-
 memcached:
   enabled: true
-  replicas: 2
+  replicas: 1 
 
 memcachedExporter:
   enabled: true
@@ -67,6 +74,8 @@ memcachedExporter:
 metaMonitoring:
   serviceMonitor:
     enabled: true
+    labels: 
+      release: prometheus
 
 minio:
   enabled: false

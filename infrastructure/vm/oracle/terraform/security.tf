@@ -1,3 +1,7 @@
+locals {
+  dev_subnet_cidr_block = "10.0.1.0/24"
+}
+
 resource "oci_core_security_list" "public_sl" {
   compartment_id = oci_identity_compartment.dev.id
   vcn_id         = oci_core_vcn.main.id
@@ -25,8 +29,9 @@ resource "oci_core_security_list" "public_sl" {
   ingress_security_rules {
     protocol = "6" # TCP
     source   = "0.0.0.0/0"
+    #source   = local.dev_subnet_cidr_block
 
-    tcp_options {
+    tcp_options { 
       min = 80
       max = 80
     }
@@ -42,10 +47,9 @@ resource "oci_core_security_list" "public_sl" {
     }
   }
 
-  # control plane API
   ingress_security_rules {
     protocol = "6" # TCP
-    source   = "0.0.0.0/0"
+    source   =  "0.0.0.0/0"
 
     tcp_options {
       min = 6443
@@ -159,10 +163,11 @@ resource "oci_core_security_list" "public_sl" {
   ingress_security_rules {
     protocol = "6" # TCP
     source   = local.dev_subnet_cidr_block
+    #source   = "0.0.0.0/0"
 
     tcp_options {
-      min = 30000
-      max = 32767
+        min = 30000
+        max = 32767
     }
   }
 
@@ -170,8 +175,4 @@ resource "oci_core_security_list" "public_sl" {
     destination = "0.0.0.0/0"
     protocol    = "all"
   }
-}
-
-locals {
-  dev_subnet_cidr_block = "10.0.1.0/24"
 }

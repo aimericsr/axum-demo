@@ -6,10 +6,9 @@ auth:
   fingerprint: e7:69:19:16:1c:2e:ac:80:2e:c4:97:eb:61:4a:0a:63
   useInstancePrincipals: false
 compartment: ocid1.compartment.oc1..aaaaaaaa2367n6viggezcqy6db3k3dmojhjxuft262ezobuvdgkxsiudcmca
-vcn: ocid1.vcn.oc1.eu-paris-1.amaaaaaa5cso7saadr4xfx5uqbd5jhy22tundv57ri7nut6i3lgg2qhn77fa
+vcn: ocid1.vcn.oc1.eu-paris-1.amaaaaaa5cso7saa5izwlqropsthj4o4p57spl2ejmnfcgetc6s3sjzmrppa
 loadBalancer: 
-  subnet1: ocid1.subnet.oc1.eu-paris-1.aaaaaaaamtumlr27heicwv6ld45o4ikevbfvmj23257nqutw5b37e35tcknq
-  subnet2: ocid1.subnet.oc1.eu-paris-1.aaaaaaaamtumlr27heicwv6ld45o4ikevbfvmj23257nqutw5b37e35tcknq
-  securityListManagementMode: All
+  subnet1: ocid1.subnet.oc1.eu-paris-1.aaaaaaaank4pbsccn65gix5pmwjfa3tn7befypoblobkcztyeewdifftossq
+  securityListManagementMode: None
 # yq eval '.auth.key |= load_str("/Users/aimericsorin/.oci/id_rsa.pem")' -i provider-config-example.yaml
 # kubectl create secret generic oci-cloud-controller-manager -n kube-system --from-file=cloud-provider.yaml=provider-config-example.yaml

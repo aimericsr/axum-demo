@@ -1,0 +1,115 @@
+mode: "deployment"
+
+config:
+  receivers:
+    jaeger: null
+    prometheus: null
+    zipkin: null
+    otlp:
+      protocols:
+        grpc:
+          #endpoint: ${env:MY_POD_IP}:4317
+          endpoint: 0.0.0.0:4317
+   
+  extensions:
+    health_check:
+      endpoint: ${env:MY_POD_IP}:13133
+
+  processors:
+    batch: {}
+    memory_limiter:
+      check_interval: 5s
+      limit_percentage: 80
+      spike_limit_percentage: 25
+
+  exporters:
+    debug:
+    otlphttp/loki:
+      endpoint: http://loki-distributor.monitoring.svc.cluster.local:3100/otlp
+      tls:
+        insecure: true
+    otlphttp/prometheus:
+      endpoint: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/otlp
+      tls:
+        insecure: true
+    otlp/tempo:
+      endpoint: http://tempo-distributor.monitoring.svc.cluster.local:4317
+      tls:
+        insecure: true
+
+  service:
+    telemetry:
+      metrics:
+        readers:
+          - pull:
+              exporter:
+                prometheus:
+                  host: ${env:MY_POD_IP}
+                  port: 8888
+
+    extensions:
+      - health_check
+  
+    pipelines:
+      logs:
+        exporters:
+          - otlphttp/loki
+        processors:
+          - memory_limiter
+          - batch
+        receivers:
+          - otlp
+      metrics:
+        exporters:
+          - otlphttp/prometheus
+        processors:
+          - memory_limiter
+          - batch
+        receivers:
+          - otlp
+      traces:
+        exporters:
+          - otlp/tempo
+        processors:
+          - memory_limiter
+          - batch
+        receivers:
+          - otlp
+
+image:
+  repository: "otel/opentelemetry-collector-contrib"
+  tag: "0.123.0"
+
+presets:
+  kubernetesAttributes:
+    enabled: true
+
+ports:
+  otlp:
+    enabled: true
+  otlp-http:
+    enabled: false
+  jaeger-compact:
+    enabled: false
+  jaeger-thrift:
+    enabled: false
+  jaeger-grpc:  
+    enabled: false
+  zipkin:
+    enabled: false
+  metrics:
+    enabled: true
+
+useGOMEMLIMIT: true
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+
+replicaCount: 3
+
+serviceMonitor:
+  enabled: true
+  extraLabels:
+    release: prometheus

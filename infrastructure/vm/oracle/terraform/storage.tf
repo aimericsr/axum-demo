@@ -27,13 +27,13 @@ resource "oci_objectstorage_bucket" "loki" {
   storage_tier   = "Standard"
   versioning     = "Disabled"
 
-  retention_rules {
-    display_name = "retention_rule_30_days"
-    duration {
-      time_amount = 30
-      time_unit   = "DAYS"
-    }
-  }
+  # retention_rules {
+  #   display_name = "retention_rule_30_days"
+  #   duration {
+  #     time_amount = 30
+  #     time_unit   = "DAYS"
+  #   }
+  # }
 }
 
 resource "oci_objectstorage_bucket" "tempo" {
@@ -44,13 +44,13 @@ resource "oci_objectstorage_bucket" "tempo" {
   storage_tier   = "Standard"
   versioning     = "Disabled"
 
-  retention_rules {
-    display_name = "retention_rule_30_days"
-    duration {
-      time_amount = 30
-      time_unit   = "DAYS"
-    }
-  }
+  # retention_rules {
+  #   display_name = "retention_rule_30_days"
+  #   duration {
+  #     time_amount = 30
+  #     time_unit   = "DAYS"
+  #   }
+  # }
 }
 
 resource "oci_objectstorage_bucket" "vcn_logs" {

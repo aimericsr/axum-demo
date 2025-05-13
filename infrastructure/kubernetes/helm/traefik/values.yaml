@@ -1,0 +1,47 @@
+deployment:
+  kind: Deployment
+  replicas: 2 
+
+ingressRoute:
+  dashboard:
+    enabled: true
+
+providers: 
+  kubernetesCRD:
+    enabled: true 
+    allowCrossNamespace: true
+  kubernetesIngress:
+    enabled: true
+  kubernetesGateway:
+    enabled: true
+
+experimental:
+  kubernetesGateway:
+    enabled: true
+
+metrics:
+  prometheus:
+    serviceMonitor:
+      enabled: true
+      additionalLabels: 
+        release: prometheus
+
+# ports:
+#   web:
+#     redirections:
+#       entryPoint:
+#         to: websecure
+#         scheme: https
+#         permanent: true
+
+service:
+  enabled: true
+  type: NodePort
+  # annotations:
+  #   oci.oraclecloud.com/load-balancer-type: "nlb"
+
+
+
+
+
+

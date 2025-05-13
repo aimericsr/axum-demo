@@ -42,11 +42,46 @@ alertmanager:
       #       requests:
       #         storage: 50Gi
 
+# https://github.com/prometheus-community/helm-charts/issues/5080
+# https://github.com/prometheus-community/helm-charts/issues/2703
+# https://github.com/grafana/helm-charts/issues/1385
+
+
 prometheus: 
   prometheusSpec:
-    retention: 2d
+    serviceMonitorSelector: {}
+    serviceMonitorNamespaceSelector: {}
+    additionalArgs:
+      - name: web.enable-otlp-receiver
+        value: ""
+    additionalConfig:
+      otlp:
+        promoteResourceAttributes:
+          - service.instance.id
+          - service.name
+          - service.namespace
+          - cloud.availability_zone
+          - cloud.region
+          - container.name
+          - deployment.environment.name
+          - k8s.cluster.name
+          - k8s.container.name
+          - k8s.cronjob.name
+          - k8s.daemonset.name
+          - k8s.deployment.name
+          - k8s.job.name
+          - k8s.namespace.name
+          - k8s.pod.name
+          - k8s.replicaset.name
+          - k8s.statefulset.name
+        translationStrategy: NoUTF8EscapingWithSuffixes
+    enableFeatures:
+      - native-histograms
+      - exemplar-storage
+    enableRemoteWriteReceiver: true
+    retention: 7d
     tsdb:
-      outOfOrderTimeWindow: 30m
+      outOfOrderTimeWindow: 15m
     storageSpec:
       volumeClaimTemplate:
        spec:
@@ -57,13 +92,35 @@ prometheus:
              storage: 50Gi
 
 grafana:
+  adminUser: admin
+  adminPassword: prom-operator
+
+  # This also publicly expose the /metrics endpoit
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - www.aimericsorin.me
+    path: /
+    tls:
+      - secretName: monitoring-stack-cert-prod
+        hosts:
+        - www.aimericsorin.me
+
   persistence:
-    enabled: false
+    enabled: true
     type: pvc
-    storageClassName: "oci-bv"
+    storageClassName: "local-path"
     accessModes:
       - ReadWriteOnce
-    size: 50Gi
+    size: 5Gi
+
+  sidecar:
+    datasources:
+      exemplarTraceIdDestinations:
+        datasourceUid: tempo
+        traceIdLabelName: trace_id
+        urlDisplayLabel: View traces
 
   additionalDataSources:
     - name: Loki
@@ -71,7 +128,7 @@ grafana:
       access: proxy
       orgId: 1
       uid: loki
-      url: http://loki.monitoring.svc.cluster.local:3100
+      url: http://loki-gateway.monitoring.svc.cluster.local
       isDefault: false
         
     - name: Tempo
@@ -79,7 +136,7 @@ grafana:
       access: proxy
       orgId: 1
       uid: tempo
-      url: http://tempo.monitoring.svc.cluster.local:3200
+      url: http://tempo-query-frontend.monitoring:3100
       isDefault: false
       jsonData:
         httpMethod: POST
@@ -88,8 +145,8 @@ grafana:
         nodeGraph:
             enabled: true
         streamingEnabled:
-            search: true
-            metrics: true
+            search: false
+            metrics: false
         tracesToMetrics:
             datasourceUid: 'prometheus'
             spanStartTimeShift: '1h'

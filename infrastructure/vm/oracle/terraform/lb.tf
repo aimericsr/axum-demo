@@ -24,6 +24,7 @@ resource "oci_network_load_balancer_backend_set" "k3s_backend_set" {
   name                     = "k3s-backend-set"
   network_load_balancer_id = oci_network_load_balancer_network_load_balancer.k3s_admin_lb.id
   policy                   = "FIVE_TUPLE"
+  is_preserve_source = false
 
   health_checker {
     port     = 6443
@@ -55,6 +56,7 @@ resource "oci_network_load_balancer_network_load_balancer" "k3s_apps_lb" {
   display_name                   = "k3s-apps-lb"
   is_private                     = false
   is_preserve_source_destination = false
+
 }
 
 resource "oci_network_load_balancer_listener" "listener_http" {
@@ -79,9 +81,10 @@ resource "oci_network_load_balancer_backend_set" "http_backend_set" {
   name                     = "http-backend-set"
   network_load_balancer_id = oci_network_load_balancer_network_load_balancer.k3s_apps_lb.id
   policy                   = "FIVE_TUPLE"
+  is_preserve_source = false
 
   health_checker {
-    port     = 80
+    port     = 30282
     protocol = "TCP"
   }
 }
@@ -90,9 +93,10 @@ resource "oci_network_load_balancer_backend_set" "https_backend_set" {
   name                     = "https-backend-set"
   network_load_balancer_id = oci_network_load_balancer_network_load_balancer.k3s_apps_lb.id
   policy                   = "FIVE_TUPLE"
+  is_preserve_source = false
 
   health_checker {
-    port     = 443
+    port     = 31660
     protocol = "TCP"
   }
 }
@@ -106,7 +110,7 @@ resource "oci_network_load_balancer_backend" "http_backend" {
   backend_set_name         = oci_network_load_balancer_backend_set.http_backend_set.name
   network_load_balancer_id = oci_network_load_balancer_network_load_balancer.k3s_apps_lb.id
   name                     = format("%s:%s", local.k3s_control_planes[count.index].id, 80)
-  port                     = 80
+  port                     = 30282
   target_id                = local.k3s_control_planes[count.index].id
 }
 
@@ -119,7 +123,7 @@ resource "oci_network_load_balancer_backend" "https_backend" {
   backend_set_name         = oci_network_load_balancer_backend_set.https_backend_set.name
   network_load_balancer_id = oci_network_load_balancer_network_load_balancer.k3s_apps_lb.id
   name                     = format("%s:%s", local.k3s_control_planes[count.index].id, 443)
-  port                     = 443
+  port                     = 31660
   target_id                = local.k3s_control_planes[count.index].id
 }
 
