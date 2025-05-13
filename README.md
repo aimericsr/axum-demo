@@ -16,6 +16,56 @@ The architecture is using kubernetes to simulate a production environmment using
 
 ```mermaid
 graph LR;
+ client([Web Services])-.->router([Router]);
+ client_kube([Kube API])-.->router([Router]);
+
+  subgraph oracle[VCN]
+    router([Router])-.->lb_web[L4 LB - Web];
+    router([Router])-.->lb_kube[L4 LB - Kube API];
+
+  subgraph subnet[Subnet]
+    lb_web-->|NodePort|node1[Control Plane Node 1];
+    lb_web-->|NodePort|node2[Control Plane Node 2];
+    lb_web-->|NodePort|node3[Control Plane Node 3];
+
+    lb_kube-->|Port 6443|node1;
+    lb_kube-->|Port 6443|node2;
+    lb_kube-->|Port 6443|node3;
+
+    subgraph k8s_nodes[Kube Cluster]
+    node1-->|Port 8443|traefik[Traefik];
+    node2-->|Port 8443|traefik[Traefik];
+    node3-->|Port 8443|traefik[Traefik];
+
+    subgraph traefik[Traefik Controller]
+    
+    end
+
+    subgraph ingress_zone[Ingress API]
+    traefik-->|Ingress|service_grafana[Grafana Service];
+    end
+
+    subgraph gateway_zone[Gateway API]
+    traefik-->|Gateway|service_tempo[Tempo Service];
+    traefik-->|Gateway|service_loki[Loki Service];
+    traefik-->|Gateway|service_prometheus[Prometheus Service];
+    end    
+    end   
+     
+  end
+end
+
+ classDef plain fill:#ddd,stroke:#fff,stroke-width:4px,color:#000;
+ classDef k8s fill:#326ce5,stroke:#fff,stroke-width:4px,color:#fff;
+ classDef box fill:#fff,stroke:#bbb,stroke-width:2px,color:#326ce5;
+
+ class client,client_kube,router plain;
+ class lb_web,lb_kube,service_grafana,service_tempo,service_loki,service_prometheus,traefik,traefik2,traefik3,node1,node2,node3 k8s;
+ class oracle,subnet,k8s_nodes,ingress_zone,gateway_zone box;
+```
+
+```mermaid
+graph LR;
  client([Client])-. Ingress-managed <br> load balancer .->ingress[Ingress];
  subgraph cluster
  ingress-->|routing rule|service_web[Web API Service];
